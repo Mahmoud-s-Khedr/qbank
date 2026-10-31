@@ -46,6 +46,28 @@ Estimated full extraction with thinking off (≈1.2k in / 2–3k out): **≈ $0.
 - Run 2: a repeat with the top 2 (consistency check). Estimated **≈ $0.15**.
 - Total ≈ $0.40, which leaves headroom for development.
 
-## Results
+## Results — run 2026-10-31 (14 golden pages, prompt `extract-v1`, thinking off/minimal)
 
-_Not run yet._
+| Model | Composite | Page kind | Q count | Stem CER (norm) | Choice CER | Type acc | Figure recall | Q box IoU | Valid | Mean latency | $/page |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| **`google/gemini-3.8-flash`** | **0.944** | 100% | 100% | 0.080 | 0.059 | 92.7% | 100% | **0.887** | 100% | 16.5 s | $0.0071 |
+| `qwen/qwen3.8-flash` | 0.909 | 92.9% | 100% | 0.089 | 0.014 | 83.3% | 100% | 0.630 | 100%* | 31.3 s | $0.0016 |
+| `openai/gpt-6-luna` | 0.856 | 85.7% | 92.9% | **0.064** | 0.034 | 85.4% | 83.3% | 0.327 | 100% | 12.7 s | **$0.0008** |
+| `anthropic/claude-haiku-5.5` | 0.731 | 92.9% | 100% | 0.080 | 0.278 | 85.4% | 16.7% | 0.018 | 100% | 11.6 s | $0.0013 |
+| `nvidia/nemotron-3.5-super-vl:free` | 0.436 | 92.9% | 92.9% | 0.432 | 0.693 | 0% | 0% | 0.053 | 100% | 8.2 s | $0 |
+
+\* qwen needed the fallback on 21% of pages and is frequently rate-limited upstream (429s for hours on 2026-10-31).
+Luna and Haiku were first run with a schema bug (tuple `prefixItems` rejected by OpenAI/Anthropic, now fixed) and re-run.
+Total benchmark cost: ≈ $0.15.
+
+### Decision
+
+| Stage | Default | Why |
+|---|---|---|
+| `extract` | `google/gemini-3.8-flash` | Best overall and by far the best boxes (figure crops and the review overlay depend on them). ≈ $0.71 per 100 pages. |
+| `extract_strong` | `google/gemini-3.8-flash`, reasoning `low` | Same model with more thinking. No premium model. |
+| `verify` | `openai/gpt-6-luna` | A different family, the **best text accuracy**, and ~$0.0008/page. Verifying text is exactly its strength. |
+| `structure` / `classify` / `compose` | `anthropic/claude-haiku-5.5` | Text-only stages, so box accuracy doesn't matter. Cheap. (Re-check once those stages exist.) |
+
+A cheaper option for text-heavy subjects with few figures (e.g. Arabic literature) is `gpt-6-luna` for extraction (~9× cheaper).
+It can be set per source via `pipeline_config`. Worth re-evaluating once the golden set grows.
