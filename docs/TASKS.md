@@ -16,7 +16,7 @@ Detailed task files (`docs/tasks/Txx-*.md`) are written just before dispatch, so
 | T06 | 1 | LLM layer: OpenRouter client, model registry, retries, cost tracking, spend cap, fake + recorded clients | cx | terra / medium | T04 | done |
 | T07 | 1 | Golden set: hand-verified ground-truth JSON for ~15 fixture pages (all types, a stimulus, figures, a continuation) | ag + cc review | argon-high | T00 | done |
 | T08 | 1 | Extraction: PageExtraction schema, prompt v1, extract actor, fallback, stitching, figure cropping | cx | terra / medium | T05,T06 | done |
-| T09 | 1 | Structure detection (chapter/lesson tree) + answer-key matching | cx | terra / medium | T08 | todo |
+| T09 | 1 | Structure detection (chapter/lesson tree) + answer-key matching | cx | terra / medium | T08 | in progress |
 | T10 | 1 | `qbank-eval` CLI + run on candidate models → MODELS.md results, choose defaults | ag + cc | terra / medium | T07,T08 | done |
 | T11 | 2 | Validation rules, confidence, verifier pass, Arabic normalization, dedup, classification | ag | argon-high | T08 | done |
 | T12 | 3 | Review APIs: question/stimulus CRUD, audit log, split/merge, re-crop, re-extract with diff, bulk approve | cc-sonnet | sonnet 5.5 | T11 | done |
@@ -26,7 +26,7 @@ Detailed task files (`docs/tasks/Txx-*.md`) are written just before dispatch, so
 | T16 | 4 | Bank search API (FTS + trigram + facets), bulk metadata edit, manual question create | ag | argon-high | T11 | in progress |
 | T17 | 4 | Bank UI + taxonomy manager UI | ag | flash or argon (complex UI only) | T16,T13 | todo |
 | T18 | 5 | Exams: model/API, sections, blueprint sampler, stimulus grouping, versions/shuffling (hypothesis tests) | cc-sonnet | sonnet 5.5 | T16 | done |
-| T19 | 5 | AI-assisted composition (compose stage) | cx | terra / medium | T18,T06 | in progress |
+| T19 | 5 | AI-assisted composition (compose stage) | cx | terra / medium | T18,T06 | done |
 | T20 | 5 | Exam builder UI (blueprint, manual cart, AI assistant, sections, versions) | ag | flash or argon (complex UI only) | T18,T19 | todo |
 | T21 | 6 | PDF export: HTML templates, fonts, KaTeX, layout options, answer key, bubble sheet | cc-sonnet | sonnet 5.5 | T18 | done |
 | T22 | 6 | DOCX export via Pandoc + reference.docx (RTL, OMML) | cc-sonnet | sonnet 5.5 | T21 | done |
@@ -58,3 +58,4 @@ cc: T00, T03 review, every merge, T10 decision, integration fixes, final accepta
 | 2026-10-31 | T11 | agy argon-high | — |
 | 2026-10-31 | T22 | cc-sonnet 5.5 sub-agent | ~156k subagent tokens, 19 min |
 | 2026-10-31 | T12 | cc-sonnet 5.5 sub-agent | ~205k subagent tokens (paused once at the Claude 5h limit) |
+| 2026-10-31 | T19 | codex medium | 5h →8%, weekly 55→56% |
