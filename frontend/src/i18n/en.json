@@ -1,0 +1,71 @@
+{
+  "app": {
+    "brand": "Qbank / بنك الأسئلة",
+    "skipToContent": "Skip to main content",
+    "sidebar": {
+      "label": "Main navigation",
+      "expand": "Expand sidebar",
+      "collapse": "Collapse sidebar",
+      "openMenu": "Open navigation menu",
+      "closeMenu": "Close navigation menu",
+      "mobileTitle": "Navigation menu"
+    }
+  },
+  "nav": {
+    "sources": "Sources",
+    "review": "Review",
+    "bank": "Question bank",
+    "exams": "Exams",
+    "settings": "Settings"
+  },
+  "language": {
+    "label": "Switch language",
+    "ar": "العربية",
+    "en": "English"
+  },
+  "theme": {
+    "toggle": "Toggle theme",
+    "light": "Light mode",
+    "dark": "Dark mode"
+  },
+  "health": {
+    "label": "Backend status",
+    "ok": "Backend connected and database healthy",
+    "dbDown": "Backend reachable, database down",
+    "unreachable": "Backend unreachable",
+    "checking": "Checking backend status..."
+  },
+  "pages": {
+    "sources": {
+      "title": "Sources",
+      "emptyTitle": "No sources yet",
+      "emptyDescription": "Upload a workbook PDF to start extracting questions automatically."
+    },
+    "review": {
+      "title": "Review",
+      "emptyTitle": "Review queue is empty",
+      "emptyDescription": "Extracted questions awaiting verification and review will appear here."
+    },
+    "bank": {
+      "title": "Question bank",
+      "emptyTitle": "No approved questions in the bank",
+      "emptyDescription": "Approve questions from the review queue or add questions manually to search and use them."
+    },
+    "exams": {
+      "title": "Exams",
+      "emptyTitle": "No exams created yet",
+      "emptyDescription": "Build print-ready exams using a blueprint, manual selection, or the AI assistant."
+    },
+    "settings": {
+      "title": "Settings",
+      "emptyTitle": "Organization and model settings",
+      "emptyDescription": "Manage users, AI pipeline models, monthly spend caps, and exam header templates."
+    },
+    "notFound": {
+      "code": "404",
+      "title": "Page not found",
+      "description": "Sorry, the page you are looking for does not exist or has been moved.",
+      "backHome": "Back to home"
+    }
+  }
+}
