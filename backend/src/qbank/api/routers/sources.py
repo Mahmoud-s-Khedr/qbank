@@ -14,7 +14,7 @@ from starlette.concurrency import run_in_threadpool
 from qbank.api.deps import DB, Current, Writer
 from qbank.config import get_settings
 from qbank.db import get_engine
-from qbank.models import Asset, Job, Question, Source, SourcePage, SourceStatus, Stimulus
+from qbank.models import Asset, Job, Question, Role, Source, SourcePage, SourceStatus, Stimulus
 from qbank.schemas.bank import QuestionOut, StimulusOut
 from qbank.schemas.common import Page
 from qbank.schemas.sources import (
@@ -27,6 +27,7 @@ from qbank.schemas.sources import (
     UploadResult,
 )
 from qbank.services import sources as service
+from qbank.services.review import get_visible
 from qbank.services.unit_of_work import found
 from qbank.storage import get_store, keys
 
@@ -120,20 +121,15 @@ def image(  # noqa: PLR0913, PLR0917 -- path, variant and conditional request in
 @router.get("/sources/{id}/questions", response_model=list[QuestionOut])
 def questions(id: UUID, db: DB, user: Current) -> list[Question]:
     service.source(db, user.org_id, id)
-    return list(
-        db.scalars(
-            select(Question)
-            .where(Question.source_id == id, Question.org_id == user.org_id)
-            .order_by(Question.position)
-        )
-    )
+    stmt = select(Question).where(Question.source_id == id, Question.org_id == user.org_id)
+    if user.role == Role.teacher:
+        stmt = stmt.where(Question.status == "approved")
+    return list(db.scalars(stmt.order_by(Question.position)))
 
 
 @router.get("/questions/{id}", response_model=QuestionOut)
 def question(id: UUID, db: DB, user: Current) -> Question:
-    return found(
-        db.scalar(select(Question).where(Question.id == id, Question.org_id == user.org_id))
-    )
+    return get_visible(db, user, id)
 
 
 @router.get("/sources/{id}/stimuli", response_model=list[StimulusOut])

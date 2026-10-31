@@ -129,8 +129,15 @@ def stitch(  # noqa: PLR0912 -- both item types share continuation handling.
     return stimuli, questions
 
 
-def crop(db: Session, source: Source, page: SourcePage, box: tuple[int, int, int, int]) -> str:
-    region = to_region_box(box)
+def render_crop(
+    source: Source,
+    page: SourcePage,
+    region: list[float],
+    *,
+    trim: bool = True,
+    image_format: str = "WEBP",
+) -> tuple[bytes, int, int]:
+    """Crop a normalized x0,y0,x1,y1 region from the hires page; returns bytes, width, height."""
     data = get_store().get_bytes(keys.page(source.org_id, source.id, page.page_number, hires=True))
     with Image.open(BytesIO(data)) as image:
         width, height = image.size
@@ -140,31 +147,49 @@ def crop(db: Session, source: Source, page: SourcePage, box: tuple[int, int, int
         if right <= left or bottom <= top:
             raise ValueError("Empty figure region")
         pixels = np.array(image.convert("RGB").crop((left, top, right, bottom)))
-    gray = cv2.cvtColor(pixels, cv2.COLOR_RGB2GRAY)
-    points = cv2.findNonZero((gray < WHITE_THRESHOLD).astype("uint8"))
-    if points is not None:
-        x, y, w, h = cv2.boundingRect(points)
-        pad = max(1, round(min(pixels.shape[:2]) * 0.01))
-        pixels = pixels[max(0, y - pad) : y + h + pad, max(0, x - pad) : x + w + pad]
+    if trim:
+        gray = cv2.cvtColor(pixels, cv2.COLOR_RGB2GRAY)
+        points = cv2.findNonZero((gray < WHITE_THRESHOLD).astype("uint8"))
+        if points is not None:
+            x, y, w, h = cv2.boundingRect(points)
+            pad = max(1, round(min(pixels.shape[:2]) * 0.01))
+            pixels = pixels[max(0, y - pad) : y + h + pad, max(0, x - pad) : x + w + pad]
     output = BytesIO()
-    Image.fromarray(pixels).save(output, format="WEBP")
+    Image.fromarray(pixels).save(output, format=image_format)
+    return output.getvalue(), pixels.shape[1], pixels.shape[0]
+
+
+def crop_region(
+    db: Session,
+    source: Source,
+    page: SourcePage,
+    region: list[float],
+    *,
+    pipeline_generated: bool = True,
+) -> Asset:
+    """Crop a region into a new figure asset (added to the session)."""
+    data, width, height = render_crop(source, page, region)
     asset_id = new_uuid()
     key = keys.prefix(source.org_id, source.id) + f"assets/{asset_id}.webp"
-    get_store().put_bytes(key, output.getvalue(), "image/webp")
-    db.add(
-        Asset(
-            id=asset_id,
-            org_id=source.org_id,
-            source_page_id=page.id,
-            kind="figure",
-            image_key=key,
-            pipeline_generated=True,
-            region=region,
-            width=pixels.shape[1],
-            height=pixels.shape[0],
-        )
+    get_store().put_bytes(key, data, "image/webp")
+    asset = Asset(
+        id=asset_id,
+        org_id=source.org_id,
+        source_page_id=page.id,
+        kind="figure",
+        image_key=key,
+        pipeline_generated=pipeline_generated,
+        region=region,
+        width=width,
+        height=height,
     )
-    return f"![](asset:{asset_id})"
+    db.add(asset)
+    return asset
+
+
+def crop(db: Session, source: Source, page: SourcePage, box: tuple[int, int, int, int]) -> str:
+    asset = crop_region(db, source, page, to_region_box(box))
+    return f"![](asset:{asset.id})"
 
 
 def _purge_drafts(

@@ -17,6 +17,7 @@ from qbank.pipeline import orchestrator
 from qbank.pipeline.orchestrator import page_done
 from qbank.pipeline.pdf_cache import get_pdf_cache
 from qbank.services import exports as exports_service
+from qbank.services import proposals
 from qbank.storage import get_store, keys
 
 dramatiq.set_broker(RedisBroker(url=get_settings().redis_url))  # type: ignore[no-untyped-call]  # Dramatiq lacks constructor types.
@@ -810,3 +811,20 @@ def render_exports(export_ids: list[str]) -> None:
     for export_id in export_ids:
         with Session(get_engine()) as db:
             exports_service.render_one(db, UUID(export_id))
+
+
+@dramatiq.actor(max_retries=0, time_limit=10 * 60 * 1000)
+def reextract_page(
+    job_id: str, source_id: str, number: int, model: str | None, user_id: str
+) -> None:
+    """Re-extract one page into a pending proposal (F4.6); live rows are never touched."""
+    with Session(get_engine()) as db:
+        proposals.run_reextract(
+            db,
+            proposals.get_client(),
+            UUID(job_id),
+            UUID(source_id),
+            number,
+            model,
+            UUID(user_id),
+        )

@@ -2,8 +2,9 @@ class DomainError(Exception):
     status = 500
     code = "internal_error"
 
-    def __init__(self, code: str | None = None) -> None:
+    def __init__(self, code: str | None = None, extra: dict[str, object] | None = None) -> None:
         self.code = code or self.code
+        self.extra = extra or {}
         super().__init__(self.code)
 
 
@@ -30,3 +31,17 @@ class Forbidden(DomainError):  # noqa: N818 -- domain names are part of the serv
 class Unauthorized(DomainError):  # noqa: N818 -- domain names are part of the service API
     status = 401
     code = "unauthorized"
+
+
+class PaymentRequired(DomainError):  # noqa: N818 -- domain names are part of the service API
+    status = 402
+    code = "budget_exceeded"
+
+
+class BadGateway(DomainError):  # noqa: N818 -- domain names are part of the service API
+    status = 502
+    code = "llm_output_invalid"
+
+
+class VersionConflict(Conflict):
+    code = "version_conflict"

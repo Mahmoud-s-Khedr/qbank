@@ -13,14 +13,16 @@ from starlette.exceptions import HTTPException
 from starlette.responses import Response
 
 from qbank.api.middleware import csrf_middleware
-from qbank.api.routers import auth, exams, exports, health, sources, taxonomy, users
+from qbank.api.routers import auth, exams, exports, health, review, sources, taxonomy, users
 from qbank.config import get_settings
 from qbank.services.errors import DomainError
 
 logger = structlog.get_logger()
 
 
-def problem(status: int, detail: str, code: str) -> JSONResponse:
+def problem(
+    status: int, detail: str, code: str, extra: dict[str, object] | None = None
+) -> JSONResponse:
     return JSONResponse(
         status_code=status,
         media_type="application/problem+json",
@@ -30,6 +32,7 @@ def problem(status: int, detail: str, code: str) -> JSONResponse:
             "status": status,
             "detail": detail,
             "code": code,
+            **(extra or {}),
         },
     )
 
@@ -57,6 +60,7 @@ def create_app() -> FastAPI:
         exams.router,
         exports.router,
         health.router,
+        review.router,
         sources.router,
         taxonomy.router,
         users.router,
@@ -76,7 +80,7 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(DomainError)
     async def domain_error(request: Request, exc: DomainError) -> JSONResponse:
-        return problem(exc.status, exc.code.replace("_", " "), exc.code)
+        return problem(exc.status, exc.code.replace("_", " "), exc.code, exc.extra)
 
     @app.exception_handler(HTTPException)
     async def http_error(request: Request, exc: HTTPException) -> JSONResponse:
