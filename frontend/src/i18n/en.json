@@ -18,6 +18,32 @@
     "exams": "Exams",
     "settings": "Settings"
   },
+  "roles": {
+    "admin": "Admin",
+    "editor": "Editor",
+    "teacher": "Teacher"
+  },
+  "auth": {
+    "login": {
+      "title": "Sign in",
+      "subtitle": "Enter your email and password to access Qbank",
+      "emailLabel": "Email",
+      "emailPlaceholder": "name@school.edu.eg",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "submit": "Sign in",
+      "submitting": "Signing in...",
+      "errors": {
+        "emailRequired": "Email is required",
+        "emailInvalid": "Please enter a valid email address",
+        "passwordRequired": "Password is required",
+        "invalidCredentials": "Invalid email or password",
+        "generic": "Unable to sign in. Please try again."
+      }
+    },
+    "userMenu": "User menu",
+    "logout": "Sign out"
+  },
   "language": {
     "label": "Switch language",
     "ar": "العربية",
@@ -66,6 +92,112 @@
       "title": "Page not found",
       "description": "Sorry, the page you are looking for does not exist or has been moved.",
       "backHome": "Back to home"
+    }
+  },
+  "sources": {
+    "uploadWorkbook": "Upload workbook",
+    "loadMore": "Load more",
+    "loadingMore": "Loading...",
+    "filters": {
+      "subject": "Subject",
+      "allSubjects": "All subjects",
+      "status": "Status",
+      "allStatuses": "All statuses"
+    },
+    "table": {
+      "title": "Title",
+      "subject": "Subject",
+      "status": "Status",
+      "pages": "Pages (rendered/failed/total)",
+      "cost": "Cost",
+      "created": "Created",
+      "unknownSubject": "—"
+    },
+    "status": {
+      "uploaded": "Uploaded",
+      "rendering": "Rendering",
+      "extracting": "Extracting",
+      "validating": "Validating",
+      "ready": "Ready",
+      "failed": "Failed",
+      "paused": "Paused"
+    },
+    "upload": {
+      "dialogTitle": "Upload workbook",
+      "dialogDescription": "Upload a scanned workbook PDF (up to 300 MB) to extract questions.",
+      "subjectLabel": "Subject",
+      "subjectPlaceholder": "Select a subject",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Workbook title",
+      "gradeLabel": "Grade (optional)",
+      "gradePlaceholder": "e.g. Grade 12",
+      "fileLabel": "PDF file",
+      "dropzonePrompt": "Drag and drop a PDF file here, or click to browse",
+      "dropzoneHint": "PDF only • Max 300 MB",
+      "selectedFile": "Selected file: {{name}}",
+      "progressLabel": "Upload progress",
+      "submit": "Upload workbook",
+      "uploading": "Uploading...",
+      "cancel": "Cancel",
+      "errors": {
+        "fileRequired": "Please select a PDF file",
+        "subjectRequired": "Please select a subject",
+        "titleRequired": "Please enter a title",
+        "invalidType": "Only PDF files (.pdf) are allowed",
+        "fileTooLarge": "File size must not exceed 300 MB",
+        "invalidPdf": "The uploaded file is not a valid PDF or is corrupted",
+        "uploadFailed": "Failed to upload workbook. Please try again."
+      }
+    },
+    "detail": {
+      "backToSources": "Back to sources",
+      "subject": "Subject",
+      "grade": "Grade",
+      "stage": "Current stage",
+      "noStage": "—",
+      "cost": "Cost",
+      "delete": "Delete source",
+      "deleteConfirmTitle": "Delete source",
+      "deleteConfirmDescription": "Are you sure you want to delete \"{{title}}\"? All rendered pages and files will be permanently removed.",
+      "deleteConfirmButton": "Delete",
+      "deleting": "Deleting...",
+      "cancel": "Cancel",
+      "progressTitle": "Stage progress",
+      "pausedTitle": "Source processing is paused",
+      "pausedDefaultReason": "Processing was paused (for example, the monthly spend cap was reached).",
+      "stages": {
+        "rendered": "Rendered",
+        "extracted": "Extracted",
+        "validated": "Validated",
+        "failed": "Failed"
+      },
+      "pagesTitle": "Pages ({{count}})",
+      "emptyPages": "No pages rendered yet.",
+      "pageNumber": "Page {{number}}",
+      "pageStatus": {
+        "pending": "Pending",
+        "rendered": "Rendered",
+        "extracted": "Extracted",
+        "validated": "Validated",
+        "failed": "Failed"
+      },
+      "pageKind": {
+        "cover": "Cover",
+        "blank": "Blank",
+        "toc": "Table of contents",
+        "section_divider": "Section divider",
+        "questions": "Questions",
+        "answer_key": "Answer key",
+        "answer_sheet": "Answer sheet",
+        "other": "Other"
+      },
+      "windowRange": "Showing pages {{start}}–{{end}} of {{total}}",
+      "prevRange": "Previous range",
+      "nextRange": "Next range",
+      "viewerTitle": "Page {{number}} of {{total}}",
+      "prevPage": "Previous page",
+      "nextPage": "Next page",
+      "closeViewer": "Close page viewer"
     }
   },
   "qmd": {

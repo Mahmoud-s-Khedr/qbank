@@ -18,6 +18,32 @@
     "exams": "الاختبارات",
     "settings": "الإعدادات"
   },
+  "roles": {
+    "admin": "مدير",
+    "editor": "محرر",
+    "teacher": "معلم"
+  },
+  "auth": {
+    "login": {
+      "title": "تسجيل الدخول",
+      "subtitle": "أدخل بريدك الإلكتروني وكلمة المرور للمتابعة إلى بنك الأسئلة",
+      "emailLabel": "البريد الإلكتروني",
+      "emailPlaceholder": "name@school.edu.eg",
+      "passwordLabel": "كلمة المرور",
+      "passwordPlaceholder": "••••••••",
+      "submit": "تسجيل الدخول",
+      "submitting": "جاري تسجيل الدخول...",
+      "errors": {
+        "emailRequired": "البريد الإلكتروني مطلوب",
+        "emailInvalid": "يرجى إدخال بريد إلكتروني صحيح",
+        "passwordRequired": "كلمة المرور مطلوبة",
+        "invalidCredentials": "البريد الإلكتروني أو كلمة المرور غير صحيحة",
+        "generic": "تعذر تسجيل الدخول. يرجى المحاولة مرة أخرى."
+      }
+    },
+    "userMenu": "قائمة المستخدم",
+    "logout": "تسجيل الخروج"
+  },
   "language": {
     "label": "تبديل اللغة",
     "ar": "العربية",
@@ -66,6 +92,112 @@
       "title": "الصفحة غير موجودة",
       "description": "عذراً، الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
       "backHome": "العودة إلى الرئيسية"
+    }
+  },
+  "sources": {
+    "uploadWorkbook": "رفع كتاب",
+    "loadMore": "تحميل المزيد",
+    "loadingMore": "جاري التحميل...",
+    "filters": {
+      "subject": "المادة",
+      "allSubjects": "كل المواد",
+      "status": "الحالة",
+      "allStatuses": "كل الحالات"
+    },
+    "table": {
+      "title": "العنوان",
+      "subject": "المادة",
+      "status": "الحالة",
+      "pages": "الصفحات (مصورة/فاشلة/الإجمالي)",
+      "cost": "التكلفة",
+      "created": "تاريخ الإنشاء",
+      "unknownSubject": "—"
+    },
+    "status": {
+      "uploaded": "تم الرفع",
+      "rendering": "جاري التصيير",
+      "extracting": "جاري الاستخراج",
+      "validating": "جاري التحقق",
+      "ready": "جاهز",
+      "failed": "فشل",
+      "paused": "متوقف مؤقتاً"
+    },
+    "upload": {
+      "dialogTitle": "رفع كتاب جديد",
+      "dialogDescription": "ارفع ملف PDF لكتاب أو مذكرة (بحد أقصى 300 ميجابايت) لاستخراج الأسئلة منه.",
+      "subjectLabel": "المادة",
+      "subjectPlaceholder": "اختر المادة",
+      "titleLabel": "العنوان",
+      "titlePlaceholder": "عنوان الكتاب أو المذكرة",
+      "gradeLabel": "الصف الدراسي (اختياري)",
+      "gradePlaceholder": "مثال: الصف الثالث الثانوي",
+      "fileLabel": "ملف PDF",
+      "dropzonePrompt": "اسحب وأفلت ملف PDF هنا، أو انقر للاختيار",
+      "dropzoneHint": "PDF فقط • الحد الأقصى 300 ميجابايت",
+      "selectedFile": "الملف المختار: {{name}}",
+      "progressLabel": "تقدم الرفع",
+      "submit": "رفع وبدء المعالجة",
+      "uploading": "جاري الرفع...",
+      "cancel": "إلغاء",
+      "errors": {
+        "fileRequired": "يرجى اختيار ملف PDF",
+        "subjectRequired": "يرجى اختيار المادة",
+        "titleRequired": "يرجى إدخال العنوان",
+        "invalidType": "يُسمح بملفات PDF فقط (.pdf)",
+        "fileTooLarge": "حجم الملف يتجاوز الحد الأقصى المسموح به (300 ميجابايت)",
+        "invalidPdf": "الملف المرفوع ليس ملف PDF صالحاً أو أنه تالف",
+        "uploadFailed": "تعذر رفع الملف. يرجى المحاولة مرة أخرى."
+      }
+    },
+    "detail": {
+      "backToSources": "العودة إلى المصادر",
+      "subject": "المادة",
+      "grade": "الصف",
+      "stage": "المرحلة الحالية",
+      "noStage": "—",
+      "cost": "التكلفة",
+      "delete": "حذف المصدر",
+      "deleteConfirmTitle": "تأكيد حذف المصدر",
+      "deleteConfirmDescription": "هل أنت متأكد من رغبتك في حذف «{{title}}»؟ سيتم حذف جميع صفحاته وملفاته نهائياً.",
+      "deleteConfirmButton": "تأكيد الحذف",
+      "deleting": "جاري الحذف...",
+      "cancel": "إلغاء",
+      "progressTitle": "تقدم المعالجة حسب المرحلة",
+      "pausedTitle": "تم إيقاف معالجة المصدر مؤقتاً",
+      "pausedDefaultReason": "توقفت المعالجة مؤقتاً (مثل الوصول إلى الحد الأقصى للإنفاق الشهري).",
+      "stages": {
+        "rendered": "تم التصيير",
+        "extracted": "تم الاستخراج",
+        "validated": "تم التحقق",
+        "failed": "فشل"
+      },
+      "pagesTitle": "صفحات المصدر ({{count}})",
+      "emptyPages": "لم يتم تصيير أي صفحات بعد.",
+      "pageNumber": "صفحة {{number}}",
+      "pageStatus": {
+        "pending": "قيد الانتظار",
+        "rendered": "تم التصيير",
+        "extracted": "تم الاستخراج",
+        "validated": "تم التحقق",
+        "failed": "فشل"
+      },
+      "pageKind": {
+        "cover": "غلاف",
+        "blank": "فارغة",
+        "toc": "فهرس",
+        "section_divider": "فاصل قسم",
+        "questions": "أسئلة",
+        "answer_key": "نموذج إجابة",
+        "answer_sheet": "ورقة إجابة",
+        "other": "أخرى"
+      },
+      "windowRange": "عرض الصفحات {{start}}–{{end}} من {{total}}",
+      "prevRange": "المجموعة السابقة",
+      "nextRange": "المجموعة التالية",
+      "viewerTitle": "عرض الصفحة {{number}} من {{total}}",
+      "prevPage": "الصفحة السابقة",
+      "nextPage": "الصفحة التالية",
+      "closeViewer": "إغلاق عارض الصفحة"
     }
   },
   "qmd": {
