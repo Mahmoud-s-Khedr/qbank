@@ -20,8 +20,8 @@ from qbank.schemas.review import (
     ExtractRegionIn,
     FigureIn,
     MergeIn,
+    PageProposalOut,
     ProposalDetail,
-    ProposalOut,
     QuestionCreate,
     QuestionEventOut,
     QuestionPatch,
@@ -125,6 +125,11 @@ def delete_figure(id: UUID, asset_id: UUID, db: DB, user: Writer) -> None:
     figures.delete_figure(db, user, id, asset_id)
 
 
+@router.get("/assets/{id}", response_model=AssetOut)
+def get_asset(id: UUID, db: DB, user: Current) -> AssetOut:
+    return AssetOut.model_validate(figures.get_asset(db, user.org_id, id))
+
+
 @router.put("/assets/{id}/region", response_model=AssetOut)
 def recrop(id: UUID, data: Region, db: DB, user: Writer) -> AssetOut:
     return AssetOut.model_validate(figures.recrop(db, user, id, data.box))
@@ -186,8 +191,8 @@ def accept_proposal(id: UUID, db: DB, user: Writer, data: AcceptIn | None = None
     return proposals.accept(db, user, id, data or AcceptIn())
 
 
-@router.post("/page-proposals/{id}/discard", response_model=ProposalOut)
-def discard_proposal(id: UUID, db: DB, user: Writer) -> ProposalOut:
+@router.post("/page-proposals/{id}/discard", response_model=PageProposalOut)
+def discard_proposal(id: UUID, db: DB, user: Writer) -> PageProposalOut:
     return proposals.discard(db, user, id)
 
 

@@ -219,7 +219,7 @@ class ComposeSelection(BaseModel):
     rationale: str
 
 
-class ProposalOut(BaseModel):
+class ExamProposalOut(BaseModel):
     proposal_id: UUID
     blueprint: ComposePlan
     selection: list[list[UUID]]

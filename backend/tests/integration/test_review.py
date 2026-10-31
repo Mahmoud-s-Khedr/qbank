@@ -1,5 +1,6 @@
 """Review APIs (T12): editing, audit, workflow, split/merge, figures, stimuli, re-extraction."""
 
+import json
 from collections.abc import Iterator
 from dataclasses import dataclass
 from http import HTTPStatus
@@ -1052,3 +1053,62 @@ def test_review_queue_ordering_filters_and_visibility(world: World, client: Test
     assert ids() == [str(c)]
     login(client, "other")
     assert client.get(url).status_code == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.integration
+def test_create_question_on_source_page_with_regions(world: World, client: TestClient) -> None:
+    login(client, "editor")
+    base = {"subject_id": str(world.subject), "type": "essay", "stem": "Missed by extraction."}
+    region = {"page": str(world.pages[1]), "box": [0.1, 0.2, 0.9, 0.4]}
+    response = client.post(
+        f"{API}/questions", json={**base, "source_id": str(world.source), "regions": [region]}
+    )
+    assert response.status_code == HTTPStatus.CREATED, response.text
+    body = response.json()
+    assert body["source_id"] == str(world.source)
+    assert body["regions"] == [region]
+    queue = client.get(f"{API}/sources/{world.source}/review-queue").json()
+    assert body["id"] in json.dumps(queue)
+    # Regions without a source, foreign pages and unknown sources are rejected.
+    assert (
+        client.post(f"{API}/questions", json={**base, "regions": [region]}).status_code
+        == HTTPStatus.UNPROCESSABLE_ENTITY
+    )
+    foreign = {"page": str(uuid4()), "box": [0.1, 0.2, 0.9, 0.4]}
+    assert (
+        client.post(
+            f"{API}/questions",
+            json={**base, "source_id": str(world.source), "regions": [foreign]},
+        ).status_code
+        == HTTPStatus.UNPROCESSABLE_ENTITY
+    )
+    assert (
+        client.post(f"{API}/questions", json={**base, "source_id": str(uuid4())}).status_code
+        == HTTPStatus.NOT_FOUND
+    )
+
+
+@pytest.mark.integration
+def test_get_asset_and_llm_models(world: World, client: TestClient) -> None:
+    login(client, "editor")
+    question = make_question(world, "5")
+    added = client.post(
+        f"{API}/questions/{question}/figures",
+        json={"page_id": str(world.pages[1]), "box": [0.1, 0.1, 0.5, 0.5]},
+    )
+    assert added.status_code == HTTPStatus.CREATED, added.text
+    asset_id = added.json()["id"]
+    got = client.get(f"{API}/assets/{asset_id}")
+    assert got.status_code == HTTPStatus.OK
+    assert got.json()["source_page_id"] == str(world.pages[1])
+    assert got.json()["region"] == added.json()["region"]
+    login(client, "other")
+    assert client.get(f"{API}/assets/{asset_id}").status_code == HTTPStatus.NOT_FOUND
+
+    login(client, "teacher")
+    models = client.get(f"{API}/llm/models").json()
+    ids = [m["id"] for m in models]
+    assert "google/gemini-3.8-flash" in ids
+    assert all(float(m["price_out_per_m"]) <= 5 for m in models)  # noqa: PLR2004 -- price ceiling
+    flash = next(m for m in models if m["id"] == "google/gemini-3.8-flash")
+    assert "extract" in flash["default_for_stages"]

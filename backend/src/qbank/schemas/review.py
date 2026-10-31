@@ -77,8 +77,17 @@ class QuestionPatch(Strict):
         return self
 
 
+class RegionRef(Region):
+    """A box on a specific source page."""
+
+    page: UUID
+
+
 class QuestionCreate(Strict):
     subject_id: UUID
+    # Set when the question was missed by extraction and drawn on a source page during review.
+    source_id: UUID | None = None
+    regions: list[RegionRef] = Field(default_factory=list)
     type: QuestionType
     stem: str
     choices: list[ChoiceIn] = Field(default_factory=list)
@@ -216,7 +225,7 @@ class DraftQuestion(ExtractedQuestion):
     """An extracted question, not yet persisted; confirm it with POST /questions."""
 
 
-class ProposalOut(Output):
+class PageProposalOut(Output):
     page_id: UUID
     source_id: UUID
     page_number: int
@@ -258,7 +267,7 @@ class ProposalDiff(BaseModel):
 
 
 class ProposalDetail(BaseModel):
-    proposal: ProposalOut
+    proposal: PageProposalOut
     diff: ProposalDiff
 
 
@@ -272,7 +281,7 @@ class SkippedItem(BaseModel):
 
 
 class AcceptOut(BaseModel):
-    proposal: ProposalOut
+    proposal: PageProposalOut
     applied: list[str]
     skipped: list[SkippedItem]
 

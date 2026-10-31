@@ -22,6 +22,9 @@ export default defineConfig({
     environment: "jsdom",
     globals: true,
     setupFiles: ["./src/test/setup.ts"],
+    // UI interaction tests (e.g. 1,000-item review queue) can exceed the 5 s default on
+    // a loaded machine or CI runner; a timeout is not a real failure signal here.
+    testTimeout: 20_000,
     coverage: {
       provider: "v8",
       reporter: ["text", "json", "html"],

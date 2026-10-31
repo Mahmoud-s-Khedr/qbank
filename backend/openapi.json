@@ -32,7 +32,7 @@
             "type": "array"
           },
           "proposal": {
-            "$ref": "#/components/schemas/qbank__schemas__review__ProposalOut"
+            "$ref": "#/components/schemas/PageProposalOut"
           },
           "skipped": {
             "items": {
@@ -1303,6 +1303,59 @@
         "title": "ExamLayout",
         "type": "object"
       },
+      "ExamProposalOut": {
+        "properties": {
+          "blueprint": {
+            "$ref": "#/components/schemas/ComposePlan"
+          },
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "proposal_id": {
+            "format": "uuid",
+            "title": "Proposal Id",
+            "type": "string"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          },
+          "selection": {
+            "items": {
+              "items": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Selection",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "proposal_id",
+          "blueprint",
+          "selection",
+          "rationale",
+          "warnings",
+          "cost_usd",
+          "status"
+        ],
+        "title": "ExamProposalOut",
+        "type": "object"
+      },
       "ExamSettings": {
         "properties": {
           "header": {
@@ -2063,6 +2116,37 @@
         "title": "MergeIn",
         "type": "object"
       },
+      "ModelOut": {
+        "properties": {
+          "default_for_stages": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Default For Stages",
+            "type": "array"
+          },
+          "id": {
+            "title": "Id",
+            "type": "string"
+          },
+          "price_in_per_m": {
+            "title": "Price In Per M",
+            "type": "string"
+          },
+          "price_out_per_m": {
+            "title": "Price Out Per M",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "price_in_per_m",
+          "price_out_per_m",
+          "default_for_stages"
+        ],
+        "title": "ModelOut",
+        "type": "object"
+      },
       "PageDetail": {
         "properties": {
           "created_at": {
@@ -2278,6 +2362,83 @@
         "title": "PageOut",
         "type": "object"
       },
+      "PageProposalOut": {
+        "properties": {
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "extraction": {
+            "additionalProperties": true,
+            "title": "Extraction",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "page_id": {
+            "format": "uuid",
+            "title": "Page Id",
+            "type": "string"
+          },
+          "page_number": {
+            "title": "Page Number",
+            "type": "integer"
+          },
+          "source_id": {
+            "format": "uuid",
+            "title": "Source Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "page_id",
+          "source_id",
+          "page_number",
+          "model",
+          "cost_usd",
+          "created_by",
+          "status",
+          "extraction"
+        ],
+        "title": "PageProposalOut",
+        "type": "object"
+      },
       "PageStatus": {
         "enum": [
           "pending",
@@ -2444,7 +2605,7 @@
             "$ref": "#/components/schemas/ProposalDiff"
           },
           "proposal": {
-            "$ref": "#/components/schemas/qbank__schemas__review__ProposalOut"
+            "$ref": "#/components/schemas/PageProposalOut"
           }
         },
         "required": [
@@ -2684,6 +2845,25 @@
             "default": "",
             "title": "Number Label",
             "type": "string"
+          },
+          "regions": {
+            "items": {
+              "$ref": "#/components/schemas/RegionRef"
+            },
+            "title": "Regions",
+            "type": "array"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
           },
           "stem": {
             "title": "Stem",
@@ -3338,6 +3518,32 @@
           "box"
         ],
         "title": "Region",
+        "type": "object"
+      },
+      "RegionRef": {
+        "additionalProperties": false,
+        "description": "A box on a specific source page.",
+        "properties": {
+          "box": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "title": "Box",
+            "type": "array"
+          },
+          "page": {
+            "format": "uuid",
+            "title": "Page",
+            "type": "string"
+          }
+        },
+        "required": [
+          "box",
+          "page"
+        ],
+        "title": "RegionRef",
         "type": "object"
       },
       "RejectIn": {
@@ -4804,136 +5010,6 @@
         "title": "ItemUpdate",
         "type": "object"
       },
-      "qbank__schemas__exams__ProposalOut": {
-        "properties": {
-          "blueprint": {
-            "$ref": "#/components/schemas/ComposePlan"
-          },
-          "cost_usd": {
-            "title": "Cost Usd",
-            "type": "number"
-          },
-          "proposal_id": {
-            "format": "uuid",
-            "title": "Proposal Id",
-            "type": "string"
-          },
-          "rationale": {
-            "title": "Rationale",
-            "type": "string"
-          },
-          "selection": {
-            "items": {
-              "items": {
-                "format": "uuid",
-                "type": "string"
-              },
-              "type": "array"
-            },
-            "title": "Selection",
-            "type": "array"
-          },
-          "status": {
-            "title": "Status",
-            "type": "string"
-          },
-          "warnings": {
-            "items": {
-              "type": "string"
-            },
-            "title": "Warnings",
-            "type": "array"
-          }
-        },
-        "required": [
-          "proposal_id",
-          "blueprint",
-          "selection",
-          "rationale",
-          "warnings",
-          "cost_usd",
-          "status"
-        ],
-        "title": "ProposalOut",
-        "type": "object"
-      },
-      "qbank__schemas__review__ProposalOut": {
-        "properties": {
-          "cost_usd": {
-            "title": "Cost Usd",
-            "type": "number"
-          },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "created_by": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created By"
-          },
-          "extraction": {
-            "additionalProperties": true,
-            "title": "Extraction",
-            "type": "object"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "model": {
-            "title": "Model",
-            "type": "string"
-          },
-          "page_id": {
-            "format": "uuid",
-            "title": "Page Id",
-            "type": "string"
-          },
-          "page_number": {
-            "title": "Page Number",
-            "type": "integer"
-          },
-          "source_id": {
-            "format": "uuid",
-            "title": "Source Id",
-            "type": "string"
-          },
-          "status": {
-            "title": "Status",
-            "type": "string"
-          },
-          "updated_at": {
-            "format": "date-time",
-            "title": "Updated At",
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "created_at",
-          "updated_at",
-          "page_id",
-          "source_id",
-          "page_number",
-          "model",
-          "cost_usd",
-          "created_by",
-          "status",
-          "extraction"
-        ],
-        "title": "ProposalOut",
-        "type": "object"
-      },
       "qbank__schemas__taxonomy__ItemUpdate": {
         "properties": {
           "position": {
@@ -4970,6 +5046,49 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/assets/{id}": {
+      "get": {
+        "operationId": "get_asset_api_v1_assets__id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Asset",
+        "tags": [
+          "review"
+        ]
+      }
+    },
     "/api/v1/assets/{id}/image": {
       "get": {
         "operationId": "asset_image_api_v1_assets__id__image_get",
@@ -5495,7 +5614,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/qbank__schemas__exams__ProposalOut"
+                  "$ref": "#/components/schemas/ExamProposalOut"
                 }
               }
             },
@@ -6268,7 +6387,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/qbank__schemas__exams__ProposalOut"
+                  "$ref": "#/components/schemas/ExamProposalOut"
                 }
               }
             },
@@ -6559,7 +6678,7 @@
               "application/json": {
                 "schema": {
                   "items": {
-                    "$ref": "#/components/schemas/qbank__schemas__exams__ProposalOut"
+                    "$ref": "#/components/schemas/ExamProposalOut"
                   },
                   "title": "Response List Proposals Api V1 Exams  Id  Proposals Get",
                   "type": "array"
@@ -7101,6 +7220,29 @@
         "summary": "Edit Lesson"
       }
     },
+    "/api/v1/llm/models": {
+      "get": {
+        "description": "Models the server will accept (allowlist \u2229 price ceiling), for pickers such as re-extract.",
+        "operationId": "models_api_v1_llm_models_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ModelOut"
+                  },
+                  "title": "Response Models Api V1 Llm Models Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Models"
+      }
+    },
     "/api/v1/page-proposals/{id}": {
       "get": {
         "operationId": "proposal_detail_api_v1_page_proposals__id__get",
@@ -7224,7 +7366,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/qbank__schemas__review__ProposalOut"
+                  "$ref": "#/components/schemas/PageProposalOut"
                 }
               }
             },

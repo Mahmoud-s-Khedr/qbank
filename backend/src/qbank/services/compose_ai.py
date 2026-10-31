@@ -18,9 +18,9 @@ from qbank.schemas.exams import (
     ComposePlan,
     ComposeSelection,
     ExamDetail,
+    ExamProposalOut,
     ExamSettings,
     ProposalApply,
-    ProposalOut,
 )
 from qbank.services import exams
 from qbank.services.errors import BadGateway, Conflict, Invalid, PaymentRequired
@@ -62,9 +62,9 @@ def _row(row: BlueprintRow) -> Row:
     )
 
 
-def _out(p: ExamProposal) -> ProposalOut:
+def _out(p: ExamProposal) -> ExamProposalOut:
     stored = StoredSelection.model_validate(p.selection)
-    return ProposalOut(
+    return ExamProposalOut(
         proposal_id=p.id,
         blueprint=ComposePlan.model_validate(p.plan),
         selection=stored.rows,
@@ -75,7 +75,7 @@ def _out(p: ExamProposal) -> ProposalOut:
     )
 
 
-def compose(db: Session, user: User, exam_id: UUID, data: ComposeIn) -> ProposalOut:  # noqa: PLR0912, PLR0915 -- orchestration of the two calls and validation
+def compose(db: Session, user: User, exam_id: UUID, data: ComposeIn) -> ExamProposalOut:  # noqa: PLR0912, PLR0915 -- orchestration of the two calls and validation
     exam = exams.exam_for(db, user, exam_id)
     chapters = list(db.scalars(select(Chapter).where(Chapter.subject_id == exam.subject_id)))
     lessons = list(
@@ -300,7 +300,7 @@ def compose(db: Session, user: User, exam_id: UUID, data: ComposeIn) -> Proposal
     return _out(proposal)
 
 
-def listing(db: Session, user: User, exam_id: UUID) -> list[ProposalOut]:
+def listing(db: Session, user: User, exam_id: UUID) -> list[ExamProposalOut]:
     exams.exam_for(db, user, exam_id)
     return [
         _out(p)
@@ -320,7 +320,7 @@ def _get(db: Session, user: User, proposal_id: UUID) -> tuple[ExamProposal, Exam
     return proposal, exam
 
 
-def discard(db: Session, user: User, proposal_id: UUID) -> ProposalOut:
+def discard(db: Session, user: User, proposal_id: UUID) -> ExamProposalOut:
     proposal, _ = _get(db, user, proposal_id)
     proposal.status = "discarded"
     save(db)

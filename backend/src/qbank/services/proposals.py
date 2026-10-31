@@ -36,9 +36,9 @@ from qbank.schemas.review import (
     DraftQuestion,
     ExtractRegionIn,
     FieldChange,
+    PageProposalOut,
     ProposalDetail,
     ProposalDiff,
-    ProposalOut,
     RemovedItem,
     SkippedItem,
 )
@@ -195,8 +195,8 @@ def _proposal(
     return row[0], row[1], row[2]
 
 
-def _out(proposal: PageProposal, page: SourcePage) -> ProposalOut:
-    return ProposalOut(
+def _out(proposal: PageProposal, page: SourcePage) -> PageProposalOut:
+    return PageProposalOut(
         id=proposal.id,
         created_at=proposal.created_at,
         updated_at=proposal.updated_at,
@@ -435,7 +435,7 @@ def accept(db: Session, user: User, proposal_id: UUID, data: AcceptIn) -> Accept
     return AcceptOut(proposal=_out(proposal, page), applied=applied, skipped=skipped)
 
 
-def discard(db: Session, user: User, proposal_id: UUID) -> ProposalOut:
+def discard(db: Session, user: User, proposal_id: UUID) -> PageProposalOut:
     proposal, page, _ = _proposal(db, user.org_id, proposal_id)
     if proposal.status != "pending":
         raise Conflict("proposal_not_pending")

@@ -461,8 +461,8 @@ export function useDiscardProposal() {
         params: { path: { id } },
       })
       .then((r) =>
-        unwrap<components["schemas"]["ProposalOut"]>(
-          r as Envelope<components["schemas"]["ProposalOut"]>,
+        unwrap<components["schemas"]["PageProposalOut"]>(
+          r as Envelope<components["schemas"]["PageProposalOut"]>,
         ),
       ),
   );

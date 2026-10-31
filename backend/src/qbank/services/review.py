@@ -170,12 +170,29 @@ def get_visible(db: Session, user: User, question_id: UUID) -> Question:
     return question
 
 
+def _source_for_create(db: Session, user: User, data: QuestionCreate) -> Source | None:
+    if data.source_id is None:
+        if data.regions:
+            raise Invalid("regions_need_source")
+        return None
+    source = found(
+        db.scalar(select(Source).where(Source.id == data.source_id, Source.org_id == user.org_id))
+    )
+    if source.subject_id != data.subject_id:
+        raise Invalid("source_subject_mismatch")
+    page_ids = set(db.scalars(select(SourcePage.id).where(SourcePage.source_id == source.id)))
+    if any(region.page not in page_ids for region in data.regions):
+        raise Invalid("region_page_not_in_source")
+    return source
+
+
 def create(db: Session, user: User, data: QuestionCreate) -> Question:
     subject = found(get(db, Subject, user.org_id, data.subject_id))
+    source = _source_for_create(db, user, data)
     question = Question(
         org_id=user.org_id,
         subject_id=subject.id,
-        source_id=None,
+        source_id=source.id if source else None,
         chapter_id=data.chapter_id,
         lesson_id=data.lesson_id,
         position=0,
@@ -189,7 +206,7 @@ def create(db: Session, user: User, data: QuestionCreate) -> Question:
         difficulty_source="human" if data.difficulty is not None else None,
         language=subject.language,
         tags=_tags(data.tags),
-        regions=[],
+        regions=[{"page": str(r.page), "box": r.box} for r in data.regions],
         status="draft",
         confidence=1.0,
         version=1,

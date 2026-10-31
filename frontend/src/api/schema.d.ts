@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+  "/api/v1/assets/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Asset */
+    get: operations["get_asset_api_v1_assets__id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/assets/{id}/image": {
     parameters: {
       query?: never;
@@ -625,6 +642,26 @@ export interface paths {
     head?: never;
     /** Edit Lesson */
     patch: operations["edit_lesson_api_v1_lessons__id__patch"];
+    trace?: never;
+  };
+  "/api/v1/llm/models": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Models
+     * @description Models the server will accept (allowlist ∩ price ceiling), for pickers such as re-extract.
+     */
+    get: operations["models_api_v1_llm_models_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/v1/page-proposals/{id}": {
@@ -1295,7 +1332,7 @@ export interface components {
     AcceptOut: {
       /** Applied */
       applied: string[];
-      proposal: components["schemas"]["qbank__schemas__review__ProposalOut"];
+      proposal: components["schemas"]["PageProposalOut"];
       /** Skipped */
       skipped: components["schemas"]["SkippedItem"][];
     };
@@ -1792,6 +1829,25 @@ export interface components {
        */
       font_size_pt: number;
     };
+    /** ExamProposalOut */
+    ExamProposalOut: {
+      blueprint: components["schemas"]["ComposePlan"];
+      /** Cost Usd */
+      cost_usd: number;
+      /**
+       * Proposal Id
+       * Format: uuid
+       */
+      proposal_id: string;
+      /** Rationale */
+      rationale: string;
+      /** Selection */
+      selection: string[][];
+      /** Status */
+      status: string;
+      /** Warnings */
+      warnings: string[];
+    };
     /** ExamSettings */
     ExamSettings: {
       header?: components["schemas"]["ExamHeader"];
@@ -2121,6 +2177,17 @@ export interface components {
       /** Ids */
       ids: string[];
     };
+    /** ModelOut */
+    ModelOut: {
+      /** Default For Stages */
+      default_for_stages: string[];
+      /** Id */
+      id: string;
+      /** Price In Per M */
+      price_in_per_m: string;
+      /** Price Out Per M */
+      price_out_per_m: string;
+    };
     /** PageDetail */
     PageDetail: {
       /**
@@ -2198,6 +2265,48 @@ export interface components {
       /** Width Px */
       width_px: number | null;
     };
+    /** PageProposalOut */
+    PageProposalOut: {
+      /** Cost Usd */
+      cost_usd: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Created By */
+      created_by: string | null;
+      /** Extraction */
+      extraction: {
+        [key: string]: unknown;
+      };
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Model */
+      model: string;
+      /**
+       * Page Id
+       * Format: uuid
+       */
+      page_id: string;
+      /** Page Number */
+      page_number: number;
+      /**
+       * Source Id
+       * Format: uuid
+       */
+      source_id: string;
+      /** Status */
+      status: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
     /**
      * PageStatus
      * @enum {string}
@@ -2245,7 +2354,7 @@ export interface components {
     /** ProposalDetail */
     ProposalDetail: {
       diff: components["schemas"]["ProposalDiff"];
-      proposal: components["schemas"]["qbank__schemas__review__ProposalOut"];
+      proposal: components["schemas"]["PageProposalOut"];
     };
     /** ProposalDiff */
     ProposalDiff: {
@@ -2312,6 +2421,10 @@ export interface components {
        * @default
        */
       number_label: string;
+      /** Regions */
+      regions?: components["schemas"]["RegionRef"][];
+      /** Source Id */
+      source_id?: string | null;
       /** Stem */
       stem: string;
       /**
@@ -2542,6 +2655,19 @@ export interface components {
     Region: {
       /** Box */
       box: number[];
+    };
+    /**
+     * RegionRef
+     * @description A box on a specific source page.
+     */
+    RegionRef: {
+      /** Box */
+      box: number[];
+      /**
+       * Page
+       * Format: uuid
+       */
+      page: string;
     };
     /** RejectIn */
     RejectIn: {
@@ -3122,67 +3248,6 @@ export interface components {
       /** Section Id */
       section_id?: string | null;
     };
-    /** ProposalOut */
-    qbank__schemas__exams__ProposalOut: {
-      blueprint: components["schemas"]["ComposePlan"];
-      /** Cost Usd */
-      cost_usd: number;
-      /**
-       * Proposal Id
-       * Format: uuid
-       */
-      proposal_id: string;
-      /** Rationale */
-      rationale: string;
-      /** Selection */
-      selection: string[][];
-      /** Status */
-      status: string;
-      /** Warnings */
-      warnings: string[];
-    };
-    /** ProposalOut */
-    qbank__schemas__review__ProposalOut: {
-      /** Cost Usd */
-      cost_usd: number;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /** Created By */
-      created_by: string | null;
-      /** Extraction */
-      extraction: {
-        [key: string]: unknown;
-      };
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Model */
-      model: string;
-      /**
-       * Page Id
-       * Format: uuid
-       */
-      page_id: string;
-      /** Page Number */
-      page_number: number;
-      /**
-       * Source Id
-       * Format: uuid
-       */
-      source_id: string;
-      /** Status */
-      status: string;
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string;
-    };
     /** ItemUpdate */
     qbank__schemas__taxonomy__ItemUpdate: {
       /** Position */
@@ -3199,6 +3264,37 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  get_asset_api_v1_assets__id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["AssetOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   asset_image_api_v1_assets__id__image_get: {
     parameters: {
       query?: never;
@@ -3590,7 +3686,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["qbank__schemas__exams__ProposalOut"];
+          "application/json": components["schemas"]["ExamProposalOut"];
         };
       };
       /** @description Validation Error */
@@ -4113,7 +4209,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["qbank__schemas__exams__ProposalOut"];
+          "application/json": components["schemas"]["ExamProposalOut"];
         };
       };
       /** @description Validation Error */
@@ -4311,7 +4407,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["qbank__schemas__exams__ProposalOut"][];
+          "application/json": components["schemas"]["ExamProposalOut"][];
         };
       };
       /** @description Validation Error */
@@ -4700,6 +4796,26 @@ export interface operations {
       };
     };
   };
+  models_api_v1_llm_models_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ModelOut"][];
+        };
+      };
+    };
+  };
   proposal_detail_api_v1_page_proposals__id__get: {
     parameters: {
       query?: never;
@@ -4783,7 +4899,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["qbank__schemas__review__ProposalOut"];
+          "application/json": components["schemas"]["PageProposalOut"];
         };
       };
       /** @description Validation Error */

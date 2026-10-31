@@ -57,6 +57,10 @@ def add_figure(db: Session, user: User, question_id: UUID, data: FigureIn) -> As
     return asset
 
 
+def get_asset(db: Session, org_id: UUID, asset_id: UUID) -> Asset:
+    return found(db.scalar(select(Asset).where(Asset.id == asset_id, Asset.org_id == org_id)))
+
+
 def recrop(db: Session, user: User, asset_id: UUID, box: list[float]) -> Asset:
     """Re-crop in place: same asset id and storage key, new pixels and a new ETag."""
     asset = found(db.scalar(select(Asset).where(Asset.id == asset_id, Asset.org_id == user.org_id)))
