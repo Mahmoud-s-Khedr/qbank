@@ -6,7 +6,6 @@ import {
   type DraftQuestion,
   type QuestionOut,
   useCreateQuestion,
-  usePatchQuestion,
 } from "@/api/hooks/review";
 import type { Box } from "@/components/page-canvas/PageCanvas";
 import { QmdEditor } from "@/components/qmd/QmdEditor";
@@ -34,6 +33,7 @@ export function MissedQuestionDialog({
   box,
   pageId,
   subjectId,
+  sourceId,
   lang,
   onCreated,
   onClose,
@@ -42,6 +42,7 @@ export function MissedQuestionDialog({
   box: Box;
   pageId: string;
   subjectId: string;
+  sourceId: string;
   lang: "ar" | "en";
   onCreated: (question: QuestionOut) => void;
   onClose: () => void;
@@ -63,12 +64,13 @@ export function MissedQuestionDialog({
     })),
   );
   const create = useCreateQuestion();
-  const patch = usePatchQuestion();
 
   const save = async () => {
     try {
       const created = await create.mutateAsync({
         subject_id: subjectId,
+        source_id: sourceId,
+        regions: [{ page: pageId, box }],
         type,
         stem,
         number_label: numberLabel,
@@ -80,16 +82,8 @@ export function MissedQuestionDialog({
           pinned: c.pinned,
         })),
       });
-      // POST /questions has no `regions` field, so the page box is attached right after.
-      const withRegion = await patch.mutateAsync({
-        id: created.id,
-        patch: {
-          version: created.version,
-          regions: [{ page: pageId, box }],
-        },
-      });
       toast.success(t("review.missed.created"));
-      onCreated(withRegion);
+      onCreated(created);
     } catch (error) {
       toast.error(
         error instanceof ApiError ? error.message : t("review.missed.failed"),
@@ -173,7 +167,7 @@ export function MissedQuestionDialog({
           </Button>
           <Button
             type="button"
-            disabled={create.isPending || patch.isPending || stem.trim() === ""}
+            disabled={create.isPending || stem.trim() === ""}
             onClick={() => {
               void save();
             }}
