@@ -35,3 +35,5 @@ eval-reports/
 # copyrighted sample workbooks: kept local only, never committed (see fixtures/README.md)
 fixtures/pdfs/
 fixtures/golden/pages/
+# golden transcriptions reproduce the copyrighted workbook text: local only
+fixtures/golden/*__p*.json
