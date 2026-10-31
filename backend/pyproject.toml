@@ -39,6 +39,11 @@ files = ["src", "tests"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 markers = ["integration: requires PostgreSQL"]
-addopts = "--cov=qbank --cov-report=term-missing"
+addopts = "--cov=qbank --cov-report=term-missing --cov-report=xml"
+# Starlette deprecates its httpx TestClient integration; changing dependencies is out of scope.
+filterwarnings = [
+    "error",
+    "ignore:Using `httpx` with `starlette.testclient` is deprecated.*:starlette.exceptions.StarletteDeprecationWarning",
+]
 [tool.coverage.report]
 fail_under = 80
