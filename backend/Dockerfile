@@ -4,7 +4,7 @@ COPY pyproject.toml uv.lock ./
 COPY src ./src
 RUN uv sync --frozen --no-dev
 
-FROM python:3.12-slim-bookworm
+FROM python:3.15-slim-bookworm
 # T21 will add Pandoc and Chromium.
 RUN useradd --create-home --uid 10001 qbank
 WORKDIR /app
