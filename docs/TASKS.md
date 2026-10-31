@@ -27,7 +27,7 @@ Detailed task files (`docs/tasks/Txx-*.md`) are written just before dispatch, so
 | T17 | 4 | Bank UI + taxonomy manager UI | ag | flash or argon (complex UI only) | T16,T13 | in progress |
 | T18 | 5 | Exams: model/API, sections, blueprint sampler, stimulus grouping, versions/shuffling (hypothesis tests) | cc-sonnet | sonnet 5.5 | T16 | done |
 | T19 | 5 | AI-assisted composition (compose stage) | cx | terra / medium | T18,T06 | done |
-| T20 | 5 | Exam builder UI (blueprint, manual cart, AI assistant, sections, versions) | cc-sonnet | sonnet 5.5 | T18,T19 | in progress |
+| T20 | 5 | Exam builder UI (blueprint, manual cart, AI assistant, sections, versions) | cc-sonnet | sonnet 5.5 | T18,T19 | done |
 | T21 | 6 | PDF export: HTML templates, fonts, KaTeX, layout options, answer key, bubble sheet | cc-sonnet | sonnet 5.5 | T18 | done |
 | T22 | 6 | DOCX export via Pandoc + reference.docx (RTL, OMML) | cc-sonnet | sonnet 5.5 | T21 | done |
 | T23 | 6 | Export/preview UI, exam templates, admin settings (users, models, spend cap), cost dashboard | cx | terra / medium | T21,T22 | done |
@@ -62,3 +62,4 @@ cc: T00, T03 review, every merge, T10 decision, integration fixes, final accepta
 | 2026-10-31 | T09 | codex medium | — |
 | 2026-10-31 | T15 | cc-sonnet 5.5 sub-agent | ~255k subagent tokens; cc added 3 backend endpoints it needed |
 | 2026-10-31 | T23 (+1 continue round) | codex medium | weekly 56→~60% |
+| 2026-10-31 | T20 | cc-sonnet 5.5 sub-agent | ~189k subagent tokens |
