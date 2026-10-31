@@ -9,6 +9,10 @@ from sqlalchemy.orm import Mapped, mapped_column, validates
 from qbank.db import Base, Timestamps, UUIDPk
 
 
+def normalize_email(value: str) -> str:
+    return value.strip().lower()
+
+
 class Role(StrEnum):
     admin = "admin"
     editor = "editor"
@@ -42,7 +46,7 @@ class User(ModelBase):
 
     @validates("email")
     def normalize_email(self, key: str, value: str) -> str:
-        return value.strip().lower()
+        return normalize_email(value)
 
 
 class Subject(ModelBase):

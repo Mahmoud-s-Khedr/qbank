@@ -1,14 +1,15 @@
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
-from uuid import uuid4
+from typing import cast
+from uuid import UUID, uuid4
 
 import jwt
 import pytest
 from argon2 import PasswordHasher
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
-from sqlalchemy import create_engine, select
+from sqlalchemy import create_engine, event, select
 from sqlalchemy.orm import Session
 
 from qbank.auth import hasher
@@ -16,6 +17,8 @@ from qbank.cli import seed_dev
 from qbank.config import Settings, get_settings
 from qbank.db import get_db
 from qbank.models import Organization, Role, User
+from qbank.services import auth
+from qbank.services.taxonomy import tree
 
 
 @pytest.fixture
@@ -283,3 +286,71 @@ def test_login_rehashes_password(
         assert user.password_hash != old_hash
         assert not hasher.check_needs_rehash(user.password_hash)
     engine.dispose()
+
+
+@pytest.mark.integration
+def test_created_email_is_normalized_and_can_login(
+    setup_core: dict[str, str], client: TestClient
+) -> None:
+    login(client, "a@example.com")
+    for email in ("bad", "a@", "@example.com", "x y@example.com"):
+        response = client.post(
+            "/api/v1/users",
+            json={"email": email, "name": "New", "password": "password", "role": "teacher"},
+        )
+        assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    response = client.post(
+        "/api/v1/users",
+        json={"email": "  Foo@X.com  ", "name": "New", "password": "password", "role": "teacher"},
+    )
+    assert response.status_code == HTTPStatus.CREATED
+    assert response.json()["email"] == "foo@x.com"
+    assert client.post("/api/v1/auth/logout").status_code == HTTPStatus.NO_CONTENT
+    login(client, "FOO@x.COM")
+    assert client.get("/api/v1/auth/me").json()["email"] == "foo@x.com"
+
+
+@pytest.mark.integration
+def test_unknown_user_performs_dummy_password_check(
+    setup_core: dict[str, str], client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    checked: list[str] = []
+    original = auth.verify_password
+
+    def verify(password: str, encoded: str) -> bool:
+        checked.append(encoded)
+        return original(password, encoded)
+
+    monkeypatch.setattr(auth, "verify_password", verify)
+    response = client.post(
+        "/api/v1/auth/login", json={"email": "missing@example.com", "password": "password"}
+    )
+    assert response.status_code == HTTPStatus.UNAUTHORIZED
+    assert checked == [auth.DUMMY_HASH]
+    assert not auth.hasher.check_needs_rehash(checked[0])
+
+
+@pytest.mark.integration
+def test_tree_query_count_is_constant(
+    setup_core: dict[str, str], database: str, client: TestClient
+) -> None:
+    login(client, "a@example.com")
+    sid = client.post("/api/v1/subjects", json={"name": "Tree", "language": "ar"}).json()["id"]
+    for i in range(4):
+        chapter = client.post(f"/api/v1/subjects/{sid}/chapters", json={"title": str(i)}).json()[
+            "id"
+        ]
+        client.post(f"/api/v1/chapters/{chapter}/lessons", json={"title": "L"})
+    engine = create_engine(database)
+    statements: list[str] = []
+
+    def count_queries(*args: object) -> None:
+        statements.append(str(args[2]))
+
+    event.listen(engine, "before_cursor_execute", count_queries)
+    with Session(engine) as db:
+        result = tree(UUID(sid), db, UUID(setup_core["org"]))
+        assert len(cast(list[object], result["chapters"])) == len(range(4))
+    event.remove(engine, "before_cursor_execute", count_queries)
+    engine.dispose()
+    assert len(statements) == len(("subject", "chapters", "lessons"))

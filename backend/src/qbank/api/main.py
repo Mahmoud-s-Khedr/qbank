@@ -2,33 +2,22 @@ import logging
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from importlib.metadata import version
-from secrets import compare_digest
-from typing import Annotated, Literal
 from uuid import uuid4
 
 import structlog
-from fastapi import Depends, FastAPI, Request
+from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from pydantic import BaseModel
-from sqlalchemy import text
-from sqlalchemy.exc import SQLAlchemyError
-from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException
 from starlette.responses import Response
 
-from qbank.api.routes import router
+from qbank.api.middleware import csrf_middleware
+from qbank.api.routers import auth, health, taxonomy, users
 from qbank.config import get_settings
-from qbank.db import get_db
+from qbank.services.errors import DomainError
 
 logger = structlog.get_logger()
-
-
-class Health(BaseModel):
-    status: Literal["ok"] = "ok"
-    version: str
-    db: Literal["ok", "down"]
 
 
 def problem(status: int, detail: str, code: str) -> JSONResponse:
@@ -63,7 +52,9 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    app.include_router(router)
+    for router in (auth.router, health.router, taxonomy.router, users.router):
+        app.include_router(router)
+    app.middleware("http")(csrf_middleware)
 
     @app.middleware("http")
     async def request_id(
@@ -71,18 +62,13 @@ def create_app() -> FastAPI:
     ) -> Response:
         # IDs are generated locally so untrusted headers cannot inject log content.
         request.state.request_id = str(uuid4())
-        if (
-            request.method in {"POST", "PUT", "PATCH", "DELETE"}
-            and request.url.path != "/api/v1/auth/login"
-            and "qbank_session" in request.cookies
-        ):
-            csrf = request.cookies.get("qbank_csrf", "")
-            header = request.headers.get("X-CSRF-Token", "")
-            if not csrf or not header or not compare_digest(csrf.encode(), header.encode()):
-                return problem(403, "CSRF validation failed", "csrf_failed")
         response = await call_next(request)
         response.headers["X-Request-ID"] = request.state.request_id
         return response
+
+    @app.exception_handler(DomainError)
+    async def domain_error(request: Request, exc: DomainError) -> JSONResponse:
+        return problem(exc.status, exc.code.replace("_", " "), exc.code)
 
     @app.exception_handler(HTTPException)
     async def http_error(request: Request, exc: HTTPException) -> JSONResponse:
@@ -98,15 +84,6 @@ def create_app() -> FastAPI:
     async def unexpected_error(request: Request, exc: Exception) -> JSONResponse:
         logger.exception("unhandled_exception", request_id=request.state.request_id)
         return problem(500, "Internal server error", "internal_error")
-
-    @app.get("/api/v1/health")
-    def health(db: Annotated[Session, Depends(get_db)]) -> Health:
-        try:
-            db.execute(text("SET LOCAL statement_timeout = '2s'"))
-            db.execute(text("SELECT 1"))
-        except SQLAlchemyError:
-            return Health(version=version("qbank"), db="down")
-        return Health(version=version("qbank"), db="ok")
 
     return app
 
