@@ -17,13 +17,22 @@ export class ApiError extends Error {
   readonly status: number;
   readonly code?: string | undefined;
   readonly detail?: string | undefined;
+  /** The full problem+json body, for extras such as `current` or `issues`. */
+  readonly body?: Record<string, unknown> | undefined;
 
-  constructor(status: number, message: string, code?: string, detail?: string) {
+  constructor(
+    status: number,
+    message: string,
+    code?: string,
+    detail?: string,
+    body?: Record<string, unknown>,
+  ) {
     super(message);
     this.name = "ApiError";
     this.status = status;
     this.code = code;
     this.detail = detail;
+    this.body = body;
   }
 }
 
@@ -35,7 +44,7 @@ export function extractApiError(status: number, errorBody: unknown): ApiError {
       typeof record.detail === "string" ? record.detail : undefined;
     const title = typeof record.title === "string" ? record.title : undefined;
     const message = detail ?? title ?? `Request failed (${String(status)})`;
-    return new ApiError(status, message, code, detail);
+    return new ApiError(status, message, code, detail, record);
   }
   return new ApiError(status, `Request failed (${String(status)})`);
 }
