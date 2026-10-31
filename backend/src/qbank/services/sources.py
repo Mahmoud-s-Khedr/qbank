@@ -180,7 +180,8 @@ def page(db: Session, org_id: UUID, source_id: UUID, number: int) -> SourcePage:
 
 def job(db: Session, org_id: UUID, job_id: UUID) -> Job:
     item = found(db.scalar(select(Job).where(Job.id == job_id, Job.org_id == org_id)))
-    item.progress = cast(dict[str, object], counts(db, item.ref_id))
+    if item.kind == "ingest":
+        item.progress = cast(dict[str, object], counts(db, item.ref_id))
     return item
 
 

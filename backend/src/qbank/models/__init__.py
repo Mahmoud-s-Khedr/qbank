@@ -214,7 +214,8 @@ class Question(ModelBase):
     )
     org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id"), index=True)
     subject_id: Mapped[UUID] = mapped_column(ForeignKey("subjects.id"), index=True)
-    source_id: Mapped[UUID] = mapped_column(
+    # Null for questions entered by hand (F5.4).
+    source_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("sources.id", ondelete="CASCADE"), index=True
     )
     chapter_id: Mapped[UUID | None] = mapped_column(ForeignKey("chapters.id"))
@@ -286,6 +287,20 @@ class Asset(ModelBase):
     region: Mapped[list[float]] = mapped_column(JSONB)
     width: Mapped[int] = mapped_column(Integer)
     height: Mapped[int] = mapped_column(Integer)
+
+
+class PageProposal(ModelBase):
+    """A re-extraction result awaiting review; it never touches live rows until accepted."""
+
+    __tablename__ = "page_proposals"
+    page_id: Mapped[UUID] = mapped_column(
+        ForeignKey("source_pages.id", ondelete="CASCADE"), index=True
+    )
+    extraction: Mapped[dict[str, object]] = mapped_column(JSONB)
+    model: Mapped[str] = mapped_column(String)
+    cost_usd: Mapped[Decimal] = mapped_column(Numeric(18, 9), server_default=text("0"))
+    created_by: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"))
+    status: Mapped[str] = mapped_column(String, server_default=text("'pending'"))
 
 
 class Exam(ModelBase):

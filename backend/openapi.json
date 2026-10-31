@@ -1,6 +1,103 @@
 {
   "components": {
     "schemas": {
+      "AcceptIn": {
+        "additionalProperties": false,
+        "properties": {
+          "number_labels": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number Labels"
+          }
+        },
+        "title": "AcceptIn",
+        "type": "object"
+      },
+      "AcceptOut": {
+        "properties": {
+          "applied": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Applied",
+            "type": "array"
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/ProposalOut"
+          },
+          "skipped": {
+            "items": {
+              "$ref": "#/components/schemas/SkippedItem"
+            },
+            "title": "Skipped",
+            "type": "array"
+          }
+        },
+        "required": [
+          "proposal",
+          "applied",
+          "skipped"
+        ],
+        "title": "AcceptOut",
+        "type": "object"
+      },
+      "AddedItem": {
+        "properties": {
+          "number_label": {
+            "title": "Number Label",
+            "type": "string"
+          },
+          "question": {
+            "additionalProperties": true,
+            "title": "Question",
+            "type": "object"
+          }
+        },
+        "required": [
+          "number_label",
+          "question"
+        ],
+        "title": "AddedItem",
+        "type": "object"
+      },
+      "Answer": {
+        "additionalProperties": false,
+        "properties": {
+          "labels": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Labels",
+            "type": "array"
+          },
+          "text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text"
+          }
+        },
+        "required": [
+          "labels",
+          "text"
+        ],
+        "title": "Answer",
+        "type": "object"
+      },
       "AnswerKey": {
         "properties": {
           "items": {
@@ -84,6 +181,96 @@
           "points"
         ],
         "title": "AnswerKeyEntry",
+        "type": "object"
+      },
+      "ApproveIn": {
+        "additionalProperties": false,
+        "properties": {
+          "force": {
+            "default": false,
+            "title": "Force",
+            "type": "boolean"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "title": "ApproveIn",
+        "type": "object"
+      },
+      "AssetOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "height": {
+            "title": "Height",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "pipeline_generated": {
+            "title": "Pipeline Generated",
+            "type": "boolean"
+          },
+          "region": {
+            "items": {
+              "type": "number"
+            },
+            "title": "Region",
+            "type": "array"
+          },
+          "source_page_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Page Id"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "width": {
+            "title": "Width",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "source_page_id",
+          "kind",
+          "region",
+          "width",
+          "height",
+          "pipeline_generated"
+        ],
+        "title": "AssetOut",
         "type": "object"
       },
       "Blueprint": {
@@ -303,6 +490,225 @@
         "title": "Body_upload_api_v1_sources_post",
         "type": "object"
       },
+      "BulkIn": {
+        "additionalProperties": false,
+        "properties": {
+          "action": {
+            "enum": [
+              "approve",
+              "reject",
+              "set_metadata"
+            ],
+            "title": "Action",
+            "type": "string"
+          },
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 500,
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          },
+          "metadata": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BulkMetadata"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          }
+        },
+        "required": [
+          "ids",
+          "action"
+        ],
+        "title": "BulkIn",
+        "type": "object"
+      },
+      "BulkMetadata": {
+        "additionalProperties": false,
+        "properties": {
+          "chapter_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Id"
+          },
+          "difficulty": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty"
+          },
+          "lesson_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lesson Id"
+          },
+          "tags_add": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags Add",
+            "type": "array"
+          },
+          "tags_remove": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags Remove",
+            "type": "array"
+          }
+        },
+        "title": "BulkMetadata",
+        "type": "object"
+      },
+      "BulkOut": {
+        "properties": {
+          "failed": {
+            "title": "Failed",
+            "type": "integer"
+          },
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/BulkResult"
+            },
+            "title": "Results",
+            "type": "array"
+          },
+          "succeeded": {
+            "title": "Succeeded",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "results",
+          "succeeded",
+          "failed"
+        ],
+        "title": "BulkOut",
+        "type": "object"
+      },
+      "BulkResult": {
+        "properties": {
+          "code": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Code"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "ok": {
+            "title": "Ok",
+            "type": "boolean"
+          },
+          "status": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "required": [
+          "id",
+          "ok"
+        ],
+        "title": "BulkResult",
+        "type": "object"
+      },
+      "ChangedItem": {
+        "properties": {
+          "fields": {
+            "additionalProperties": {
+              "$ref": "#/components/schemas/FieldChange"
+            },
+            "title": "Fields",
+            "type": "object"
+          },
+          "number_label": {
+            "title": "Number Label",
+            "type": "string"
+          },
+          "question_id": {
+            "format": "uuid",
+            "title": "Question Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "number_label",
+          "question_id",
+          "status",
+          "fields"
+        ],
+        "title": "ChangedItem",
+        "type": "object"
+      },
       "ChapterOut": {
         "properties": {
           "created_at": {
@@ -393,6 +799,193 @@
           "lessons"
         ],
         "title": "ChapterTree",
+        "type": "object"
+      },
+      "Choice": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "label",
+          "content"
+        ],
+        "title": "Choice",
+        "type": "object"
+      },
+      "ChoiceIn": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "is_correct": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Is Correct"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "pinned": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pinned"
+          }
+        },
+        "required": [
+          "label",
+          "content"
+        ],
+        "title": "ChoiceIn",
+        "type": "object"
+      },
+      "ChoiceSplit": {
+        "additionalProperties": false,
+        "properties": {
+          "choice_index": {
+            "minimum": 0.0,
+            "title": "Choice Index",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "choice_index"
+        ],
+        "title": "ChoiceSplit",
+        "type": "object"
+      },
+      "DraftQuestion": {
+        "additionalProperties": false,
+        "description": "An extracted question, not yet persisted; confirm it with POST /questions.",
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/Answer"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "box_2d": {
+            "maxItems": 4,
+            "minItems": 4,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Box 2D",
+            "type": "array"
+          },
+          "choices": {
+            "items": {
+              "$ref": "#/components/schemas/Choice"
+            },
+            "title": "Choices",
+            "type": "array"
+          },
+          "confidence": {
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence",
+            "type": "number"
+          },
+          "continues_from_previous": {
+            "title": "Continues From Previous",
+            "type": "boolean"
+          },
+          "continues_on_next": {
+            "title": "Continues On Next",
+            "type": "boolean"
+          },
+          "figures": {
+            "items": {
+              "$ref": "#/components/schemas/Figure"
+            },
+            "title": "Figures",
+            "type": "array"
+          },
+          "number_label": {
+            "title": "Number Label",
+            "type": "string"
+          },
+          "stem": {
+            "title": "Stem",
+            "type": "string"
+          },
+          "stimulus_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stimulus Ref"
+          },
+          "type": {
+            "enum": [
+              "mcq_single",
+              "mcq_multi",
+              "true_false",
+              "fill_blank",
+              "short_answer",
+              "essay",
+              "matching",
+              "ordering"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "number_label",
+          "type",
+          "stem",
+          "choices",
+          "answer",
+          "stimulus_ref",
+          "figures",
+          "box_2d",
+          "continues_from_previous",
+          "continues_on_next",
+          "confidence"
+        ],
+        "title": "DraftQuestion",
         "type": "object"
       },
       "ExamDetail": {
@@ -910,6 +1503,118 @@
         "title": "ExportsIn",
         "type": "object"
       },
+      "ExtractRegionIn": {
+        "additionalProperties": false,
+        "properties": {
+          "box": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "title": "Box",
+            "type": "array"
+          },
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          }
+        },
+        "required": [
+          "box"
+        ],
+        "title": "ExtractRegionIn",
+        "type": "object"
+      },
+      "FieldChange": {
+        "properties": {
+          "after": {
+            "title": "After"
+          },
+          "before": {
+            "title": "Before"
+          }
+        },
+        "required": [
+          "before",
+          "after"
+        ],
+        "title": "FieldChange",
+        "type": "object"
+      },
+      "Figure": {
+        "additionalProperties": false,
+        "properties": {
+          "box_2d": {
+            "maxItems": 4,
+            "minItems": 4,
+            "prefixItems": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              },
+              {
+                "type": "integer"
+              }
+            ],
+            "title": "Box 2D",
+            "type": "array"
+          },
+          "kind": {
+            "enum": [
+              "diagram",
+              "chart",
+              "table",
+              "photo"
+            ],
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "box_2d",
+          "kind"
+        ],
+        "title": "Figure",
+        "type": "object"
+      },
+      "FigureIn": {
+        "additionalProperties": false,
+        "properties": {
+          "box": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "title": "Box",
+            "type": "array"
+          },
+          "page_id": {
+            "format": "uuid",
+            "title": "Page Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "box",
+          "page_id"
+        ],
+        "title": "FigureIn",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -1244,6 +1949,26 @@
           "password"
         ],
         "title": "Login",
+        "type": "object"
+      },
+      "MergeIn": {
+        "additionalProperties": false,
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "maxItems": 2,
+            "minItems": 2,
+            "title": "Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "MergeIn",
         "type": "object"
       },
       "PageDetail": {
@@ -1612,6 +2337,139 @@
         "title": "Page[UserOut]",
         "type": "object"
       },
+      "ProposalDetail": {
+        "properties": {
+          "diff": {
+            "$ref": "#/components/schemas/ProposalDiff"
+          },
+          "proposal": {
+            "$ref": "#/components/schemas/ProposalOut"
+          }
+        },
+        "required": [
+          "proposal",
+          "diff"
+        ],
+        "title": "ProposalDetail",
+        "type": "object"
+      },
+      "ProposalDiff": {
+        "properties": {
+          "added": {
+            "items": {
+              "$ref": "#/components/schemas/AddedItem"
+            },
+            "title": "Added",
+            "type": "array"
+          },
+          "changed": {
+            "items": {
+              "$ref": "#/components/schemas/ChangedItem"
+            },
+            "title": "Changed",
+            "type": "array"
+          },
+          "removed": {
+            "items": {
+              "$ref": "#/components/schemas/RemovedItem"
+            },
+            "title": "Removed",
+            "type": "array"
+          },
+          "unchanged": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Unchanged",
+            "type": "array"
+          }
+        },
+        "required": [
+          "changed",
+          "added",
+          "removed",
+          "unchanged"
+        ],
+        "title": "ProposalDiff",
+        "type": "object"
+      },
+      "ProposalOut": {
+        "properties": {
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "extraction": {
+            "additionalProperties": true,
+            "title": "Extraction",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "page_id": {
+            "format": "uuid",
+            "title": "Page Id",
+            "type": "string"
+          },
+          "page_number": {
+            "title": "Page Number",
+            "type": "integer"
+          },
+          "source_id": {
+            "format": "uuid",
+            "title": "Source Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "page_id",
+          "source_id",
+          "page_number",
+          "model",
+          "cost_usd",
+          "created_by",
+          "status",
+          "extraction"
+        ],
+        "title": "ProposalOut",
+        "type": "object"
+      },
       "QuestionContent": {
         "properties": {
           "answer": {
@@ -1707,6 +2565,175 @@
         "title": "QuestionContent",
         "type": "object"
       },
+      "QuestionCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          },
+          "chapter_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Id"
+          },
+          "choices": {
+            "items": {
+              "$ref": "#/components/schemas/ChoiceIn"
+            },
+            "title": "Choices",
+            "type": "array"
+          },
+          "difficulty": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation"
+          },
+          "lesson_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lesson Id"
+          },
+          "number_label": {
+            "default": "",
+            "title": "Number Label",
+            "type": "string"
+          },
+          "stem": {
+            "title": "Stem",
+            "type": "string"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "type": {
+            "enum": [
+              "mcq_single",
+              "mcq_multi",
+              "true_false",
+              "fill_blank",
+              "short_answer",
+              "essay",
+              "matching",
+              "ordering"
+            ],
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "subject_id",
+          "type",
+          "stem"
+        ],
+        "title": "QuestionCreate",
+        "type": "object"
+      },
+      "QuestionEventOut": {
+        "properties": {
+          "action": {
+            "title": "Action",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "diff": {
+            "additionalProperties": true,
+            "title": "Diff",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "question_id": {
+            "format": "uuid",
+            "title": "Question Id",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "user_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "User Id"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "question_id",
+          "user_id",
+          "action",
+          "diff"
+        ],
+        "title": "QuestionEventOut",
+        "type": "object"
+      },
       "QuestionOut": {
         "properties": {
           "answer": {
@@ -1719,6 +2746,18 @@
               }
             ],
             "title": "Answer"
+          },
+          "chapter_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Id"
           },
           "choices": {
             "items": {
@@ -1759,6 +2798,17 @@
             ],
             "title": "Difficulty Reason"
           },
+          "difficulty_source": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty Source"
+          },
           "duplicate_of_id": {
             "anyOf": [
               {
@@ -1770,6 +2820,17 @@
               }
             ],
             "title": "Duplicate Of Id"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation"
           },
           "id": {
             "format": "uuid",
@@ -1785,6 +2846,18 @@
           },
           "language": {
             "$ref": "#/components/schemas/Language"
+          },
+          "lesson_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lesson Id"
           },
           "number_label": {
             "title": "Number Label",
@@ -1803,9 +2876,16 @@
             "type": "array"
           },
           "source_id": {
-            "format": "uuid",
-            "title": "Source Id",
-            "type": "string"
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
           },
           "status": {
             "title": "Status",
@@ -1858,6 +2938,10 @@
             "format": "date-time",
             "title": "Updated At",
             "type": "string"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
           }
         },
         "required": [
@@ -1866,6 +2950,11 @@
           "updated_at",
           "subject_id",
           "source_id",
+          "chapter_id",
+          "lesson_id",
+          "explanation",
+          "difficulty_source",
+          "version",
           "stimulus_id",
           "stimulus_position",
           "position",
@@ -1885,6 +2974,395 @@
           "issues"
         ],
         "title": "QuestionOut",
+        "type": "object"
+      },
+      "QuestionPatch": {
+        "additionalProperties": false,
+        "description": "Partial update; only the fields present in the body change.",
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          },
+          "chapter_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Id"
+          },
+          "choices": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/ChoiceIn"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Choices"
+          },
+          "difficulty": {
+            "anyOf": [
+              {
+                "maximum": 5.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty"
+          },
+          "explanation": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Explanation"
+          },
+          "lesson_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lesson Id"
+          },
+          "number_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number Label"
+          },
+          "regions": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Regions"
+          },
+          "stem": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stem"
+          },
+          "stimulus_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stimulus Id"
+          },
+          "stimulus_position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stimulus Position"
+          },
+          "tags": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tags"
+          },
+          "type": {
+            "anyOf": [
+              {
+                "enum": [
+                  "mcq_single",
+                  "mcq_multi",
+                  "true_false",
+                  "fill_blank",
+                  "short_answer",
+                  "essay",
+                  "matching",
+                  "ordering"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Type"
+          },
+          "version": {
+            "title": "Version",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "version"
+        ],
+        "title": "QuestionPatch",
+        "type": "object"
+      },
+      "QueueItem": {
+        "properties": {
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "issues": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Issues",
+            "type": "object"
+          },
+          "number_label": {
+            "title": "Number Label",
+            "type": "string"
+          },
+          "page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Page"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number_label",
+          "position",
+          "page",
+          "status",
+          "confidence",
+          "issues"
+        ],
+        "title": "QueueItem",
+        "type": "object"
+      },
+      "QueueTotals": {
+        "properties": {
+          "by_severity": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "By Severity",
+            "type": "object"
+          },
+          "by_status": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "By Status",
+            "type": "object"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "count",
+          "by_status",
+          "by_severity"
+        ],
+        "title": "QueueTotals",
+        "type": "object"
+      },
+      "ReextractIn": {
+        "additionalProperties": false,
+        "properties": {
+          "model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Model"
+          }
+        },
+        "title": "ReextractIn",
+        "type": "object"
+      },
+      "ReextractOut": {
+        "properties": {
+          "job_id": {
+            "format": "uuid",
+            "title": "Job Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "job_id"
+        ],
+        "title": "ReextractOut",
+        "type": "object"
+      },
+      "Region": {
+        "additionalProperties": false,
+        "description": "A normalized x0,y0,x1,y1 box (fractions of the page).",
+        "properties": {
+          "box": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "title": "Box",
+            "type": "array"
+          }
+        },
+        "required": [
+          "box"
+        ],
+        "title": "Region",
+        "type": "object"
+      },
+      "RejectIn": {
+        "additionalProperties": false,
+        "properties": {
+          "reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Reason"
+          },
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "title": "RejectIn",
+        "type": "object"
+      },
+      "RemovedItem": {
+        "properties": {
+          "number_label": {
+            "title": "Number Label",
+            "type": "string"
+          },
+          "question_id": {
+            "format": "uuid",
+            "title": "Question Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          }
+        },
+        "required": [
+          "number_label",
+          "question_id",
+          "status"
+        ],
+        "title": "RemovedItem",
+        "type": "object"
+      },
+      "ReopenIn": {
+        "additionalProperties": false,
+        "properties": {
+          "version": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Version"
+          }
+        },
+        "title": "ReopenIn",
         "type": "object"
       },
       "Reorder": {
@@ -1942,6 +3420,26 @@
           "ids"
         ],
         "title": "ReorderSections",
+        "type": "object"
+      },
+      "ReviewQueue": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/QueueItem"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "totals": {
+            "$ref": "#/components/schemas/QueueTotals"
+          }
+        },
+        "required": [
+          "items",
+          "totals"
+        ],
+        "title": "ReviewQueue",
         "type": "object"
       },
       "Role": {
@@ -2049,6 +3547,24 @@
           }
         },
         "title": "SectionUpdate",
+        "type": "object"
+      },
+      "SkippedItem": {
+        "properties": {
+          "number_label": {
+            "title": "Number Label",
+            "type": "string"
+          },
+          "reason": {
+            "title": "Reason",
+            "type": "string"
+          }
+        },
+        "required": [
+          "number_label",
+          "reason"
+        ],
+        "title": "SkippedItem",
         "type": "object"
       },
       "SourceDetail": {
@@ -2308,6 +3824,75 @@
         "title": "SourceSummary",
         "type": "object"
       },
+      "SplitIn": {
+        "additionalProperties": false,
+        "properties": {
+          "at": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/StemSplit"
+              },
+              {
+                "$ref": "#/components/schemas/ChoiceSplit"
+              }
+            ],
+            "title": "At"
+          },
+          "number_label": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Number Label"
+          }
+        },
+        "required": [
+          "at"
+        ],
+        "title": "SplitIn",
+        "type": "object"
+      },
+      "SplitOut": {
+        "properties": {
+          "first": {
+            "$ref": "#/components/schemas/QuestionOut"
+          },
+          "second": {
+            "$ref": "#/components/schemas/QuestionOut"
+          }
+        },
+        "required": [
+          "first",
+          "second"
+        ],
+        "title": "SplitOut",
+        "type": "object"
+      },
+      "StemSplit": {
+        "additionalProperties": false,
+        "properties": {
+          "field": {
+            "const": "stem",
+            "title": "Field",
+            "type": "string"
+          },
+          "offset": {
+            "minimum": 0.0,
+            "title": "Offset",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "field",
+          "offset"
+        ],
+        "title": "StemSplit",
+        "type": "object"
+      },
       "StimulusContent": {
         "properties": {
           "content": {
@@ -2332,6 +3917,65 @@
         "title": "StimulusContent",
         "type": "object"
       },
+      "StimulusCreate": {
+        "additionalProperties": false,
+        "properties": {
+          "box": {
+            "items": {
+              "type": "number"
+            },
+            "maxItems": 4,
+            "minItems": 4,
+            "title": "Box",
+            "type": "array"
+          },
+          "content": {
+            "default": "",
+            "title": "Content",
+            "type": "string"
+          },
+          "intro": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intro"
+          },
+          "kind": {
+            "enum": [
+              "passage",
+              "poem",
+              "figure",
+              "table",
+              "case"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "page_id": {
+            "format": "uuid",
+            "title": "Page Id",
+            "type": "string"
+          },
+          "source_id": {
+            "format": "uuid",
+            "title": "Source Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "box",
+          "source_id",
+          "page_id",
+          "kind"
+        ],
+        "title": "StimulusCreate",
+        "type": "object"
+      },
       "StimulusOut": {
         "properties": {
           "content": {
@@ -2351,6 +3995,11 @@
           "kind": {
             "title": "Kind",
             "type": "string"
+          },
+          "metadata": {
+            "additionalProperties": true,
+            "title": "Metadata",
+            "type": "object"
           },
           "regions": {
             "items": {
@@ -2383,9 +4032,50 @@
           "kind",
           "content",
           "regions",
-          "status"
+          "status",
+          "metadata"
         ],
         "title": "StimulusOut",
+        "type": "object"
+      },
+      "StimulusPatch": {
+        "additionalProperties": false,
+        "properties": {
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content"
+          },
+          "intro": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Intro"
+          },
+          "kind": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Kind"
+          }
+        },
+        "title": "StimulusPatch",
         "type": "object"
       },
       "SubjectIn": {
@@ -3156,6 +4846,59 @@
           }
         },
         "summary": "Asset Image"
+      }
+    },
+    "/api/v1/assets/{id}/region": {
+      "put": {
+        "operationId": "recrop_api_v1_assets__id__region_put",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Region"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Recrop",
+        "tags": [
+          "review"
+        ]
       }
     },
     "/api/v1/auth/login": {
@@ -4779,6 +6522,92 @@
         "summary": "Health"
       }
     },
+    "/api/v1/issues/{id}/resolve": {
+      "post": {
+        "operationId": "resolve_issue_api_v1_issues__id__resolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationIssueOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resolve Issue",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/issues/{id}/unresolve": {
+      "post": {
+        "operationId": "unresolve_issue_api_v1_issues__id__unresolve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidationIssueOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Unresolve Issue",
+        "tags": [
+          "review"
+        ]
+      }
+    },
     "/api/v1/jobs/{id}": {
       "get": {
         "operationId": "job_api_v1_jobs__id__get",
@@ -4900,7 +6729,310 @@
         "summary": "Edit Lesson"
       }
     },
+    "/api/v1/page-proposals/{id}": {
+      "get": {
+        "operationId": "proposal_detail_api_v1_page_proposals__id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Proposal Detail",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/page-proposals/{id}/accept": {
+      "post": {
+        "operationId": "accept_proposal_api_v1_page_proposals__id__accept_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/AcceptIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Data"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AcceptOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Accept Proposal",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/page-proposals/{id}/discard": {
+      "post": {
+        "operationId": "discard_proposal_api_v1_page_proposals__id__discard_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProposalOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Discard Proposal",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/questions": {
+      "post": {
+        "operationId": "create_question_api_v1_questions_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Question",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/questions/bulk": {
+      "post": {
+        "operationId": "bulk_api_v1_questions_bulk_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BulkIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BulkOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Bulk",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/questions/merge": {
+      "post": {
+        "operationId": "merge_api_v1_questions_merge_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MergeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Merge",
+        "tags": [
+          "review"
+        ]
+      }
+    },
     "/api/v1/questions/{id}": {
+      "delete": {
+        "operationId": "delete_question_api_v1_questions__id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Question",
+        "tags": [
+          "review"
+        ]
+      },
       "get": {
         "operationId": "question_api_v1_questions__id__get",
         "parameters": [
@@ -4938,6 +7070,448 @@
           }
         },
         "summary": "Question"
+      },
+      "patch": {
+        "operationId": "patch_question_api_v1_questions__id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "version_conflict (body carries `current`) or invalid state"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Question",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/questions/{id}/approve": {
+      "post": {
+        "operationId": "approve_api_v1_questions__id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ApproveIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Data"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "version_conflict (body carries `current`) or invalid state"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/questions/{id}/figures": {
+      "post": {
+        "operationId": "add_figure_api_v1_questions__id__figures_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FigureIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AssetOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Figure",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/questions/{id}/figures/{asset_id}": {
+      "delete": {
+        "operationId": "delete_figure_api_v1_questions__id__figures__asset_id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "asset_id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Asset Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Figure",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/questions/{id}/history": {
+      "get": {
+        "operationId": "history_api_v1_questions__id__history_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/QuestionEventOut"
+                  },
+                  "title": "Response History Api V1 Questions  Id  History Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "History",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/questions/{id}/reject": {
+      "post": {
+        "operationId": "reject_api_v1_questions__id__reject_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/RejectIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Data"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "version_conflict (body carries `current`) or invalid state"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reject",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/questions/{id}/reopen": {
+      "post": {
+        "operationId": "reopen_api_v1_questions__id__reopen_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ReopenIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Data"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "409": {
+            "description": "version_conflict (body carries `current`) or invalid state"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reopen",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/questions/{id}/split": {
+      "post": {
+        "operationId": "split_api_v1_questions__id__split_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SplitIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SplitOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Split",
+        "tags": [
+          "review"
+        ]
       }
     },
     "/api/v1/sources": {
@@ -5269,6 +7843,68 @@
         "summary": "Page Detail"
       }
     },
+    "/api/v1/sources/{id}/pages/{number}/extract-region": {
+      "post": {
+        "operationId": "extract_region_api_v1_sources__id__pages__number__extract_region_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "number",
+            "required": true,
+            "schema": {
+              "title": "Number",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtractRegionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DraftQuestion"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Extract Region",
+        "tags": [
+          "review"
+        ]
+      }
+    },
     "/api/v1/sources/{id}/pages/{number}/image": {
       "get": {
         "operationId": "image_api_v1_sources__id__pages__number__image_get",
@@ -5344,6 +7980,75 @@
           }
         },
         "summary": "Image"
+      }
+    },
+    "/api/v1/sources/{id}/pages/{number}/reextract": {
+      "post": {
+        "operationId": "reextract_api_v1_sources__id__pages__number__reextract_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "number",
+            "required": true,
+            "schema": {
+              "title": "Number",
+              "type": "integer"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/ReextractIn"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ],
+                "title": "Data"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReextractOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reextract",
+        "tags": [
+          "review"
+        ]
       }
     },
     "/api/v1/sources/{id}/questions": {
@@ -5430,6 +8135,117 @@
         "summary": "Resume"
       }
     },
+    "/api/v1/sources/{id}/review-queue": {
+      "get": {
+        "operationId": "review_queue_api_v1_sources__id__review_queue_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "severity",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "error",
+                    "warning"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Severity"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Page"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "default": "page",
+              "enum": [
+                "page",
+                "severity",
+                "confidence"
+              ],
+              "title": "Sort",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ReviewQueue"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Review Queue",
+        "tags": [
+          "review"
+        ]
+      }
+    },
     "/api/v1/sources/{id}/stimuli": {
       "get": {
         "operationId": "stimuli_api_v1_sources__id__stimuli_get",
@@ -5512,6 +8328,220 @@
           }
         },
         "summary": "Summary"
+      }
+    },
+    "/api/v1/stimuli": {
+      "post": {
+        "operationId": "create_stimulus_api_v1_stimuli_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StimulusCreate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StimulusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Stimulus",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/stimuli/{id}": {
+      "delete": {
+        "operationId": "delete_stimulus_api_v1_stimuli__id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Stimulus",
+        "tags": [
+          "review"
+        ]
+      },
+      "patch": {
+        "operationId": "patch_stimulus_api_v1_stimuli__id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StimulusPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StimulusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Patch Stimulus",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/stimuli/{id}/approve": {
+      "post": {
+        "operationId": "approve_stimulus_api_v1_stimuli__id__approve_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StimulusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Approve Stimulus",
+        "tags": [
+          "review"
+        ]
+      }
+    },
+    "/api/v1/stimuli/{id}/reject": {
+      "post": {
+        "operationId": "reject_stimulus_api_v1_stimuli__id__reject_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StimulusOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reject Stimulus",
+        "tags": [
+          "review"
+        ]
       }
     },
     "/api/v1/subjects": {

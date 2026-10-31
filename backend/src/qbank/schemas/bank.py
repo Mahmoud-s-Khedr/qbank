@@ -1,6 +1,8 @@
 from datetime import datetime
 from uuid import UUID
 
+from pydantic import Field
+
 from qbank.models import Language
 from qbank.schemas.common import Output
 
@@ -16,7 +18,12 @@ class ValidationIssueOut(Output):
 
 class QuestionOut(Output):
     subject_id: UUID
-    source_id: UUID
+    source_id: UUID | None
+    chapter_id: UUID | None
+    lesson_id: UUID | None
+    explanation: str | None
+    difficulty_source: str | None
+    version: int
     stimulus_id: UUID | None
     stimulus_position: int | None
     position: int
@@ -42,3 +49,4 @@ class StimulusOut(Output):
     content: str
     regions: list[dict[str, object]]
     status: str
+    metadata: dict[str, object] = Field(validation_alias="metadata_json")
