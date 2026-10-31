@@ -30,7 +30,7 @@ Detailed task files (`docs/tasks/Txx-*.md`) are written just before dispatch, so
 | T20 | 5 | Exam builder UI (blueprint, manual cart, AI assistant, sections, versions) | cc-sonnet | sonnet 5.5 | T18,T19 | in progress |
 | T21 | 6 | PDF export: HTML templates, fonts, KaTeX, layout options, answer key, bubble sheet | cc-sonnet | sonnet 5.5 | T18 | done |
 | T22 | 6 | DOCX export via Pandoc + reference.docx (RTL, OMML) | cc-sonnet | sonnet 5.5 | T21 | done |
-| T23 | 6 | Export/preview UI, exam templates, admin settings (users, models, spend cap), cost dashboard | cx | terra / medium | T21,T22 | in progress |
+| T23 | 6 | Export/preview UI, exam templates, admin settings (users, models, spend cap), cost dashboard | cx | terra / medium | T21,T22 | done |
 | T24 | 7 | E2E: Playwright full flow on fixtures in CI with recorded LLM | cx | terra / medium | T15,T20,T23 | todo |
 | T25 | 7 | Hardening: security review, rate limits, logging, prod compose + Caddy, README/deploy docs | cx + cc | terra / medium | T24 | todo |
 
@@ -61,3 +61,4 @@ cc: T00, T03 review, every merge, T10 decision, integration fixes, final accepta
 | 2026-10-31 | T19 | codex medium | 5h →8%, weekly 55→56% |
 | 2026-10-31 | T09 | codex medium | — |
 | 2026-10-31 | T15 | cc-sonnet 5.5 sub-agent | ~255k subagent tokens; cc added 3 backend endpoints it needed |
+| 2026-10-31 | T23 (+1 continue round) | codex medium | weekly 56→~60% |
