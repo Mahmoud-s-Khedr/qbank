@@ -1,6 +1,6 @@
 # T12 — Review APIs: edit, audit log, split/merge, re-crop, re-extract with diff, bulk approve
 
-**Owner:** Codex (medium) · **Branch:** `task/T12` · **Refs:** SPEC F4, F5.3, F5.4 · ARCHITECTURE §2 (API conventions), §3 · AGENTS.md
+**Owner:** Claude Code sub-agent (Sonnet 5.5) · **Branch:** `task/T12` · **Refs:** SPEC F4, F5.3, F5.4 · ARCHITECTURE §2 (API conventions), §3 · AGENTS.md
 
 ## Goal
 Everything the review screen (T15) needs on the server: reviewers fix extraction mistakes, then approve or reject. Every change is audited.
@@ -9,6 +9,7 @@ Everything the review screen (T15) needs on the server: reviewers fix extraction
 `backend/**`. Build on: `models/` (`Question`, `Stimulus`, `Asset`, `ValidationIssue`, `QuestionEvent` from T11), `pipeline/validate.py`
 (re-validate after edits), `pipeline/materialize.py` (`crop`, `normalize_blanks`, `pinned`), `pipeline/extract.py` (`extract_page`),
 `services/sources.py`, `api/routers/sources.py` (style). **No live LLM calls in tests.**
+**Migrations:** use `down_revision` = the current head (`uv run --directory backend alembic heads`) and name the file `t12_review.py`. Another task is adding a migration in parallel, and the orchestrator re-parents at merge.
 
 ## Requirements (editor/admin for writes; teachers have read access only to `approved` questions)
 ### Questions
