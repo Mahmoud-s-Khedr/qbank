@@ -118,8 +118,7 @@ jobs:
       - uses: actions/setup-node@v7
         with:
           node-version-file: .node-version
-          cache: pnpm
-          cache-dependency-path: frontend/pnpm-lock.yaml
+          # No cache here: this job never installs packages, so there is no store to save.
       - run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:$PWD" -v "$(git rev-parse --path-format=absolute --git-common-dir):$(git rev-parse --path-format=absolute --git-common-dir):ro" -w "$PWD" zricethezav/gitleaks git --verbose --redact
       - run: uv export --directory backend --frozen --no-dev --no-hashes --no-emit-project | uvx pip-audit -r /dev/stdin --strict
       - run: pnpm -C frontend audit --prod --audit-level high
