@@ -16,7 +16,7 @@ from sqlalchemy.orm import Session
 from qbank.auth import hasher
 from qbank.cli import seed_dev
 from qbank.config import Settings, get_settings
-from qbank.db import get_db, get_engine
+from qbank.db import get_db, reset_engine
 from qbank.models import Organization, PageStatus, Role, SourceStatus, User
 from qbank.pipeline import orchestrator
 from qbank.services import auth
@@ -374,7 +374,7 @@ def test_upload_render_and_images(
     monkeypatch.setenv("QBANK_RENDER_DPI_HIRES", "36")
     get_settings.cache_clear()
     get_store.cache_clear()
-    get_engine.cache_clear()
+    reset_engine()
     queued: list[str] = []
     monkeypatch.setattr(
         orchestrator,
@@ -437,7 +437,7 @@ def test_upload_render_and_images(
     assert client.delete(f"/api/v1/sources/{sid}").status_code == HTTPStatus.NO_CONTENT
     assert client.get(f"/api/v1/sources/{sid}").status_code == HTTPStatus.NOT_FOUND
     assert not list(Path(str(tmp_path)).rglob("*.pdf"))
-    get_engine.cache_clear()
+    reset_engine()
     get_store.cache_clear()
     get_settings.cache_clear()
 
@@ -489,7 +489,7 @@ def test_damaged_pdf_render(
     monkeypatch.setenv("QBANK_RENDER_DPI_HIRES", "12")
     get_settings.cache_clear()
     get_store.cache_clear()
-    get_engine.cache_clear()
+    reset_engine()
     monkeypatch.setattr(
         orchestrator,
         "STAGES",
@@ -520,7 +520,7 @@ def test_damaged_pdf_render(
     assert all(page["status"] == "rendered" for page in result[:60])
     assert all(page["status"] == "failed" and page["error"] for page in result[60:])
     assert client.get(f"/api/v1/sources/{sid}").json()["status"] == "ready"
-    get_engine.cache_clear()
+    reset_engine()
     get_store.cache_clear()
     get_settings.cache_clear()
 
@@ -535,7 +535,7 @@ def test_stage_transition_compare_and_set(
     monkeypatch.setenv("QBANK_STORAGE_LOCAL_ROOT", str(tmp_path))
     get_settings.cache_clear()
     get_store.cache_clear()
-    get_engine.cache_clear()
+    reset_engine()
     monkeypatch.setattr(
         orchestrator,
         "STAGES",
@@ -556,7 +556,7 @@ def test_stage_transition_compare_and_set(
     with ThreadPoolExecutor(max_workers=2) as pool:
         results = list(pool.map(lambda _: orchestrator.advance(sid, "render"), range(2)))
     assert sorted(results) == [False, True]
-    get_engine.cache_clear()
+    reset_engine()
     get_store.cache_clear()
     get_settings.cache_clear()
 
@@ -574,7 +574,7 @@ def test_source_exceeding_page_limit_fails(
     monkeypatch.setenv("QBANK_MAX_PAGES", "1")
     get_settings.cache_clear()
     get_store.cache_clear()
-    get_engine.cache_clear()
+    reset_engine()
     monkeypatch.setattr(
         orchestrator,
         "STAGES",
@@ -600,7 +600,7 @@ def test_source_exceeding_page_limit_fails(
     assert source["status"] == "failed"
     assert source["error"] == "too_many_pages"
     assert client.get(f"/api/v1/jobs/{job_id}").json()["status"] == "failed"
-    get_engine.cache_clear()
+    reset_engine()
     get_store.cache_clear()
     get_settings.cache_clear()
 
@@ -618,7 +618,7 @@ def test_generated_damaged_pdf_isolates_page_failure(
     monkeypatch.setenv("QBANK_RENDER_BATCH_SIZE", "2")
     get_settings.cache_clear()
     get_store.cache_clear()
-    get_engine.cache_clear()
+    reset_engine()
     monkeypatch.setattr(
         orchestrator,
         "STAGES",
@@ -659,7 +659,7 @@ def test_generated_damaged_pdf_isolates_page_failure(
     assert [page["status"] for page in pages] == ["rendered", "rendered", "failed"]
     assert pages[2]["error"]
     assert client.get(f"/api/v1/sources/{sid}").json()["status"] == "ready"
-    get_engine.cache_clear()
+    reset_engine()
     get_store.cache_clear()
     get_settings.cache_clear()
 
@@ -683,7 +683,7 @@ def test_storage_retry_exhaustion_fails_remaining_pages(  # noqa: PLR0915 -- ful
     monkeypatch.setenv("QBANK_RENDER_DPI_HIRES", "12")
     get_settings.cache_clear()
     get_store.cache_clear()
-    get_engine.cache_clear()
+    reset_engine()
     monkeypatch.setattr(
         orchestrator,
         "STAGES",
@@ -741,6 +741,6 @@ def test_storage_retry_exhaustion_fails_remaining_pages(  # noqa: PLR0915 -- ful
         assert all("disk unavailable" in page["error"] for page in pages)
     finally:
         worker.stop()
-        get_engine.cache_clear()
+        reset_engine()
         get_store.cache_clear()
         get_settings.cache_clear()

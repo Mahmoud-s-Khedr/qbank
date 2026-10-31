@@ -1,3 +1,6 @@
+WORKER_PROCESSES ?= 4
+WORKER_THREADS ?= 4
+
 .PHONY: infra-up infra-down be-install be-lint be-fmt be-types be-test be-test-unit be-migrate be-openapi fe-install fe-lint fe-types fe-test fe-build api-gen contract-check lint-actions pre-commit-install check be-dev be-worker
 infra-up:
 	docker compose up -d --wait postgres redis minio

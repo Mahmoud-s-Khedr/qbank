@@ -17,6 +17,7 @@ os.environ["QBANK_JWT_SECRET"] = "test-only-secret-at-least-32-bytes-long"  # no
 
 from qbank.api.main import create_app
 from qbank.config import get_settings
+from qbank.db import reset_engine
 
 
 @pytest.fixture
@@ -39,12 +40,15 @@ def database(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
         connection.execute(text(f'CREATE DATABASE "{name}"'))
     test_url = url.set(database=name).render_as_string(hide_password=False)
     monkeypatch.setenv("QBANK_DATABASE_URL", test_url)
+    reset_engine()
     get_settings.cache_clear()
     config = Config("alembic.ini")
     try:
         command.upgrade(config, "head")
         yield test_url
     finally:
+        # Close pooled connections before the database is dropped, or they leak (ResourceWarning).
+        reset_engine()
         get_settings.cache_clear()
         with admin.connect() as connection:
             connection.execute(text(f'DROP DATABASE "{name}" WITH (FORCE)'))
