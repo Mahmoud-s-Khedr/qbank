@@ -62,7 +62,7 @@ case "${1:-}" in
     ;;
   agy)
     task="$2"; model="${3:-gemini-4-argon-high}"; dir=$(worktree "$task")
-    (cd "$dir" && agy -p --dangerously-skip-permissions --model "$model" "$(prompt_for "$task")") \
+    (cd "$dir" && agy --dangerously-skip-permissions --model "$model" -p "$(prompt_for "$task")") \
       2>&1 | tee "$LOGS/$task.log"
     cp "$LOGS/$task.log" "$LOGS/$task.report.md"
     ;;
