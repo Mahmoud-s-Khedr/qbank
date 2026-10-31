@@ -9,6 +9,7 @@ Questions get placed in the subject's chapter → lesson taxonomy, and answers p
 `backend/**`. Build on: `pipeline/orchestrator.py` (stages after `materialize`, before T11's `validate`), `pipeline/schema.py`
 (`headings`, `answer_key_entries`), `models/` (`Subject`, `Chapter`, `Lesson`, `Question`), `services/taxonomy.py`, `llm/` (stage `structure`), `text/normalize.py` (T11).
 **No live LLM calls in tests.**
+**Migrations:** use `down_revision` = the current head (`uv run --directory backend alembic heads`) and name the file `t09_structure.py`. Other tasks are adding migrations in parallel, and the orchestrator re-parents at merge. Note that T11 already added the `validate`, `verify` and `classify` stages after `materialize`. Insert `structure` and `answer_keys` between `materialize` and `validate`.
 
 ## Requirements
 ### 1. Structure stage (`pipeline/structure.py`, stage `structure`, text-only, cheap)
