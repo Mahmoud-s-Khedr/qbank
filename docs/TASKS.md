@@ -31,7 +31,7 @@ Detailed task files (`docs/tasks/Txx-*.md`) are written just before dispatch, so
 | T21 | 6 | PDF export: HTML templates, fonts, KaTeX, layout options, answer key, bubble sheet | cc-sonnet | sonnet 5.5 | T18 | done |
 | T22 | 6 | DOCX export via Pandoc + reference.docx (RTL, OMML) | cc-sonnet | sonnet 5.5 | T21 | done |
 | T23 | 6 | Export/preview UI, exam templates, admin settings (users, models, spend cap), cost dashboard | cx | terra / medium | T21,T22 | done |
-| T24 | 7 | E2E: Playwright full flow on fixtures in CI with recorded LLM | cc-sonnet | sonnet 5.5 | T15,T20,T23 | in progress |
+| T24 | 7 | E2E: Playwright full flow on fixtures in CI with recorded LLM | cc-sonnet | sonnet 5.5 | T15,T20,T23 | done |
 | T25 | 7 | Hardening: security review, rate limits, logging, prod compose + Caddy, README/deploy docs | cx + cc | terra / medium | T24 | done |
 
 ## Parallel lanes
@@ -64,3 +64,4 @@ cc: T00, T03 review, every merge, T10 decision, integration fixes, final accepta
 | 2026-10-31 | T23 (+1 continue round) | codex medium | weekly 56→~60% |
 | 2026-10-31 | T20 | cc-sonnet 5.5 sub-agent | ~189k subagent tokens |
 | 2026-10-31 | T25 (+1 continue round) | codex medium | weekly 59→67% |
+| 2026-10-31 | T24 | cc-sonnet 5.5 sub-agent | ~259k subagent tokens |
