@@ -24,6 +24,9 @@ dependencies = [
     "opencv-python-headless>=5.0.0.93",
 ]
 
+[project.scripts]
+qbank-eval = "qbank.eval.cli:main"
+
 [dependency-groups]
 dev = [
     "ruff",
