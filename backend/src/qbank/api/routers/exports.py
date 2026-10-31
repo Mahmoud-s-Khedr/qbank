@@ -15,6 +15,7 @@ from qbank.schemas.exports import (
 )
 from qbank.services import exam_templates as templates
 from qbank.services import exports as service
+from qbank.services.exports import DOCX_TYPE
 
 router = APIRouter(prefix="/api/v1", tags=["exports"])
 
@@ -32,14 +33,19 @@ def list_exports(id: UUID, db: DB, user: Current) -> list[ExportOut]:
 @router.get(
     "/exports/{id}/download",
     response_class=StreamingResponse,
-    responses={200: {"content": {"application/pdf": {}}, "description": "The PDF file"}},
+    responses={
+        200: {
+            "content": {"application/pdf": {}, DOCX_TYPE: {}},
+            "description": "The exported PDF or DOCX file",
+        }
+    },
 )
 def download_export(id: UUID, db: DB, user: Current) -> StreamingResponse:
-    chunks, disposition, size = service.download(db, user, id)
+    chunks, disposition, size, media_type = service.download(db, user, id)
     headers = {"Content-Disposition": disposition}
     if size is not None:
         headers["Content-Length"] = str(size)
-    return StreamingResponse(chunks, media_type="application/pdf", headers=headers)
+    return StreamingResponse(chunks, media_type=media_type, headers=headers)
 
 
 @router.delete("/exports/{id}", status_code=204)

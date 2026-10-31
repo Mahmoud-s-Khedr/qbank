@@ -159,3 +159,9 @@ def render_qmd(source: str, assets: AssetResolver | None = None, *, inline: bool
     if inline:
         return str(_MD.renderInline(source, env))
     return str(_MD.render(source, env))
+
+
+def parse_qmd(source: str, *, inline: bool = False) -> list[Token]:
+    """The markdown-it tokens of one QMD string (what ``render_qmd`` renders to HTML)."""
+    env: dict[str, object] = {"lines": source.splitlines()}
+    return _MD.parseInline(source, env) if inline else _MD.parse(source, env)

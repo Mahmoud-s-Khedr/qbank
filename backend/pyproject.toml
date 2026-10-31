@@ -25,6 +25,8 @@ dependencies = [
     "playwright>=1.64.1",
     "markdown-it-py>=4.2.0",
     "mdit-py-plugins>=0.6.1",
+    "pypandoc-binary>=1.17",
+    "python-docx>=1.2.0",
 ]
 
 [project.scripts]

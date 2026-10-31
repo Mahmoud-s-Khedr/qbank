@@ -1181,7 +1181,12 @@ export interface components {
        * Kind
        * @enum {string}
        */
-      kind: "pdf" | "answer_key_pdf" | "bubble_sheet_pdf";
+      kind:
+        | "pdf"
+        | "answer_key_pdf"
+        | "bubble_sheet_pdf"
+        | "docx"
+        | "answer_key_docx";
       /** Size Bytes */
       size_bytes: number | null;
       /** Stale */
@@ -1202,7 +1207,13 @@ export interface components {
     /** ExportsIn */
     ExportsIn: {
       /** Kinds */
-      kinds?: ("pdf" | "answer_key_pdf" | "bubble_sheet_pdf")[];
+      kinds?: (
+        | "pdf"
+        | "answer_key_pdf"
+        | "bubble_sheet_pdf"
+        | "docx"
+        | "answer_key_docx"
+      )[];
       /**
        * Versions
        * @default all
@@ -3131,13 +3142,14 @@ export interface operations {
     };
     requestBody?: never;
     responses: {
-      /** @description The PDF file */
+      /** @description The exported PDF or DOCX file */
       200: {
         headers: {
           [name: string]: unknown;
         };
         content: {
           "application/pdf": unknown;
+          "application/vnd.openxmlformats-officedocument.wordprocessingml.document": unknown;
         };
       };
       /** @description Validation Error */

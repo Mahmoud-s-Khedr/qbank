@@ -14,5 +14,5 @@ def page(org: UUID, source: UUID, number: int, *, hires: bool = False) -> str:
     return prefix(org, source) + f"pages/{number:04d}.{suffix}"
 
 
-def export(org: UUID, export_id: UUID) -> str:
-    return f"orgs/{org}/exports/{export_id}.pdf"
+def export(org: UUID, export_id: UUID, extension: str = "pdf") -> str:
+    return f"orgs/{org}/exports/{export_id}.{extension}"

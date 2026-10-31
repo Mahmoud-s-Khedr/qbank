@@ -1,3 +1,5 @@
+import re
+import zipfile
 from collections.abc import Iterator
 from http import HTTPStatus
 from io import BytesIO
@@ -8,6 +10,8 @@ from uuid import UUID
 
 import pymupdf
 import pytest
+from docx import Document
+from docx.document import Document as DocxDocument
 from fastapi import FastAPI
 from fastapi.testclient import TestClient
 from PIL import Image
@@ -19,6 +23,7 @@ from qbank.config import get_settings
 from qbank.db import get_db
 from qbank.export.builder import StoreAssets, build_view
 from qbank.export.render import render_answer_key
+from qbank.export.view import arabic_digits, format_number
 from qbank.models import (
     Asset,
     Exam,
@@ -160,7 +165,12 @@ def ids(
                 stem="املأ الفراغ: ____ عاصمة مصر", choices=choices(2, ["أ", "ب", "القاهرة", "د"])
             ),
         ]
-        essay = question(type="essay", choices=[], answer="لأن القوة تساوي الكتلة في العجلة")
+        essay = question(
+            type="essay",
+            stem="اكتب معادلة تكوين الماء: $\\ce{2H2 + O2 -> 2H2O}$",
+            choices=[],
+            answer="لأن القوة تساوي الكتلة في العجلة",
+        )
         group = [
             question(
                 stimulus_id=stimulus.id,
@@ -367,7 +377,7 @@ def test_scoping_validation_and_failures(
         f"{URL}/exams/{exam_id}/exports", json={**body, "versions": ["ز"]}
     ).status_code == (HTTPStatus.NOT_FOUND)
     assert client.post(
-        f"{URL}/exams/{exam_id}/exports", json={**body, "kinds": ["docx"]}
+        f"{URL}/exams/{exam_id}/exports", json={**body, "kinds": ["pptx"]}
     ).status_code == (HTTPStatus.UNPROCESSABLE_ENTITY)
     empty = client.post(f"{URL}/exams", json={"title": "x", "subject_id": ids["subject"]}).json()[
         "id"
@@ -497,3 +507,111 @@ def test_answer_key_pdf_matches_answer_key_endpoint(
             assert label in html
     assert "لأن القوة تساوي الكتلة في العجلة" in html
     assert html.count("<tr>") == len(endpoint["items"]) + 2  # header + rows + total
+
+
+DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+QUESTIONS_IN_DOCX = 6
+
+
+def docx_parts(response: Any) -> tuple[zipfile.ZipFile, DocxDocument]:
+    assert response.status_code == HTTPStatus.OK
+    assert response.headers["content-type"] == DOCX_TYPE
+    assert response.content.startswith(b"PK")
+    archive = zipfile.ZipFile(BytesIO(response.content))
+    return archive, Document(BytesIO(response.content))
+
+
+def test_real_docx_for_arabic_exam_with_math_chemistry_and_figure(
+    ids: dict[str, Any], client: TestClient, queued: list[UUID]
+) -> None:
+    login(client, "t1@a.com")
+    exam_id = make_exam(client, ids, ids["mcq"] + [ids["essay"]])
+    response = client.post(
+        f"{URL}/exams/{exam_id}/exports",
+        json={"versions": ["ب"], "kinds": ["docx", "answer_key_docx"]},
+    )
+    assert response.status_code == HTTPStatus.ACCEPTED
+    drain(queued)
+    listing = client.get(f"{URL}/exams/{exam_id}/exports").json()
+    assert {e["status"] for e in listing} == {"ready"}
+    exam_row = next(e for e in listing if e["kind"] == "docx")
+    key_row = next(e for e in listing if e["kind"] == "answer_key_docx")
+
+    download = client.get(f"{URL}/exports/{exam_row['id']}/download")
+    archive, document = docx_parts(download)
+    disposition = download.headers["content-disposition"]
+    assert f"filename*=UTF-8''{quote(f'{TITLE}-ب-docx.docx', safe='')}" in disposition
+    assert disposition.isascii()
+    assert (
+        int(download.headers["content-length"]) == len(download.content) == exam_row["size_bytes"]
+    )
+
+    xml = archive.read("word/document.xml").decode()
+    assert xml.count("<m:oMath>") >= QUESTIONS_IN_DOCX - 2  # fractions, group stimulus, chemistry
+    assert "\\ce" not in xml
+    media = [n for n in archive.namelist() if n.startswith("word/media/")]
+    assert len(media) == 1  # only the figure: equations are not images
+    assert media[0].endswith(".png")
+    assert xml.count("<w:bidi/>") >= QUESTIONS_IN_DOCX
+    assert "w:bidiVisual" in xml
+
+    engine = create_engine(get_settings().database_url)
+    with Session(engine) as db:
+        exam = db.get(Exam, UUID(exam_id))
+        version = db.scalar(
+            select(ExamVersion).where(
+                ExamVersion.exam_id == UUID(exam_id), ExamVersion.label == "ب"
+            )
+        )
+        assert exam is not None
+        assert version is not None
+        view = build_view(db, exam, version, StoreAssets(db, exam.org_id, get_store()))
+    engine.dispose()
+    questions = view.questions
+    assert len(questions) == QUESTIONS_IN_DOCX
+    numbers = [
+        p.text.split("-")[0]
+        for p in document.paragraphs
+        if p.style is not None and p.style.name == "Question" and re.match(r"\d+-", p.text)
+    ]
+    assert numbers == [arabic_digits(str(q.number)) for q in questions]
+    tables = [t for t in document.tables if t.style is not None and t.style.name == "PlainTable"]
+    shown = [
+        [c.text.split(" ")[0] for r in t.rows for c in r.cells if c.text]
+        for t in tables[1:]  # the first is the student-fields table
+    ]
+    assert shown == [[c.label for c in q.choices] for q in questions if q.choices]
+    header = " ".join(c.text for c in document.tables[0]._cells)
+    assert view.header.subject in header
+    assert "النموذج: ب" in header
+    assert any(p.text == TITLE for p in document.paragraphs)
+
+    key = client.get(f"{URL}/exams/{exam_id}/versions/ب/answer-key").json()
+    _, key_doc = docx_parts(client.get(f"{URL}/exports/{key_row['id']}/download"))
+    (key_table,) = key_doc.tables
+    rows = [[c.text for c in r.cells] for r in key_table.rows]
+    assert len(rows) == len(key["items"]) + 2  # header + rows + total
+    for item, row in zip(key["items"], rows[1:-1], strict=True):
+        assert row[0] == arabic_digits(str(item["number"]))
+        assert row[2] == arabic_digits(format_number(item["points"]))
+        for label in item["correct"] or []:
+            assert label in row[1]
+
+
+def test_english_docx_is_left_to_right(
+    ids: dict[str, Any], client: TestClient, queued: list[UUID]
+) -> None:
+    login(client, "t1@a.com")
+    exam_id = make_exam(client, ids, ids["mcq"][:2], language="en")
+    response = client.post(
+        f"{URL}/exams/{exam_id}/exports", json={"versions": "all", "kinds": ["docx", "docx"]}
+    )
+    assert response.status_code == HTTPStatus.ACCEPTED
+    assert [e["kind"] for e in response.json()["exports"]] == [
+        "docx",
+        "docx",
+    ]  # kinds de-duplicated
+    drain(queued)
+    for row in client.get(f"{URL}/exams/{exam_id}/exports").json():
+        archive, _ = docx_parts(client.get(f"{URL}/exports/{row['id']}/download"))
+        assert "<w:bidi" not in archive.read("word/document.xml").decode()
