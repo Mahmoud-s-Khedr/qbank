@@ -1,0 +1,263 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://qbank.local/schemas/golden-page.json",
+  "title": "GoldenPage",
+  "description": "Hand-verified ground truth extraction for a single workbook page image.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "image",
+    "source_pdf",
+    "page_number",
+    "page_kind",
+    "headings",
+    "stimuli",
+    "questions",
+    "notes"
+  ],
+  "properties": {
+    "image": {
+      "type": "string",
+      "pattern": "^pages/.+\\.png$"
+    },
+    "source_pdf": {
+      "type": "string",
+      "minLength": 1
+    },
+    "page_number": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "page_kind": {
+      "type": "string",
+      "enum": [
+        "cover",
+        "blank",
+        "toc",
+        "section_divider",
+        "questions",
+        "answer_key",
+        "answer_sheet",
+        "other"
+      ]
+    },
+    "headings": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/heading"
+      }
+    },
+    "stimuli": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/stimulus"
+      }
+    },
+    "questions": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/question"
+      }
+    },
+    "notes": {
+      "type": ["string", "null"]
+    }
+  },
+  "$defs": {
+    "box": {
+      "type": "array",
+      "items": {
+        "type": "number",
+        "minimum": 0.0,
+        "maximum": 1.0
+      },
+      "minItems": 4,
+      "maxItems": 4
+    },
+    "heading": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["level", "text", "box"],
+      "properties": {
+        "level": {
+          "type": "string",
+          "enum": ["book", "unit", "chapter", "lesson", "exam", "section"]
+        },
+        "text": {
+          "type": "string",
+          "minLength": 1
+        },
+        "box": {
+          "$ref": "#/$defs/box"
+        }
+      }
+    },
+    "stimulus": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "ref",
+        "kind",
+        "intro",
+        "content",
+        "box",
+        "continues_from_previous",
+        "continues_on_next"
+      ],
+      "properties": {
+        "ref": {
+          "type": "string",
+          "minLength": 1
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["passage", "poem", "figure", "table", "case"]
+        },
+        "intro": {
+          "type": ["string", "null"]
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1
+        },
+        "box": {
+          "$ref": "#/$defs/box"
+        },
+        "continues_from_previous": {
+          "type": "boolean"
+        },
+        "continues_on_next": {
+          "type": "boolean"
+        }
+      }
+    },
+    "choice": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["label", "content"],
+      "properties": {
+        "label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "content": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
+    "answer": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["labels"],
+          "properties": {
+            "labels": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              },
+              "minItems": 1
+            }
+          }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["text"],
+          "properties": {
+            "text": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      ]
+    },
+    "figure": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["box", "kind"],
+      "properties": {
+        "box": {
+          "$ref": "#/$defs/box"
+        },
+        "kind": {
+          "type": "string",
+          "enum": ["diagram", "chart", "table", "photo"]
+        }
+      }
+    },
+    "question": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "number_label",
+        "type",
+        "stem",
+        "choices",
+        "answer",
+        "stimulus_ref",
+        "figures",
+        "box",
+        "continues_from_previous",
+        "continues_on_next"
+      ],
+      "properties": {
+        "number_label": {
+          "type": "string",
+          "minLength": 1
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "mcq_single",
+            "mcq_multi",
+            "true_false",
+            "fill_blank",
+            "short_answer",
+            "essay",
+            "matching",
+            "ordering"
+          ]
+        },
+        "stem": {
+          "type": "string",
+          "minLength": 1
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/choice"
+          }
+        },
+        "answer": {
+          "$ref": "#/$defs/answer"
+        },
+        "stimulus_ref": {
+          "type": ["string", "null"]
+        },
+        "figures": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/figure"
+          }
+        },
+        "box": {
+          "$ref": "#/$defs/box"
+        },
+        "continues_from_previous": {
+          "type": "boolean"
+        },
+        "continues_on_next": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}
