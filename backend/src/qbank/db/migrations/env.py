@@ -1,6 +1,7 @@
 from alembic import context
 from sqlalchemy import create_engine, pool
 
+from qbank import models  # noqa: F401
 from qbank.config import get_settings
 from qbank.db import Base
 
