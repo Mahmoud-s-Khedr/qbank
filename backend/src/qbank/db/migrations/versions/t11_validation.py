@@ -10,7 +10,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 revision = "t11"
-down_revision = "t18"
+down_revision = "t21"  # re-parented at merge (T11 and T21 were built in parallel on t18)
 branch_labels = None
 depends_on = None
 
