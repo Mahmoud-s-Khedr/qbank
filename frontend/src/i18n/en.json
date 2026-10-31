@@ -909,7 +909,8 @@
       "confirm": "Confirm",
       "cancel": "Cancel",
       "targetChapter": "Target chapter",
-      "targetLesson": "Target lesson"
+      "targetLesson": "Target lesson",
+      "accepted": "Suggestion accepted"
     }
   }
 }

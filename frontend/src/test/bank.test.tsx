@@ -143,6 +143,7 @@ class BankWorld {
       id: CHAPTER_1_ID,
       title: "Chapter 1: Mechanics",
       position: 1,
+      proposed: false,
       subject_id: SUBJECT_ID,
       created_at: "2026-10-01T10:00:00Z",
       updated_at: "2026-10-01T10:00:00Z",
@@ -152,6 +153,7 @@ class BankWorld {
           title: "Lesson 1: Newton's Laws",
           chapter_id: CHAPTER_1_ID,
           position: 1,
+          proposed: false,
           created_at: "2026-10-01T10:00:00Z",
           updated_at: "2026-10-01T10:00:00Z",
         },
@@ -161,6 +163,7 @@ class BankWorld {
       id: CHAPTER_2_ID,
       title: "Chapter 2: Energy",
       position: 2,
+      proposed: true,
       subject_id: SUBJECT_ID,
       created_at: "2026-10-01T10:00:00Z",
       updated_at: "2026-10-01T10:00:00Z",
@@ -170,6 +173,7 @@ class BankWorld {
           title: "Lesson 2: Kinetic Energy",
           chapter_id: CHAPTER_2_ID,
           position: 1,
+          proposed: false,
           created_at: "2026-10-01T10:00:00Z",
           updated_at: "2026-10-01T10:00:00Z",
         },
@@ -491,6 +495,11 @@ class BankWorld {
     }
 
     // Delete subject / chapter / lesson
+    if (path === `/api/v1/chapters/${CHAPTER_2_ID}` && method === "PATCH") {
+      const chapter = this.chapters[1];
+      if (chapter) chapter.proposed = false;
+      return json(chapter);
+    }
     if (method === "DELETE") {
       if (path.includes(SUBJECT_ID) || path.includes(CHAPTER_1_ID)) {
         return json(
@@ -871,6 +880,22 @@ describe("Question Bank UI & Taxonomy Manager", () => {
       expect(reorderCalls[0]?.body).toEqual({
         ids: [CHAPTER_2_ID, CHAPTER_1_ID],
       });
+    });
+  });
+
+  it("9b. Accepting a suggested chapter clears its proposed flag via PATCH", async () => {
+    renderBank("/bank/taxonomy");
+    await waitFor(() => {
+      expect(screen.getByText("Chapter 2: Energy")).toBeInTheDocument();
+    });
+    expect(screen.getAllByText("Suggested").length).toBe(1);
+    fireEvent.click(screen.getByRole("button", { name: "Accept" }));
+    await waitFor(() => {
+      const patch = world.calls.find(
+        (c) =>
+          c.path === `/api/v1/chapters/${CHAPTER_2_ID}` && c.method === "PATCH",
+      );
+      expect(patch?.body).toEqual({ proposed: false });
     });
   });
 

@@ -19,6 +19,6 @@ def found[T](value: T | None) -> T:
     return value
 
 
-def update(obj: object, values: BaseModel) -> None:
-    for key, value in values.model_dump(exclude_unset=True).items():
+def update(obj: object, values: BaseModel, *, exclude: set[str] | None = None) -> None:
+    for key, value in values.model_dump(exclude_unset=True, exclude=exclude).items():
         setattr(obj, key, value)

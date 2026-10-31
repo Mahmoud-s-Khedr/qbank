@@ -212,6 +212,22 @@ export function TaxonomyTree({
     }
   };
 
+  // Accept an AI-proposed chapter/lesson (clears the server-side "proposed" flag).
+  const handleAcceptProposed = async (
+    type: "chapter" | "lesson",
+    id: string,
+  ) => {
+    try {
+      const mutation = type === "chapter" ? updateChapterMut : updateLessonMut;
+      await mutation.mutateAsync({ id, subjectId, data: { proposed: false } });
+      toast.success(t("bank.taxonomy.accepted"));
+    } catch (error) {
+      toast.error(
+        error instanceof ApiError ? error.message : t("review.errors.action"),
+      );
+    }
+  };
+
   // Add Lesson
   const handleCreateLesson = async (chapterId: string) => {
     if (!newLessonTitle.trim()) return;
@@ -311,9 +327,7 @@ export function TaxonomyTree({
           const isExpanded = expandedChapters.has(chapter.id);
           const isEditing = editingNodeId === chapter.id;
           const qCount = chapterCounts.get(chapter.id) ?? 0;
-          const isProposed =
-            (chapter as unknown as { metadata?: { proposed?: boolean } })
-              .metadata?.proposed === true;
+          const isProposed = chapter.proposed;
 
           return (
             <div
@@ -408,9 +422,9 @@ export function TaxonomyTree({
                         variant="outline"
                         size="sm"
                         className="h-7 px-2 text-xs"
-                        onClick={() => {
-                          toast.info("Proposed node accepted.");
-                        }}
+                        onClick={() =>
+                          void handleAcceptProposed("chapter", chapter.id)
+                        }
                       >
                         {t("bank.taxonomy.accept")}
                       </Button>
@@ -559,12 +573,7 @@ export function TaxonomyTree({
                   {chapter.lessons.map((lesson, lIndex) => {
                     const isLessonEditing = editingNodeId === lesson.id;
                     const lCount = lessonCounts.get(lesson.id) ?? 0;
-                    const isLessonProposed =
-                      (
-                        lesson as unknown as {
-                          metadata?: { proposed?: boolean };
-                        }
-                      ).metadata?.proposed === true;
+                    const isLessonProposed = lesson.proposed;
 
                     return (
                       <div
@@ -647,9 +656,9 @@ export function TaxonomyTree({
                                 variant="outline"
                                 size="sm"
                                 className="h-6 px-1.5 text-[10px]"
-                                onClick={() => {
-                                  toast.info("Proposed node accepted.");
-                                }}
+                                onClick={() =>
+                                  void handleAcceptProposed("lesson", lesson.id)
+                                }
                               >
                                 {t("bank.taxonomy.accept")}
                               </Button>

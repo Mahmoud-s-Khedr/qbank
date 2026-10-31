@@ -166,9 +166,15 @@ def create_chapter(id: UUID, data: ItemIn, db: Session, org_id: UUID) -> Chapter
     return item
 
 
+def _accept_proposal(item: Chapter | Lesson, data: ItemUpdate) -> None:
+    if data.proposed is False:
+        item.metadata_json = {**item.metadata_json, "proposed": False}
+
+
 def edit_chapter(id: UUID, data: ItemUpdate, db: Session, org_id: UUID) -> Chapter:
     item = found(get(db, Chapter, org_id, id))
-    update(item, data)
+    _accept_proposal(item, data)
+    update(item, data, exclude={"proposed"})
     save(db)
     return item
 
@@ -197,7 +203,8 @@ def edit_lesson(id: UUID, data: LessonUpdate, db: Session, org_id: UUID) -> Less
         if source.subject_id != target.subject_id:
             raise Invalid("invalid_move")
         data.position = next_position(db, Lesson, target.id, org_id)
-    update(item, data)
+    _accept_proposal(item, data)
+    update(item, data, exclude={"proposed"})
     save(db)
     return item
 

@@ -1143,6 +1143,11 @@
             "title": "Position",
             "type": "integer"
           },
+          "proposed": {
+            "default": false,
+            "title": "Proposed",
+            "type": "boolean"
+          },
           "subject_id": {
             "format": "uuid",
             "title": "Subject Id",
@@ -1191,6 +1196,11 @@
           "position": {
             "title": "Position",
             "type": "integer"
+          },
+          "proposed": {
+            "default": false,
+            "title": "Proposed",
+            "type": "boolean"
           },
           "subject_id": {
             "format": "uuid",
@@ -2580,6 +2590,11 @@
             "title": "Position",
             "type": "integer"
           },
+          "proposed": {
+            "default": false,
+            "title": "Proposed",
+            "type": "boolean"
+          },
           "title": {
             "title": "Title",
             "type": "string"
@@ -2625,6 +2640,18 @@
               }
             ],
             "title": "Position"
+          },
+          "proposed": {
+            "anyOf": [
+              {
+                "const": false,
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed"
           },
           "title": {
             "anyOf": [
@@ -5892,6 +5919,18 @@
               }
             ],
             "title": "Position"
+          },
+          "proposed": {
+            "anyOf": [
+              {
+                "const": false,
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Proposed"
           },
           "title": {
             "anyOf": [

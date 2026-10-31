@@ -19,7 +19,9 @@ from qbank.cli import seed_dev
 from qbank.config import Settings, get_settings
 from qbank.db import get_db, reset_engine
 from qbank.models import (
+    Chapter,
     Language,
+    Lesson,
     LLMCall,
     Organization,
     PageStatus,
@@ -921,3 +923,37 @@ def test_privilege_change_revokes_session(
     )
     client.cookies.set("qbank_session", old, domain="testserver.local", path="/")
     assert client.get("/api/v1/auth/me").status_code == HTTPStatus.UNAUTHORIZED
+
+
+@pytest.mark.integration
+def test_accept_proposed_taxonomy_nodes(
+    setup_core: dict[str, str], database: str, client: TestClient
+) -> None:
+    login(client, "editor@example.com")
+    subject = client.post(
+        "/api/v1/subjects", json={"name": "Bio", "language": "ar", "grade": "3"}
+    ).json()
+    chapter = client.post(f"/api/v1/subjects/{subject['id']}/chapters", json={"title": "c"}).json()
+    lesson = client.post(f"/api/v1/chapters/{chapter['id']}/lessons", json={"title": "l"}).json()
+    assert chapter["proposed"] is False
+    engine = create_engine(database)
+    with Session(engine) as db:  # the structure stage (T09) marks AI-created nodes like this
+        chapter_row = db.get(Chapter, UUID(chapter["id"]))
+        lesson_row = db.get(Lesson, UUID(lesson["id"]))
+        assert chapter_row is not None
+        assert lesson_row is not None
+        chapter_row.metadata_json = {"proposed": True}
+        lesson_row.metadata_json = {"proposed": True}
+        db.commit()
+    engine.dispose()
+    tree_body = client.get(f"/api/v1/subjects/{subject['id']}/tree").json()
+    assert tree_body["chapters"][0]["proposed"] is True
+    assert tree_body["chapters"][0]["lessons"][0]["proposed"] is True
+    accepted = client.patch(f"/api/v1/chapters/{chapter['id']}", json={"proposed": False})
+    assert accepted.status_code == HTTPStatus.OK, accepted.text
+    assert accepted.json()["proposed"] is False
+    assert accepted.json()["title"] == "c"
+    lesson_ok = client.patch(f"/api/v1/lessons/{lesson['id']}", json={"proposed": False})
+    assert lesson_ok.json()["proposed"] is False
+    again = client.patch(f"/api/v1/chapters/{chapter['id']}", json={"proposed": True})
+    assert again.status_code == HTTPStatus.UNPROCESSABLE_ENTITY

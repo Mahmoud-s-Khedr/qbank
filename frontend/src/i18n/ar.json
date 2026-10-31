@@ -909,7 +909,8 @@
       "confirm": "تأكيد",
       "cancel": "إلغاء",
       "targetChapter": "الفصل المستهدف",
-      "targetLesson": "الدرس المستهدف"
+      "targetLesson": "الدرس المستهدف",
+      "accepted": "تم قبول الاقتراح"
     }
   }
 }

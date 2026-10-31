@@ -1898,6 +1898,11 @@ export interface components {
       /** Position */
       position: number;
       /**
+       * Proposed
+       * @default false
+       */
+      proposed: boolean;
+      /**
        * Subject Id
        * Format: uuid
        */
@@ -1926,6 +1931,11 @@ export interface components {
       lessons: components["schemas"]["LessonOut"][];
       /** Position */
       position: number;
+      /**
+       * Proposed
+       * @default false
+       */
+      proposed: boolean;
       /**
        * Subject Id
        * Format: uuid
@@ -2539,6 +2549,11 @@ export interface components {
       id: string;
       /** Position */
       position: number;
+      /**
+       * Proposed
+       * @default false
+       */
+      proposed: boolean;
       /** Title */
       title: string;
       /**
@@ -2553,6 +2568,8 @@ export interface components {
       chapter_id?: string | null;
       /** Position */
       position?: number | null;
+      /** Proposed */
+      proposed?: false | null;
       /** Title */
       title?: string | null;
     };
@@ -3754,6 +3771,8 @@ export interface components {
     qbank__schemas__taxonomy__ItemUpdate: {
       /** Position */
       position?: number | null;
+      /** Proposed */
+      proposed?: false | null;
       /** Title */
       title?: string | null;
     };
