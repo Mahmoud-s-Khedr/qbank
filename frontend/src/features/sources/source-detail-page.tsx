@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   ChevronLeft,
   ChevronRight,
+  ClipboardCheck,
   PauseCircle,
   Trash2,
 } from "lucide-react";
@@ -421,18 +422,26 @@ export function SourceDetailPage() {
         </div>
 
         {canWrite ? (
-          <Button
-            type="button"
-            variant="destructive"
-            size="sm"
-            data-testid="delete-source-button"
-            onClick={() => {
-              setIsDeleteDialogOpen(true);
-            }}
-          >
-            <Trash2 className="size-4" aria-hidden="true" />
-            <span>{t("sources.detail.delete")}</span>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button asChild size="sm" data-testid="review-source-button">
+              <Link to={`/sources/${source.id}/review`}>
+                <ClipboardCheck className="size-4" aria-hidden="true" />
+                <span>{t("sources.detail.review")}</span>
+              </Link>
+            </Button>
+            <Button
+              type="button"
+              variant="destructive"
+              size="sm"
+              data-testid="delete-source-button"
+              onClick={() => {
+                setIsDeleteDialogOpen(true);
+              }}
+            >
+              <Trash2 className="size-4" aria-hidden="true" />
+              <span>{t("sources.detail.delete")}</span>
+            </Button>
+          </div>
         ) : null}
       </div>
 

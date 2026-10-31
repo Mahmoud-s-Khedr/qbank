@@ -198,7 +198,8 @@
       "prevPage": "Previous page",
       "nextPage": "Next page",
       "closeViewer": "Close page viewer",
-      "resume": "Resume"
+      "resume": "Resume",
+      "review": "Review"
     }
   },
   "qmd": {
@@ -259,5 +260,238 @@
     "modeView": "View",
     "modeEdit": "Edit",
     "modeDraw": "Draw"
+  },
+  "review": {
+    "common": {
+      "cancel": "Cancel",
+      "close": "Close",
+      "loading": "Loading..."
+    },
+    "workspace": {
+      "title": "Review",
+      "back": "Back to source",
+      "reextract": "Re-extract page"
+    },
+    "panes": {
+      "queue": "Queue",
+      "page": "Page",
+      "editor": "Editor",
+      "switch": "Review panes"
+    },
+    "status": {
+      "draft": "Draft",
+      "needs_review": "Needs review",
+      "approved": "Approved",
+      "rejected": "Rejected"
+    },
+    "severity": {
+      "error": "Error",
+      "warning": "Warning"
+    },
+    "types": {
+      "mcq_single": "Multiple choice (single)",
+      "mcq_multi": "Multiple choice (multi)",
+      "true_false": "True / false",
+      "fill_blank": "Fill in the blank",
+      "short_answer": "Short answer",
+      "essay": "Essay",
+      "matching": "Matching",
+      "ordering": "Ordering"
+    },
+    "fields": {
+      "number_label": "Number",
+      "type": "Type",
+      "stem": "Question text",
+      "choices": "Choices",
+      "answer": "Answer",
+      "explanation": "Explanation",
+      "difficulty": "Difficulty",
+      "tags": "Tags"
+    },
+    "queue": {
+      "label": "Review queue",
+      "total": "{{count}} questions",
+      "status": "Status",
+      "severity": "Severity",
+      "sort": "Sort",
+      "all": "All",
+      "sortBy": {
+        "page": "Page",
+        "severity": "Severity",
+        "confidence": "Confidence"
+      },
+      "page": "Page {{page}}",
+      "noLabel": "(no number)",
+      "empty": "No questions match these filters.",
+      "error": "Could not load the review queue."
+    },
+    "actions": {
+      "approve": "Approve",
+      "reject": "Reject",
+      "reopen": "Reopen"
+    },
+    "editor": {
+      "tabs": "Question sections",
+      "tab": {
+        "edit": "Edit",
+        "history": "History"
+      },
+      "version": "v{{version}}",
+      "unsaved": "Unsaved",
+      "save": "Save",
+      "empty": "Select a question from the queue.",
+      "stimulus": "Stimulus",
+      "editStimulus": "Edit stimulus",
+      "stimulusHint": "Changes apply to every question that shares this stimulus.",
+      "splitAtCursor": "Split at cursor",
+      "mergeNext": "Merge with next",
+      "noDifficulty": "Not set",
+      "difficultySource": "Source: {{source}}",
+      "tagPlaceholder": "Add a tag and press Enter",
+      "removeTag": "Remove tag {{tag}}",
+      "figures": "Figures",
+      "addFigure": "Add figure",
+      "removeFigure": "Remove figure",
+      "noFigures": "No figures in this question.",
+      "figureAlt": "Question figure"
+    },
+    "choices": {
+      "label": "Label of choice {{n}}",
+      "content": "Text of choice {{n}}",
+      "correct": "Correct",
+      "pinned": "Pinned",
+      "moveUp": "Move choice {{n}} up",
+      "moveDown": "Move choice {{n}} down",
+      "remove": "Remove choice {{n}}",
+      "splitBefore": "Split before choice {{n}}",
+      "add": "Add choice"
+    },
+    "issues": {
+      "title": "Issues",
+      "none": "No issues.",
+      "resolve": "Resolve",
+      "unresolve": "Unresolve",
+      "applyFix": "Apply fix to {{field}}"
+    },
+    "history": {
+      "empty": "No history yet.",
+      "error": "Could not load the history."
+    },
+    "page": {
+      "switcher": "Pages of this question",
+      "addFigure": "Add figure",
+      "addMissed": "Add missed question",
+      "drawFigureHint": "Draw a box around the figure. Esc cancels.",
+      "drawMissedHint": "Draw a box around the missed question. Esc cancels.",
+      "editFigureHint": "Drag or resize the figure box to re-crop it.",
+      "none": "No page to show."
+    },
+    "bulk": {
+      "select": "Select {{label}}",
+      "selected": "{{count}} selected",
+      "clear": "Clear selection",
+      "metadata": "Set metadata",
+      "metadataTitle": "Set metadata",
+      "metadataDescription": "Applies to {{count}} selected questions.",
+      "keepAsIs": "Keep as is",
+      "tagsAdd": "Tags to add (comma separated)",
+      "tagsRemove": "Tags to remove (comma separated)",
+      "apply": "Apply",
+      "result": "{{ok}} succeeded, {{failed}} failed"
+    },
+    "reject": {
+      "title": "Reject",
+      "description": "Rejected questions leave the review queue. You can reopen them later.",
+      "reason": "Reason (optional)",
+      "confirm": "Reject"
+    },
+    "approveBlocked": {
+      "title": "Cannot approve yet",
+      "force": "Force approve"
+    },
+    "conflict": {
+      "title": "This question was changed by someone else",
+      "description": "Choose whether to load the server version or overwrite it with your edits.",
+      "field": "Field",
+      "server": "Server",
+      "mine": "Your edit",
+      "reload": "Reload server version",
+      "overwrite": "Overwrite with my edits"
+    },
+    "shortcuts": {
+      "title": "Keyboard shortcuts",
+      "description": "Shortcuts are disabled while you type in a field.",
+      "next": "Next question",
+      "prev": "Previous question",
+      "approve": "Approve",
+      "reject": "Reject",
+      "edit": "Focus the editor",
+      "save": "Save",
+      "figure": "Draw a figure",
+      "cancel": "Cancel the current mode",
+      "help": "Show this help"
+    },
+    "merge": {
+      "title": "Merge with next question",
+      "description": "These two questions will become one.",
+      "confirm": "Merge"
+    },
+    "figure": {
+      "removeTitle": "Remove figure",
+      "removeDescription": "The figure is removed from the question and deleted if nothing else uses it."
+    },
+    "missed": {
+      "title": "Add missed question",
+      "description": "Review the extracted text, then save it as a new question.",
+      "save": "Save question",
+      "created": "Question added",
+      "failed": "Could not add the question."
+    },
+    "reextract": {
+      "title": "Re-extract page {{page}}",
+      "description": "Read this page again and compare the result before applying it.",
+      "model": "Model",
+      "defaultModel": "The source's model (default)",
+      "start": "Start",
+      "running": "Re-extracting the page...",
+      "failed": "Re-extraction failed: {{error}}",
+      "startFailed": "Could not start re-extraction.",
+      "acceptFailed": "Could not apply the changes.",
+      "summary": "Model {{model}} · {{unchanged}} unchanged",
+      "changed": "Changed: {{label}}",
+      "added": "New: {{label}}",
+      "removed": "Removed: {{label}}",
+      "skipped": "approved, skipped",
+      "noChanges": "No differences found.",
+      "discard": "Discard",
+      "accept": "Accept selected ({{count}})",
+      "applied": "{{count}} applied.",
+      "skippedItem": "{{label}} skipped ({{reason}})"
+    },
+    "toast": {
+      "approved": "Approved {{label}}",
+      "rejected": "Rejected {{label}}",
+      "figureAdded": "Figure added",
+      "figureRemoved": "Figure removed",
+      "recropped": "Figure re-cropped",
+      "split": "Question split",
+      "merged": "Questions merged"
+    },
+    "errors": {
+      "save": "Could not save the question.",
+      "action": "The action failed.",
+      "stale": "The question changed on the server and was reloaded.",
+      "load": "Could not load the question.",
+      "figure": "The figure action failed.",
+      "recrop": "Could not re-crop the figure.",
+      "split": "Could not split the question.",
+      "merge": "Could not merge the questions.",
+      "extractRegion": "Could not read that region."
+    },
+    "list": {
+      "pending": "{{count}} awaiting review",
+      "errors": "{{count}} errors",
+      "open": "Review"
+    }
   }
 }

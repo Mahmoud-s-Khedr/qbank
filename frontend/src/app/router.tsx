@@ -12,6 +12,7 @@ import { LoginPage } from "@/features/auth/login-page";
 import { BankPage } from "@/features/bank/bank-page";
 import { ExamsPage } from "@/features/exams/exams-page";
 import { ReviewPage } from "@/features/review/review-page";
+import { ReviewWorkspacePage } from "@/features/review/review-workspace-page";
 import { SettingsPage } from "@/features/settings/settings-page";
 import { SourceDetailPage } from "@/features/sources/source-detail-page";
 import { SourcesPage } from "@/features/sources/sources-page";
@@ -39,6 +40,10 @@ export const routes: RouteObject[] = [
           {
             path: "sources/:id",
             element: <SourceDetailPage />,
+          },
+          {
+            path: "sources/:id/review",
+            element: <ReviewWorkspacePage />,
           },
           {
             path: "sources/:id/pages/:pageNumber",
