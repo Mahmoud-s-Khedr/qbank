@@ -17,7 +17,7 @@ class Page[T](BaseModel):
     next_cursor: str | None
 
 
-class Health(BaseModel):
+class HealthOut(BaseModel):
     status: Literal["ok"] = "ok"
     version: str
     db: Literal["ok", "down"]

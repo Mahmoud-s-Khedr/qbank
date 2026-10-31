@@ -106,7 +106,7 @@
         "title": "HTTPValidationError",
         "type": "object"
       },
-      "Health": {
+      "HealthOut": {
         "properties": {
           "db": {
             "enum": [
@@ -131,7 +131,7 @@
           "version",
           "db"
         ],
-        "title": "Health",
+        "title": "HealthOut",
         "type": "object"
       },
       "ItemIn": {
@@ -969,7 +969,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Health"
+                  "$ref": "#/components/schemas/HealthOut"
                 }
               }
             },
