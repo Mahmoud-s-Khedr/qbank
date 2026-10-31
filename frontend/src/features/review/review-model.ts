@@ -22,18 +22,6 @@ export const QUESTION_TYPES: readonly QuestionType[] = [
   "ordering",
 ];
 
-/**
- * The backend exposes no models endpoint yet, so this mirrors `llm_allowed_models`
- * (docs/MODELS.md). The empty value means "the source's own model".
- */
-export const REEXTRACT_MODELS: readonly string[] = [
-  "google/gemini-3.8-flash",
-  "qwen/qwen3.8-flash",
-  "openai/gpt-6-luna",
-  "anthropic/claude-haiku-5.5",
-  "nvidia/nemotron-3.5-super-vl:free",
-];
-
 export interface ChoiceDraft {
   key: string;
   label: string;
@@ -307,13 +295,12 @@ export function extractionBox(value: unknown): Box | null {
 
 export interface ExtractionView {
   headings: { text: string; box: Box }[];
-  figuresByQuestion: Map<string, Box[]>;
 }
 
 export function parseExtraction(
   extraction: Record<string, unknown> | null | undefined,
 ): ExtractionView {
-  const view: ExtractionView = { headings: [], figuresByQuestion: new Map() };
+  const view: ExtractionView = { headings: [] };
   if (!extraction) return view;
   const headings = extraction.headings;
   if (Array.isArray(headings)) {
@@ -326,18 +313,6 @@ export function parseExtraction(
           box,
         });
       }
-    }
-  }
-  const questions = extraction.questions;
-  if (Array.isArray(questions)) {
-    for (const q of questions as unknown[]) {
-      if (!isRecord(q) || typeof q.number_label !== "string") continue;
-      const figures = Array.isArray(q.figures) ? (q.figures as unknown[]) : [];
-      const boxes = figures.flatMap((f) => {
-        const box = isRecord(f) ? extractionBox(f.box_2d) : null;
-        return box ? [box] : [];
-      });
-      view.figuresByQuestion.set(q.number_label, boxes);
     }
   }
   return view;

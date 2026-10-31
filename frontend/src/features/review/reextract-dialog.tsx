@@ -9,6 +9,7 @@ import {
   useAcceptProposal,
   useDiscardProposal,
   useJob,
+  useLlmModels,
   useProposal,
   useStartReextract,
 } from "@/api/hooks/review";
@@ -22,7 +23,6 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { REEXTRACT_MODELS } from "./review-model";
 
 function show(value: unknown): string {
   if (value === null || value === undefined) return "—";
@@ -42,7 +42,12 @@ export function ReextractDialog({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const [model, setModel] = useState("");
+  const [chosenModel, setModel] = useState<string | null>(null);
+  const models = useLlmModels(open);
+  const defaultModel =
+    models.data?.find((m) => m.default_for_stages.includes("extract"))?.id ??
+    "";
+  const model = chosenModel ?? defaultModel;
   const [jobId, setJobId] = useState<string | undefined>();
   const [selected, setSelected] = useState<Set<string> | null>(null);
   const [result, setResult] = useState<AcceptOut | null>(null);
@@ -195,9 +200,9 @@ export function ReextractDialog({
                 }}
               >
                 <option value="">{t("review.reextract.defaultModel")}</option>
-                {REEXTRACT_MODELS.map((m) => (
-                  <option key={m} value={m}>
-                    {m}
+                {(models.data ?? []).map((m) => (
+                  <option key={m.id} value={m.id}>
+                    {m.id} (${m.price_in_per_m} / ${m.price_out_per_m})
                   </option>
                 ))}
               </select>

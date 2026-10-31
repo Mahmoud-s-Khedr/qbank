@@ -1,5 +1,6 @@
 import {
   useMutation,
+  useQueries,
   useQuery,
   useQueryClient,
   type QueryClient,
@@ -466,6 +467,39 @@ export function useDiscardProposal() {
         ),
       ),
   );
+}
+
+export type LlmModel = components["schemas"]["ModelOut"];
+
+export const assetKey = (id: string) => [...REVIEW_KEY, "asset", id] as const;
+
+export function fetchAsset(id: string): Promise<AssetOut> {
+  return apiClient
+    .GET("/api/v1/assets/{id}", { params: { path: { id } } })
+    .then((r) => unwrap<AssetOut>(r as Envelope<AssetOut>));
+}
+
+/** Loads the metadata (region, page, updated_at) of every figure asset given. */
+export function useAssets(ids: readonly string[]) {
+  return useQueries({
+    queries: ids.map((id) => ({
+      queryKey: assetKey(id),
+      queryFn: () => fetchAsset(id),
+      staleTime: 30_000,
+    })),
+  });
+}
+
+export function useLlmModels(enabled = true) {
+  return useQuery({
+    queryKey: [...REVIEW_KEY, "llm-models"],
+    queryFn: () =>
+      apiClient
+        .GET("/api/v1/llm/models")
+        .then((r) => unwrap<LlmModel[]>(r as Envelope<LlmModel[]>)),
+    enabled,
+    staleTime: 300_000,
+  });
 }
 
 export function assetImageUrl(assetId: string, version?: string): string {

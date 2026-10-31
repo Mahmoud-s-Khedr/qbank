@@ -141,12 +141,30 @@ class World {
     ];
     this.extraction = {
       headings: [{ text: "Unit 1", box_2d: [10, 10, 60, 500] }],
+      // Figures in the extraction must NOT be used to place figure boxes.
       questions: [
         {
           number_label: "Q1",
-          figures: [{ box_2d: [400, 100, 600, 500], kind: "diagram" }],
+          figures: [{ box_2d: [1, 1, 2, 2], kind: "diagram" }],
         },
       ],
+    };
+  }
+
+  assetRegions = new Map<string, number[]>([[ASSET_ID, [0.1, 0.4, 0.5, 0.6]]]);
+  assetUpdated = new Map<string, string>();
+
+  asset(id: string) {
+    return {
+      id,
+      created_at: "",
+      height: 10,
+      width: 10,
+      kind: "figure",
+      pipeline_generated: true,
+      region: this.assetRegions.get(id) ?? [0, 0, 1, 1],
+      source_page_id: "page-1",
+      updated_at: this.assetUpdated.get(id) ?? "2026-10-31T10:00:00Z",
     };
   }
 
@@ -204,6 +222,26 @@ class World {
       });
     const search = new URLSearchParams(call.search);
     if (path === "/api/v1/auth/me") return json(user(this.role));
+    if (path === "/api/v1/llm/models") {
+      return json([
+        {
+          id: "qwen/qwen3.8-flash",
+          price_in_per_m: "0.15",
+          price_out_per_m: "0.47",
+          default_for_stages: ["verify"],
+        },
+        {
+          id: "google/gemini-3.8-flash",
+          price_in_per_m: "0.83",
+          price_out_per_m: "4.12",
+          default_for_stages: ["extract"],
+        },
+      ]);
+    }
+    const assetMatch = /^\/api\/v1\/assets\/([^/]+)$/.exec(path);
+    if (assetMatch && method === "GET") {
+      return json(this.asset(assetMatch[1] ?? ""));
+    }
     if (path === "/api/v1/subjects")
       return json({ items: [], next_cursor: null });
     if (path === "/api/v1/sources") {
@@ -646,31 +684,33 @@ describe("Review workspace", () => {
         { status: 201, headers: { "Content-Type": "application/json" } },
       );
     });
-    world.overrides.set(
-      `PUT /api/v1/assets/${ASSET_ID}/region`,
-      (call) =>
-        new Response(
-          JSON.stringify({
-            id: ASSET_ID,
-            created_at: "",
-            height: 10,
-            width: 10,
-            kind: "figure",
-            pipeline_generated: true,
-            region: (call.body as { box: number[] }).box,
-            source_page_id: "page-1",
-            updated_at: "2026-10-31T13:00:00Z",
-          }),
-          { status: 200, headers: { "Content-Type": "application/json" } },
-        ),
-    );
+    world.overrides.set(`PUT /api/v1/assets/${ASSET_ID}/region`, (call) => {
+      world.assetRegions.set(ASSET_ID, (call.body as { box: number[] }).box);
+      world.assetUpdated.set(ASSET_ID, "2026-10-31T13:00:00Z");
+      return new Response(
+        JSON.stringify({
+          id: ASSET_ID,
+          created_at: "",
+          height: 10,
+          width: 10,
+          kind: "figure",
+          pipeline_generated: true,
+          region: (call.body as { box: number[] }).box,
+          source_page_id: "page-1",
+          updated_at: "2026-10-31T13:00:00Z",
+        }),
+        { status: 200, headers: { "Content-Type": "application/json" } },
+      );
+    });
     const u = userEvent.setup();
     renderReview();
     await waitForEditor("Q1");
 
     // Re-crop: select the figure box (edit mode) and nudge it.
     const thumb = await screen.findByTestId(`figure-thumb-${ASSET_ID}`);
-    expect(thumb.getAttribute("src")).not.toContain("?v=");
+    expect(thumb.getAttribute("src")).toBe(
+      `/api/v1/assets/${ASSET_ID}/image?v=2026-10-31T10%3A00%3A00Z`,
+    );
     const figure = await screen.findByRole("button", { name: "figure Q1.1" });
     fireEvent.click(figure);
     await waitFor(() => {
@@ -691,7 +731,7 @@ describe("Review workspace", () => {
     await waitFor(() => {
       expect(
         screen.getByTestId(`figure-thumb-${ASSET_ID}`).getAttribute("src"),
-      ).toContain(`/assets/${ASSET_ID}/image?v=`);
+      ).toContain("2026-10-31T13%3A00%3A00Z");
     });
 
     // Add figure on Q2: draw mode, then drag on the canvas.
@@ -855,9 +895,11 @@ describe("Review workspace", () => {
     await waitForEditor("Q1");
     await u.click(screen.getByRole("button", { name: "Re-extract page" }));
     const dialog = await screen.findByTestId("reextract-dialog");
-    expect(
-      within(dialog).getByRole("option", { name: "openai/gpt-6-luna" }),
-    ).toBeInTheDocument();
+    await waitFor(() => {
+      expect(within(dialog).getByLabelText("Model")).toHaveValue(
+        "google/gemini-3.8-flash",
+      );
+    });
     await u.click(within(dialog).getByRole("button", { name: "Start" }));
     const diff = await within(dialog).findByTestId(
       "reextract-diff",
@@ -1062,13 +1104,11 @@ describe("Review workspace extras", () => {
       stem: "Recovered stem",
       number_label: "Q9",
     });
-    await waitFor(() => {
-      expect(callsTo("PATCH", /q9$/)).toHaveLength(1);
-    });
-    expect(callsTo("PATCH", /q9$/)[0]?.body).toEqual({
-      version: 1,
+    expect(callsTo("POST", /\/questions$/)[0]?.body).toMatchObject({
+      source_id: SOURCE_ID,
       regions: [{ page: "page-1", box: [0.1, 0.2, 0.45, 0.7] }],
     });
+    expect(callsTo("PATCH", /q9$/)).toHaveLength(0);
     await waitForEditor("Q9");
   });
 

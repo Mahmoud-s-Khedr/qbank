@@ -21,10 +21,12 @@ import {
   isQuestionOut,
   type QuestionOut,
   type QueueFilters,
+  assetKey,
   prefetchQuestion,
   questionKey,
   useAddFigure,
   useApproveQuestion,
+  useAssets,
   useBulkQuestions,
   useDeleteFigure,
   useExtractRegion,
@@ -181,9 +183,6 @@ export function ReviewWorkspacePage() {
   const [figureBoxes, setFigureBoxes] = useState<
     Record<string, { pageId: string; box: Box }>
   >({});
-  const [assetVersions, setAssetVersions] = useState<Record<string, string>>(
-    {},
-  );
 
   const stemRef = useRef<HTMLTextAreaElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
@@ -479,6 +478,26 @@ export function ReviewWorkspacePage() {
     [pageDetail.data],
   );
 
+  const assetIds = useMemo(() => {
+    const ids = new Set(question ? assetIdsOf(question) : []);
+    for (const q of sourceQuestions.data ?? []) {
+      if (parseRegions(q.regions).some((r) => r.page === currentPage?.id)) {
+        assetIdsOf(q).forEach((id) => ids.add(id));
+      }
+    }
+    return [...ids];
+  }, [question, sourceQuestions.data, currentPage]);
+  const assetQueries = useAssets(assetIds);
+  const assetMap = useMemo(
+    () =>
+      new Map(
+        assetQueries.flatMap((a) =>
+          a.data ? [[a.data.id, a.data] as const] : [],
+        ),
+      ),
+    [assetQueries],
+  );
+
   const regions = useMemo<Region[]>(() => {
     if (!currentPage) return [];
     const list: Region[] = [];
@@ -493,18 +512,14 @@ export function ReviewWorkspacePage() {
           label: q.number_label,
         });
       }
-      const assets = assetIdsOf(q);
-      const fromExtraction = extraction.figuresByQuestion.get(q.number_label);
-      const mapped =
-        own[0]?.page === currentPage.id &&
-        fromExtraction?.length === assets.length;
-      assets.forEach((assetId, i) => {
-        const known = figureBoxes[assetId];
+      assetIdsOf(q).forEach((assetId, i) => {
+        const override = figureBoxes[assetId];
+        const asset = assetMap.get(assetId);
         const box =
-          known?.pageId === currentPage.id
-            ? known.box
-            : !known && mapped
-              ? fromExtraction[i]
+          override?.pageId === currentPage.id
+            ? override.box
+            : asset?.source_page_id === currentPage.id
+              ? toBox(asset.region)
               : undefined;
         if (box) {
           list.push({
@@ -534,6 +549,7 @@ export function ReviewWorkspacePage() {
     stimuli.data,
     extraction,
     figureBoxes,
+    assetMap,
   ]);
 
   const selectedRegion =
@@ -552,8 +568,8 @@ export function ReviewWorkspacePage() {
       : "view";
 
   const resolveAsset = useCallback(
-    (id: string) => assetImageUrl(id, assetVersions[id]),
-    [assetVersions],
+    (id: string) => assetImageUrl(id, assetMap.get(id)?.updated_at),
+    [assetMap],
   );
 
   const onCanvasSelect = (id: string) => {
@@ -577,21 +593,12 @@ export function ReviewWorkspacePage() {
     }));
     try {
       const asset = await recropMut.mutateAsync({ assetId, box });
-      setAssetVersions((prev) => ({ ...prev, [assetId]: asset.updated_at }));
-      if (asset.region.length === 4) {
-        const [x0, y0, x1, y1] = asset.region;
-        if (
-          x0 !== undefined &&
-          y0 !== undefined &&
-          x1 !== undefined &&
-          y1 !== undefined
-        ) {
-          setFigureBoxes((prev) => ({
-            ...prev,
-            [assetId]: { pageId: currentPage.id, box: [x0, y0, x1, y1] },
-          }));
-        }
-      }
+      queryClient.setQueryData(assetKey(assetId), asset);
+      setFigureBoxes((prev) => {
+        const next = { ...prev };
+        Reflect.deleteProperty(next, assetId);
+        return next;
+      });
       toast.success(t("review.toast.recropped"));
     } catch (error) {
       setFigureBoxes((prev) => {
@@ -617,10 +624,7 @@ export function ReviewWorkspacePage() {
           pageId: currentPage.id,
           box,
         });
-        setFigureBoxes((prev) => ({
-          ...prev,
-          [asset.id]: { pageId: asset.source_page_id ?? currentPage.id, box },
-        }));
+        queryClient.setQueryData(assetKey(asset.id), asset);
         setRegionSel({ qid: saved.id, id: `f:${asset.id}` });
         toast.success(t("review.toast.figureAdded"));
       } catch (error) {
@@ -1232,6 +1236,7 @@ export function ReviewWorkspacePage() {
           box={missed.box}
           pageId={missed.pageId}
           subjectId={source.data.subject_id}
+          sourceId={sourceId}
           lang={question?.language ?? "ar"}
           onCreated={(created) => {
             setMissed(null);
@@ -1244,6 +1249,16 @@ export function ReviewWorkspacePage() {
       ) : null}
     </section>
   );
+}
+
+function toBox(region: readonly number[]): Box | undefined {
+  const [x0, y0, x1, y1] = region;
+  return x0 !== undefined &&
+    y0 !== undefined &&
+    x1 !== undefined &&
+    y1 !== undefined
+    ? [x0, y0, x1, y1]
+    : undefined;
 }
 
 const EMPTY_QUESTION = {
