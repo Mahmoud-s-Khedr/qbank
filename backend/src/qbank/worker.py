@@ -14,6 +14,7 @@ from qbank.config import get_settings
 from qbank.db import get_engine
 from qbank.models import Job, PageStatus, Source, SourcePage, SourceStatus
 from qbank.pipeline.orchestrator import page_done
+from qbank.pipeline.pdf_cache import get_pdf_cache
 from qbank.storage import get_store, keys
 
 dramatiq.set_broker(RedisBroker(url=get_settings().redis_url))  # type: ignore[no-untyped-call]  # Dramatiq lacks constructor types.
@@ -21,16 +22,32 @@ dramatiq.set_broker(RedisBroker(url=get_settings().redis_url))  # type: ignore[n
 
 def fail_source(source_id: UUID, error: str) -> None:
     with Session(get_engine()) as db:
-        db.execute(
+        failed = db.scalar(
             update(Source)
-            .where(Source.id == source_id)
+            .where(
+                Source.id == source_id,
+                Source.stage == "render",
+                Source.status == SourceStatus.rendering,
+            )
             .values(status=SourceStatus.failed, error=error)
+            .returning(Source.id)
         )
-        db.execute(update(Job).where(Job.ref_id == source_id).values(status="failed", error=error))
+        if failed:
+            db.execute(
+                update(Job).where(Job.ref_id == source_id).values(status="failed", error=error)
+            )
         db.commit()
 
 
 @dramatiq.actor(max_retries=3)
+def source_failed(message: dict[str, object], details: dict[str, object]) -> None:
+    args = message["args"]
+    if not isinstance(args, (list, tuple)):
+        raise ValueError("Invalid message arguments")
+    fail_source(UUID(str(args[0])), "storage_error: retries exhausted")
+
+
+@dramatiq.actor(max_retries=3, on_retry_exhausted="source_failed")
 def render_source(source_id: str) -> None:
     sid = UUID(source_id)
     with Session(get_engine()) as db:
@@ -39,13 +56,13 @@ def render_source(source_id: str) -> None:
             return
         file_key = source.file_key
     # Storage errors propagate to Dramatiq for retry.
-    data = get_store().get_bytes(file_key)
-    try:
-        with pymupdf.open(stream=data, filetype="pdf") as document:  # type: ignore[no-untyped-call]  # PyMuPDF lacks constructor types.
-            count = document.page_count
-    except Exception as exc:
-        fail_source(sid, str(exc))
-        return
+    with get_pdf_cache().acquire(file_key, get_store()) as path:
+        try:
+            with pymupdf.open(str(path)) as document:  # type: ignore[no-untyped-call]  # PyMuPDF constructor is untyped.
+                count = document.page_count
+        except Exception as exc:
+            fail_source(sid, str(exc))
+            return
     if count > get_settings().max_pages:
         fail_source(sid, "too_many_pages")
         return
@@ -68,38 +85,75 @@ def render_source(source_id: str) -> None:
                 )
             )
         )
-    for number in pending:
-        render_page.send(source_id, number)
+    batch_size = get_settings().render_batch_size
+    for offset in range(0, len(pending), batch_size):
+        render_pages.send(source_id, pending[offset : offset + batch_size])
     if not pending:
         page_done(sid, "render")
 
 
 @dramatiq.actor(max_retries=3)
-def render_page(source_id: str, page_number: int) -> None:
+def render_failed(message: dict[str, object], details: dict[str, object]) -> None:
+    args = message["args"]
+    if not isinstance(args, (list, tuple)):
+        raise ValueError("Invalid message arguments")
+    sid = UUID(str(args[0]))
+    numbers = args[1]
+    if not isinstance(numbers, (list, tuple)):
+        raise ValueError("Invalid page numbers")
+    options = message.get("options", {})
+    if not isinstance(options, dict):
+        raise ValueError("Invalid message options")
+    trace = str(options.get("traceback", "storage failure")).strip().splitlines()[-1]
+    with Session(get_engine()) as db:
+        db.execute(
+            update(SourcePage)
+            .where(
+                SourcePage.source_id == sid,
+                SourcePage.page_number.in_(numbers),
+                SourcePage.status == PageStatus.pending,
+            )
+            .values(status=PageStatus.failed, error=f"storage_error: {trace}")
+        )
+        db.commit()
+    page_done(sid, "render")
+
+
+@dramatiq.actor(max_retries=3, on_retry_exhausted="render_failed")
+def render_pages(source_id: str, numbers: list[int]) -> None:
     sid = UUID(source_id)
     with Session(get_engine()) as db:
         source = db.get(Source, sid)
+        if source is None or source.stage != "render":
+            return
+        org, file_key = source.org_id, source.file_key
+    with (
+        get_pdf_cache().acquire(file_key, get_store()) as path,
+        pymupdf.open(str(path)) as document,  # type: ignore[no-untyped-call]  # PyMuPDF is untyped.
+    ):
+        for number in numbers:
+            render_one(sid, org, number, document)
+
+
+def render_one(sid: UUID, org: UUID, page_number: int, document: pymupdf.Document) -> None:
+    with Session(get_engine()) as db:
         page = db.scalar(
             select(SourcePage).where(
                 SourcePage.source_id == sid, SourcePage.page_number == page_number
             )
         )
-        if source is None or page is None or page.status != PageStatus.pending:
+        if page is None or page.status != PageStatus.pending:
             return
-        org, file_key = source.org_id, source.file_key
-    data = get_store().get_bytes(file_key)
     settings = get_settings()
     try:
-        with pymupdf.open(stream=data, filetype="pdf") as document:  # type: ignore[no-untyped-call]  # PyMuPDF lacks constructor types.
-            pdf_page = document.load_page(page_number - 1)
-            display = pdf_page.get_pixmap(dpi=settings.render_dpi_display, alpha=False)
-            hires = pdf_page.get_pixmap(dpi=settings.render_dpi_hires, alpha=False)
-            # Pillow supplies WebP encoding (PyMuPDF's support varies by version).
-            image = Image.frombytes("RGB", (display.width, display.height), display.samples)
-            output = BytesIO()
-            image.save(output, format="WEBP")
-            display_data = output.getvalue()
-            hires_data = hires.tobytes("png")
+        pdf_page = document.load_page(page_number - 1)  # type: ignore[no-untyped-call]  # PyMuPDF is untyped.
+        display = pdf_page.get_pixmap(dpi=settings.render_dpi_display, alpha=False)
+        hires = pdf_page.get_pixmap(dpi=settings.render_dpi_hires, alpha=False)
+        image = Image.frombytes("RGB", (display.width, display.height), display.samples)
+        output = BytesIO()
+        image.save(output, format="WEBP")
+        display_data = output.getvalue()
+        hires_data = hires.tobytes("png")
     except Exception as exc:
         with Session(get_engine()) as db:
             db.execute(

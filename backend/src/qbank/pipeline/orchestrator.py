@@ -16,6 +16,7 @@ class Stage:
     name: str
     start: Callable[[str], object]
     status: SourceStatus
+    pending_status: PageStatus
 
 
 def start_render(source_id: str) -> object:
@@ -24,7 +25,7 @@ def start_render(source_id: str) -> object:
     return render_source.send(source_id)
 
 
-STAGES: list[Stage] = [Stage("render", start_render, SourceStatus.rendering)]
+STAGES: list[Stage] = [Stage("render", start_render, SourceStatus.rendering, PageStatus.pending)]
 
 
 def advance(source_id: UUID, finished_stage: str) -> bool:
@@ -53,11 +54,12 @@ def advance(source_id: UUID, finished_stage: str) -> bool:
 
 
 def page_done(source_id: UUID, stage: str) -> None:
+    pending_status = next(item.pending_status for item in STAGES if item.name == stage)
     with Session(get_engine()) as db:
         remaining = db.scalar(
             select(func.count())
             .select_from(SourcePage)
-            .where(SourcePage.source_id == source_id, SourcePage.status == PageStatus.pending)
+            .where(SourcePage.source_id == source_id, SourcePage.status == pending_status)
         )
     if remaining == 0:
         advance(source_id, stage)

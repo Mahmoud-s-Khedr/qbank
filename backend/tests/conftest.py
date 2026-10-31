@@ -1,5 +1,6 @@
 import os
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
+from pathlib import Path
 from uuid import uuid4
 
 import pytest
@@ -52,3 +53,14 @@ def database(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
 
 def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line("markers", "slow: resource-intensive integration test")
+
+
+@pytest.fixture
+def fixture_pdf() -> Callable[[str], Path]:
+    def resolve(name: str) -> Path:
+        path = Path(__file__).resolve().parents[2] / "fixtures" / "pdfs" / name
+        if not path.is_file():
+            pytest.skip(f"fixture {name} not available")
+        return path
+
+    return resolve

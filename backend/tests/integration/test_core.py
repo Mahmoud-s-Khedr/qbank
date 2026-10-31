@@ -1,8 +1,8 @@
-from collections.abc import Iterator
+from collections.abc import Callable, Iterator
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
 from pathlib import Path
-from typing import cast
+from typing import Any, cast
 from uuid import UUID, uuid4
 
 import jwt
@@ -17,12 +17,12 @@ from qbank.auth import hasher
 from qbank.cli import seed_dev
 from qbank.config import Settings, get_settings
 from qbank.db import get_db, get_engine
-from qbank.models import Organization, Role, SourceStatus, User
+from qbank.models import Organization, PageStatus, Role, SourceStatus, User
 from qbank.pipeline import orchestrator
 from qbank.services import auth
 from qbank.services.taxonomy import tree
 from qbank.storage import get_store
-from qbank.worker import render_page, render_source
+from qbank.worker import render_pages, render_source
 
 
 @pytest.fixture
@@ -363,10 +363,10 @@ def test_tree_query_count_is_constant(
 @pytest.mark.integration
 def test_upload_render_and_images(
     setup_core: dict[str, str],
-    database: str,
     client: TestClient,
     monkeypatch: pytest.MonkeyPatch,
     tmp_path: object,
+    fixture_pdf: Callable[[str], Path],
 ) -> None:
     monkeypatch.setenv("QBANK_STORAGE_BACKEND", "local")
     monkeypatch.setenv("QBANK_STORAGE_LOCAL_ROOT", str(tmp_path))
@@ -379,15 +379,15 @@ def test_upload_render_and_images(
     monkeypatch.setattr(
         orchestrator,
         "STAGES",
-        [orchestrator.Stage("render", queued.append, SourceStatus.rendering)],
+        [orchestrator.Stage("render", queued.append, SourceStatus.rendering, PageStatus.pending)],
     )
     pages: list[int] = []
-    monkeypatch.setattr(render_page, "send", lambda sid, number: pages.append(number))
+    monkeypatch.setattr(render_pages, "send", lambda sid, numbers: pages.extend(numbers))
     login(client, "a@example.com")
     subject = client.post("/api/v1/subjects", json={"name": "Render", "language": "ar"}).json()[
         "id"
     ]
-    pdf = Path("../fixtures/pdfs/test-2027.pdf").read_bytes()
+    pdf = fixture_pdf("test-2027.pdf").read_bytes()
     response = client.post(
         "/api/v1/sources",
         data={"subject_id": subject, "title": "Book"},
@@ -401,11 +401,11 @@ def test_upload_render_and_images(
     render_source.fn(sid)
     assert pages == [1, 2]
     for number in pages:
-        render_page.fn(sid, number)
+        render_pages.fn(sid, [number])
     response = client.get(f"/api/v1/sources/{sid}")
     assert response.json()["status"] == "ready"
     assert response.json()["page_counts"] == {"rendered": 2}
-    render_page.fn(sid, 1)
+    render_pages.fn(sid, [1])
     render_source.fn(sid)
     assert len(client.get(f"/api/v1/sources/{sid}/pages").json()) == len(pages)
     assert (
@@ -477,7 +477,11 @@ def test_upload_validation_and_roles(
 @pytest.mark.integration
 @pytest.mark.slow
 def test_damaged_pdf_render(
-    setup_core: dict[str, str], client: TestClient, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    setup_core: dict[str, str],
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    fixture_pdf: Callable[[str], Path],
 ) -> None:
     monkeypatch.setenv("QBANK_STORAGE_BACKEND", "local")
     monkeypatch.setenv("QBANK_STORAGE_LOCAL_ROOT", str(tmp_path))
@@ -489,15 +493,19 @@ def test_damaged_pdf_render(
     monkeypatch.setattr(
         orchestrator,
         "STAGES",
-        [orchestrator.Stage("render", lambda sid: None, SourceStatus.rendering)],
+        [
+            orchestrator.Stage(
+                "render", lambda sid: None, SourceStatus.rendering, PageStatus.pending
+            )
+        ],
     )
     pages: list[int] = []
-    monkeypatch.setattr(render_page, "send", lambda sid, number: pages.append(number))
+    monkeypatch.setattr(render_pages, "send", lambda sid, numbers: pages.extend(numbers))
     login(client, "a@example.com")
     subject = client.post("/api/v1/subjects", json={"name": "Damaged", "language": "ar"}).json()[
         "id"
     ]
-    pdf = Path("../fixtures/pdfs/test-exams.pdf").read_bytes()
+    pdf = fixture_pdf("test-exams.pdf").read_bytes()
     response = client.post(
         "/api/v1/sources",
         data={"subject_id": subject, "title": "Damaged"},
@@ -507,7 +515,7 @@ def test_damaged_pdf_render(
     sid = response.json()["source"]["id"]
     render_source.fn(sid)
     for number in pages:
-        render_page.fn(sid, number)
+        render_pages.fn(sid, [number])
     result = client.get(f"/api/v1/sources/{sid}/pages").json()
     assert all(page["status"] == "rendered" for page in result[:60])
     assert all(page["status"] == "failed" and page["error"] for page in result[60:])
@@ -531,7 +539,11 @@ def test_stage_transition_compare_and_set(
     monkeypatch.setattr(
         orchestrator,
         "STAGES",
-        [orchestrator.Stage("render", lambda sid: None, SourceStatus.rendering)],
+        [
+            orchestrator.Stage(
+                "render", lambda sid: None, SourceStatus.rendering, PageStatus.pending
+            )
+        ],
     )
     login(client, "a@example.com")
     subject = client.post("/api/v1/subjects", json={"name": "CAS", "language": "ar"}).json()["id"]
@@ -551,7 +563,11 @@ def test_stage_transition_compare_and_set(
 
 @pytest.mark.integration
 def test_source_exceeding_page_limit_fails(
-    setup_core: dict[str, str], client: TestClient, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+    setup_core: dict[str, str],
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: Path,
+    fixture_pdf: Callable[[str], Path],
 ) -> None:
     monkeypatch.setenv("QBANK_STORAGE_BACKEND", "local")
     monkeypatch.setenv("QBANK_STORAGE_LOCAL_ROOT", str(tmp_path))
@@ -562,11 +578,15 @@ def test_source_exceeding_page_limit_fails(
     monkeypatch.setattr(
         orchestrator,
         "STAGES",
-        [orchestrator.Stage("render", lambda sid: None, SourceStatus.rendering)],
+        [
+            orchestrator.Stage(
+                "render", lambda sid: None, SourceStatus.rendering, PageStatus.pending
+            )
+        ],
     )
     login(client, "a@example.com")
     subject = client.post("/api/v1/subjects", json={"name": "Limit", "language": "ar"}).json()["id"]
-    pdf = Path("../fixtures/pdfs/test-2027.pdf").read_bytes()
+    pdf = fixture_pdf("test-2027.pdf").read_bytes()
     response = client.post(
         "/api/v1/sources",
         data={"subject_id": subject, "title": "Limit"},
@@ -583,3 +603,144 @@ def test_source_exceeding_page_limit_fails(
     get_engine.cache_clear()
     get_store.cache_clear()
     get_settings.cache_clear()
+
+
+@pytest.mark.integration
+def test_generated_damaged_pdf_isolates_page_failure(
+    setup_core: dict[str, str], client: TestClient, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import pymupdf  # noqa: PLC0415 -- only needed for this generated fixture.
+
+    monkeypatch.setenv("QBANK_STORAGE_BACKEND", "local")
+    monkeypatch.setenv("QBANK_STORAGE_LOCAL_ROOT", str(tmp_path))
+    monkeypatch.setenv("QBANK_RENDER_DPI_DISPLAY", "12")
+    monkeypatch.setenv("QBANK_RENDER_DPI_HIRES", "12")
+    monkeypatch.setenv("QBANK_RENDER_BATCH_SIZE", "2")
+    get_settings.cache_clear()
+    get_store.cache_clear()
+    get_engine.cache_clear()
+    monkeypatch.setattr(
+        orchestrator,
+        "STAGES",
+        [
+            orchestrator.Stage(
+                "render", lambda sid: None, SourceStatus.rendering, PageStatus.pending
+            )
+        ],
+    )
+    batches: list[list[int]] = []
+    monkeypatch.setattr(render_pages, "send", lambda sid, numbers: batches.append(numbers))
+    document: Any = pymupdf.open()  # type: ignore[no-untyped-call]  # PyMuPDF constructor is untyped.
+    for _ in range(3):
+        document.new_page()
+    document.update_object(document.page_xref(2), "<< /Type /Pages /Count 0 /Kids [] >>")
+    raw: bytes = document.tobytes()
+    document.close()
+    # Drop the last cross-reference entry, leaving MuPDF to repair the damaged tree.
+    xref = raw.rfind(b"\nxref\n") + 1
+    trailer = raw.find(b"trailer", xref)
+    entries = raw[xref:trailer].splitlines(keepends=True)
+    pdf = raw[:xref] + b"".join(entries[:-1]) + raw[trailer:]
+    login(client, "a@example.com")
+    subject = client.post("/api/v1/subjects", json={"name": "Generated", "language": "en"}).json()[
+        "id"
+    ]
+    response = client.post(
+        "/api/v1/sources",
+        data={"subject_id": subject, "title": "Generated"},
+        files={"file": ("generated.pdf", pdf)},
+    )
+    sid = response.json()["source"]["id"]
+    render_source.fn(sid)
+    assert batches == [[1, 2], [3]]
+    for batch in batches:
+        render_pages.fn(sid, batch)
+    pages = client.get(f"/api/v1/sources/{sid}/pages").json()
+    assert [page["status"] for page in pages] == ["rendered", "rendered", "failed"]
+    assert pages[2]["error"]
+    assert client.get(f"/api/v1/sources/{sid}").json()["status"] == "ready"
+    get_engine.cache_clear()
+    get_store.cache_clear()
+    get_settings.cache_clear()
+
+
+@pytest.mark.integration
+def test_storage_retry_exhaustion_fails_remaining_pages(  # noqa: PLR0915 -- full retry integration path.
+    setup_core: dict[str, str], client: TestClient, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    import time  # noqa: PLC0415 -- used only for the asynchronous worker test.
+
+    import dramatiq  # noqa: PLC0415 -- used only for the asynchronous worker test.
+    import pymupdf  # noqa: PLC0415 -- used only to generate a fixture.
+    from dramatiq.brokers.stub import StubBroker  # noqa: PLC0415 -- test broker.
+
+    import qbank.worker as worker_module  # noqa: PLC0415 -- patch the worker's store.
+    from qbank.worker import render_failed  # noqa: PLC0415 -- test callback actor.
+
+    monkeypatch.setenv("QBANK_STORAGE_BACKEND", "local")
+    monkeypatch.setenv("QBANK_STORAGE_LOCAL_ROOT", str(tmp_path))
+    monkeypatch.setenv("QBANK_RENDER_DPI_DISPLAY", "12")
+    monkeypatch.setenv("QBANK_RENDER_DPI_HIRES", "12")
+    get_settings.cache_clear()
+    get_store.cache_clear()
+    get_engine.cache_clear()
+    monkeypatch.setattr(
+        orchestrator,
+        "STAGES",
+        [
+            orchestrator.Stage(
+                "render", lambda sid: None, SourceStatus.rendering, PageStatus.pending
+            )
+        ],
+    )
+    batches: list[list[int]] = []
+    with monkeypatch.context() as patch:
+        patch.setattr(render_pages, "send", lambda sid, numbers: batches.append(numbers))
+        document: Any = pymupdf.open()  # type: ignore[no-untyped-call]  # PyMuPDF constructor is untyped.
+        for _ in range(3):
+            document.new_page()
+        pdf = document.tobytes()
+        document.close()
+        login(client, "a@example.com")
+        subject = client.post("/api/v1/subjects", json={"name": "Retry", "language": "en"}).json()[
+            "id"
+        ]
+        response = client.post(
+            "/api/v1/sources",
+            data={"subject_id": subject, "title": "Retry"},
+            files={"file": ("generated.pdf", pdf)},
+        )
+        sid = response.json()["source"]["id"]
+        render_source.fn(sid)
+    store = get_store()
+    monkeypatch.setattr(
+        store, "put_bytes", lambda *args: (_ for _ in ()).throw(OSError("disk unavailable"))
+    )
+    monkeypatch.setattr(worker_module, "get_store", lambda: store)
+    broker = StubBroker()
+    for actor in (render_pages, render_failed):
+        monkeypatch.setattr(actor, "broker", broker)
+        broker.declare_actor(actor)
+    worker = dramatiq.Worker(broker, worker_timeout=20, worker_threads=1)
+    worker.start()
+    try:
+        render_pages.send_with_options(
+            args=(sid, batches[0]), max_retries=3, min_backoff=1, max_backoff=2
+        )
+        deadline = time.monotonic() + 10
+        while time.monotonic() < deadline:
+            source = client.get(f"/api/v1/sources/{sid}").json()
+            if source["status"] == "ready":
+                break
+            time.sleep(0.05)
+        assert source["status"] == "ready"
+        pages = client.get(f"/api/v1/sources/{sid}/pages").json()
+        assert all(
+            page["status"] == "failed" and "storage_error:" in page["error"] for page in pages
+        )
+        assert all("disk unavailable" in page["error"] for page in pages)
+    finally:
+        worker.stop()
+        get_engine.cache_clear()
+        get_store.cache_clear()
+        get_settings.cache_clear()
