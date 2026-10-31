@@ -89,3 +89,27 @@
     @apply bg-background text-foreground font-sans antialiased;
   }
 }
+
+.qmd-blank {
+  display: inline-block;
+  min-width: 4rem;
+  height: 1em;
+  margin-inline: 0.25rem;
+  vertical-align: baseline;
+  border-bottom: 2px solid currentColor;
+}
+
+.katex,
+.katex-display,
+.katex-error {
+  direction: ltr;
+  unicode-bidi: isolate;
+}
+
+.katex-error {
+  display: inline-block;
+  border: 1px solid var(--destructive);
+  border-radius: 0.25rem;
+  padding-inline: 0.25rem;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}

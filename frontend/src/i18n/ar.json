@@ -67,5 +67,64 @@
       "description": "عذراً، الصفحة التي تبحث عنها غير موجودة أو تم نقلها.",
       "backHome": "العودة إلى الرئيسية"
     }
+  },
+  "qmd": {
+    "missingAsset": "الصورة غير متاحة",
+    "blankAriaLabel": "فراغ",
+    "editor": {
+      "defaultLabel": "محتوى السؤال (QMD)",
+      "preview": "معاينة مباشرة",
+      "emptyPreview": "لا يوجد محتوى للمعاينة",
+      "toolbar": {
+        "label": "شريط أدوات التنسيق والمعادلات",
+        "inlineMath": "معادلة سطرية",
+        "inlineMathTooltip": "معادلة سطرية ($…$) — Ctrl+M",
+        "displayMath": "معادلة مستقلة",
+        "displayMathTooltip": "معادلة في سطر مستقل ($$…$$) — Ctrl+Shift+M",
+        "fraction": "كسر",
+        "fractionTooltip": "إدراج كسر (\\frac{}{})",
+        "sqrt": "جذر تربيعي",
+        "sqrtTooltip": "إدراج جذر (\\sqrt{})",
+        "superscript": "أس علوي",
+        "superscriptTooltip": "إدراج أس علوي (^{})",
+        "subscript": "دليل سفلي",
+        "subscriptTooltip": "إدراج دليل سفلي (_{})",
+        "chemistry": "معادلة كيميائية",
+        "chemistryTooltip": "إدراج صيغة كيميائية (\\ce{})",
+        "blank": "فراغ",
+        "blankTooltip": "إدراج فراغ إكمال (____)",
+        "table": "جدول",
+        "tableTooltip": "إدراج قالب جدول",
+        "tableCol1": "العمود 1",
+        "tableCol2": "العمود 2",
+        "tableCell1": "خلية 1",
+        "tableCell2": "خلية 2"
+      }
+    }
+  },
+  "pageCanvas": {
+    "toolbarLabel": "أدوات عرض الصفحة",
+    "zoomIn": "تكبير",
+    "zoomOut": "تصغير",
+    "fitWidth": "ملاءمة العرض",
+    "fitPage": "ملاءمة الصفحة",
+    "pageAlt": "صورة الصفحة الممسوحة",
+    "overlayLabel": "مناطق الصفحة التفاعلية"
+  },
+  "dev": {
+    "title": "مختبر المكونات المشتركة (T13)",
+    "subtitle": "معاينة وتجربة QmdRenderer و QmdEditor و PageCanvas",
+    "rendererSection": "١. عارض المحتوى (QmdRenderer)",
+    "editorSection": "٢. محرر المحتوى (QmdEditor)",
+    "canvasSection": "٣. لوحة الصفحة والمناطق (PageCanvas)",
+    "sampleMcq": "سؤال اختيار من متعدد بالتشكيل والرياضيات",
+    "sampleChemistry": "معادلة كيميائية (mhchem)",
+    "sampleTable": "جدول GFM",
+    "sampleBlank": "سؤال أكمل الفراغ",
+    "sampleBrokenLatex": "صيغة LaTeX غير مكتملة",
+    "sampleMissingAsset": "صورة مفقودة وصورة متاحة",
+    "modeView": "عرض",
+    "modeEdit": "تحرير",
+    "modeDraw": "رسم"
   }
 }

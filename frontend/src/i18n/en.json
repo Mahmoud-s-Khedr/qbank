@@ -67,5 +67,64 @@
       "description": "Sorry, the page you are looking for does not exist or has been moved.",
       "backHome": "Back to home"
     }
+  },
+  "qmd": {
+    "missingAsset": "الصورة غير متاحة",
+    "blankAriaLabel": "فراغ",
+    "editor": {
+      "defaultLabel": "Question content (QMD)",
+      "preview": "Live preview",
+      "emptyPreview": "Nothing to preview",
+      "toolbar": {
+        "label": "Formatting and math toolbar",
+        "inlineMath": "Inline math",
+        "inlineMathTooltip": "Inline math ($…$) — Ctrl+M",
+        "displayMath": "Display math",
+        "displayMathTooltip": "Display math ($$…$$) — Ctrl+Shift+M",
+        "fraction": "Fraction",
+        "fractionTooltip": "Insert fraction (\\frac{}{})",
+        "sqrt": "Square root",
+        "sqrtTooltip": "Insert square root (\\sqrt{})",
+        "superscript": "Superscript",
+        "superscriptTooltip": "Insert superscript (^{})",
+        "subscript": "Subscript",
+        "subscriptTooltip": "Insert subscript (_{})",
+        "chemistry": "Chemistry",
+        "chemistryTooltip": "Insert chemical formula (\\ce{})",
+        "blank": "Blank",
+        "blankTooltip": "Insert fill-in blank (____)",
+        "table": "Table",
+        "tableTooltip": "Insert table template",
+        "tableCol1": "Column 1",
+        "tableCol2": "Column 2",
+        "tableCell1": "Cell 1",
+        "tableCell2": "Cell 2"
+      }
+    }
+  },
+  "pageCanvas": {
+    "toolbarLabel": "Page canvas controls",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "fitWidth": "Fit width",
+    "fitPage": "Fit page",
+    "pageAlt": "Scanned page image",
+    "overlayLabel": "Interactive page regions"
+  },
+  "dev": {
+    "title": "Shared UI Components Playground (T13)",
+    "subtitle": "Preview and test QmdRenderer, QmdEditor, and PageCanvas",
+    "rendererSection": "1. Content Renderer (QmdRenderer)",
+    "editorSection": "2. Content Editor (QmdEditor)",
+    "canvasSection": "3. Page Canvas & Regions (PageCanvas)",
+    "sampleMcq": "Arabic MCQ with tashkeel and math",
+    "sampleChemistry": "Chemistry equation (mhchem)",
+    "sampleTable": "GFM Table",
+    "sampleBlank": "Fill-in-the-blank",
+    "sampleBrokenLatex": "Broken LaTeX string",
+    "sampleMissingAsset": "Missing and resolved assets",
+    "modeView": "View",
+    "modeEdit": "Edit",
+    "modeDraw": "Draw"
   }
 }
