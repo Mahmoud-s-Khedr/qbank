@@ -17,7 +17,7 @@ Detailed task files (`docs/tasks/Txx-*.md`) are written just before dispatch, so
 | T07 | 1 | Golden set: hand-verified ground-truth JSON for ~15 fixture pages (all types, a stimulus, figures, a continuation) | ag + cc review | argon-high | T00 | done |
 | T08 | 1 | Extraction: PageExtraction schema, prompt v1, extract actor, fallback, stitching, figure cropping | cx | terra / medium | T05,T06 | done |
 | T09 | 1 | Structure detection (chapter/lesson tree) + answer-key matching | cx | terra / medium | T08 | todo |
-| T10 | 1 | `qbank-eval` CLI + run on candidate models → MODELS.md results, choose defaults | ag + cc | terra / medium | T07,T08 | in progress |
+| T10 | 1 | `qbank-eval` CLI + run on candidate models → MODELS.md results, choose defaults | ag + cc | terra / medium | T07,T08 | done |
 | T11 | 2 | Validation rules, confidence, verifier pass, Arabic normalization, dedup, classification | cx | terra / medium | T08 | todo |
 | T12 | 3 | Review APIs: question/stimulus CRUD, audit log, split/merge, re-crop, re-extract with diff, bulk approve | cx | terra / medium | T11 | todo |
 | T13 | 3 | Shared UI: QmdRenderer, QmdEditor, PageCanvas (zoom/pan/boxes/draw) | ag | flash or argon (complex UI only) | T02 | done |
@@ -25,7 +25,7 @@ Detailed task files (`docs/tasks/Txx-*.md`) are written just before dispatch, so
 | T15 | 3 | Review workspace UI (split view, issues, editor, shortcuts, split/merge, re-crop, re-extract diff) | ag | flash or argon (complex UI only) | T12,T13 | todo |
 | T16 | 4 | Bank search API (FTS + trigram + facets), bulk metadata edit, manual question create | cx | terra / medium | T11 | todo |
 | T17 | 4 | Bank UI + taxonomy manager UI | ag | flash or argon (complex UI only) | T16,T13 | todo |
-| T18 | 5 | Exams: model/API, sections, blueprint sampler, stimulus grouping, versions/shuffling (hypothesis tests) | cc-sonnet | sonnet 5.5 | T16 | in progress |
+| T18 | 5 | Exams: model/API, sections, blueprint sampler, stimulus grouping, versions/shuffling (hypothesis tests) | cc-sonnet | sonnet 5.5 | T16 | done |
 | T19 | 5 | AI-assisted composition (compose stage) | cx | terra / medium | T18,T06 | todo |
 | T20 | 5 | Exam builder UI (blueprint, manual cart, AI assistant, sections, versions) | ag | flash or argon (complex UI only) | T18,T19 | todo |
 | T21 | 6 | PDF export: HTML templates, fonts, KaTeX, layout options, answer key, bubble sheet | cx | terra / medium | T18 | todo |
@@ -53,3 +53,4 @@ cc: T00, T03 review, every merge, T10 decision, integration fixes, final accepta
 | 2026-10-31 | T07 | agy argon-high | finished files, then hit an auth 401; committed by cc |
 | 2026-10-31 | T06 (+1 review round) | codex medium | 5h 58→68%, weekly 50→51% |
 | 2026-10-31 | T08 (+1 continue round) | codex medium | 5h 68→91%, weekly 51→55%; live run test-2027 $0.0208 |
+| 2026-10-31 | T18 | cc-sonnet 5.5 sub-agent | ~120k subagent tokens, 12 min |
