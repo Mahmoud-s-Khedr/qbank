@@ -78,10 +78,14 @@ def draw_labeled_box(
         ly0 = max(0, y0 - th - 2 * pad) if y0 >= th + 2 * pad else y0
 
     draw.rectangle([lx0, ly0, lx0 + tw + 2 * pad, ly0 + th + 2 * pad], fill=spec.color)
-    draw.text((lx0 + pad, ly0 + pad - bbox[1]), spec.label, fill=(255, 255, 255), font=font)
+    draw.text(
+        (lx0 + pad, ly0 + pad - bbox[1]), spec.label, fill=(255, 255, 255), font=font
+    )
 
 
-def render_overlay(json_path: Path, font: ImageFont.FreeTypeFont | ImageFont.ImageFont) -> Path:
+def render_overlay(
+    json_path: Path, font: ImageFont.FreeTypeFont | ImageFont.ImageFont
+) -> Path:
     data: dict[str, Any] = json.loads(json_path.read_text(encoding="utf-8"))
     image_path = GOLDEN_DIR / data["image"]
     with Image.open(image_path) as im:
@@ -155,7 +159,9 @@ def render_overlay(json_path: Path, font: ImageFont.FreeTypeFont | ImageFont.Ima
 
 
 def main() -> int:
-    golden_jsons = sorted(p for p in GOLDEN_DIR.glob("*.json") if p.name != "schema.json")
+    golden_jsons = sorted(
+        p for p in GOLDEN_DIR.glob("*.json") if p.name != "schema.json"
+    )
     if not golden_jsons:
         sys.stderr.write("No golden JSON files found in fixtures/golden/\n")
         return 1

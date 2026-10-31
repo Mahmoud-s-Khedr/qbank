@@ -28,3 +28,11 @@ updates:
     commit-message: {prefix: "chore(deps)"}
     groups:
       minor-patch: {update-types: [minor, patch]}
+    ignore:
+      # Stay on the LTS / project-pinned runtimes; bump these deliberately.
+      - dependency-name: node
+        update-types: [version-update:semver-major]
+      - dependency-name: python
+        update-types: [version-update:semver-major, version-update:semver-minor]
+      - dependency-name: astral-sh/uv
+        update-types: [version-update:semver-major]

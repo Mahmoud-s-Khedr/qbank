@@ -27,9 +27,13 @@ def check_box(box: list[float], label: str, errors: list[str]) -> None:
         return
     x0, y0, x1, y1 = box
     if not (0.0 <= x0 < x1 <= 1.0):
-        errors.append(f"{label}: invalid x range in box {box} (expected 0 <= x0 < x1 <= 1)")
+        errors.append(
+            f"{label}: invalid x range in box {box} (expected 0 <= x0 < x1 <= 1)"
+        )
     if not (0.0 <= y0 < y1 <= 1.0):
-        errors.append(f"{label}: invalid y range in box {box} (expected 0 <= y0 < y1 <= 1)")
+        errors.append(
+            f"{label}: invalid y range in box {box} (expected 0 <= y0 < y1 <= 1)"
+        )
     for coord in box:
         rounded = round(coord, COORD_DECIMALS)
         if abs(coord - rounded) > COORD_TOL:
@@ -133,7 +137,9 @@ def main() -> int:
     validator = Draft202012Validator(schema)
 
     page_pngs = sorted(PAGES_DIR.glob("*.png"))
-    golden_jsons = sorted(p for p in GOLDEN_DIR.glob("*.json") if p.name != "schema.json")
+    golden_jsons = sorted(
+        p for p in GOLDEN_DIR.glob("*.json") if p.name != "schema.json"
+    )
 
     all_errors: list[str] = []
 
