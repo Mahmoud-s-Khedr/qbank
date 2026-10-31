@@ -515,7 +515,10 @@ def _compute_facets(  # noqa: PLR0912, PLR0915 -- aggregates 7 facet dimensions 
             )
             .group_by(Question.source_id)
         ):
-            source_counts[sid] = int(cnt)
+            if (
+                sid is not None
+            ):  # filtered above; narrows the type (source_id became nullable in T12)
+                source_counts[sid] = int(cnt)
 
     chapters_out: list[ChapterFacet] = []
     if chapter_counts:
