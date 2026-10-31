@@ -1,7 +1,11 @@
 import "@testing-library/jest-dom/vitest";
-import { cleanup } from "@testing-library/react";
+import { cleanup, configure } from "@testing-library/react";
 import { afterEach, beforeEach, vi } from "vitest";
 import { setAppLanguage } from "@/i18n";
+
+// findBy*/waitFor default to 1 s, which flakes on loaded machines and CI runners
+// (seen with the review workspace tests while several suites ran in parallel).
+configure({ asyncUtilTimeout: 5000 });
 
 Object.defineProperty(window, "matchMedia", {
   writable: true,
