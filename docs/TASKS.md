@@ -32,7 +32,7 @@ Detailed task files (`docs/tasks/Txx-*.md`) are written just before dispatch, so
 | T22 | 6 | DOCX export via Pandoc + reference.docx (RTL, OMML) | cc-sonnet | sonnet 5.5 | T21 | done |
 | T23 | 6 | Export/preview UI, exam templates, admin settings (users, models, spend cap), cost dashboard | cx | terra / medium | T21,T22 | done |
 | T24 | 7 | E2E: Playwright full flow on fixtures in CI with recorded LLM | cx | terra / medium | T15,T20,T23 | todo |
-| T25 | 7 | Hardening: security review, rate limits, logging, prod compose + Caddy, README/deploy docs | cx + cc | terra / medium | T24 | todo |
+| T25 | 7 | Hardening: security review, rate limits, logging, prod compose + Caddy, README/deploy docs | cx + cc | terra / medium | T24 | in progress |
 
 ## Parallel lanes
 
