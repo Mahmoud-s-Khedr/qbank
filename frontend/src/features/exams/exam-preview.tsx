@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { useAnswerKey, type ExamDetail } from "@/api/hooks/exams";
+import { assetImageUrl } from "@/api/hooks/review";
 import { QmdRenderer } from "@/components/qmd/QmdRenderer";
 import { choiceParts, formatDigits, printSections } from "./exam-model";
 import { groupUnits } from "./exam-model";
@@ -79,7 +80,10 @@ export function ExamPreview({ exam }: { exam: ExamDetail }) {
               >
                 {unit.stimulusId !== null && unit.items[0]?.stimulus ? (
                   <div className="rounded border p-2 text-sm">
-                    <QmdRenderer source={unit.items[0].stimulus.content} />
+                    <QmdRenderer
+                      source={unit.items[0].stimulus.content}
+                      resolveAsset={assetImageUrl}
+                    />
                   </div>
                 ) : null}
                 {unit.items.map((item) => {
@@ -90,7 +94,10 @@ export function ExamPreview({ exam }: { exam: ExamDetail }) {
                         {formatDigits(numbers.get(item.id) ?? 0, digits)}.
                       </span>
                       <div className="min-w-0 flex-1">
-                        <QmdRenderer source={item.question.stem} />
+                        <QmdRenderer
+                          source={item.question.stem}
+                          resolveAsset={assetImageUrl}
+                        />
                         {choices.length > 0 ? (
                           <ul
                             className="mt-1 gap-1 text-sm"
@@ -108,7 +115,11 @@ export function ExamPreview({ exam }: { exam: ExamDetail }) {
                             {choices.map((choice) => (
                               <li key={choice.label} className="flex gap-1">
                                 <span>{choice.label}</span>
-                                <QmdRenderer source={choice.content} inline />
+                                <QmdRenderer
+                                  source={choice.content}
+                                  inline
+                                  resolveAsset={assetImageUrl}
+                                />
                               </li>
                             ))}
                           </ul>

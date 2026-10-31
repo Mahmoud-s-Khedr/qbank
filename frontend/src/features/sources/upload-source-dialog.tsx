@@ -251,19 +251,18 @@ export function UploadSourceDialog({
                   })}
                 </span>
               ) : null}
-              <input
-                ref={fileInputRef}
-                id="upload-file"
-                type="file"
-                data-testid="upload-file-input"
-                onChange={handleFileInputChange}
-                onClick={(event) => {
-                  event.stopPropagation();
-                }}
-                disabled={isUploading}
-                className="sr-only"
-              />
             </div>
+            {/* A sibling of the dropzone, not a child: nesting it would put a form control
+                inside role="button", which assistive tech cannot operate. */}
+            <input
+              ref={fileInputRef}
+              id="upload-file"
+              type="file"
+              data-testid="upload-file-input"
+              onChange={handleFileInputChange}
+              disabled={isUploading}
+              className="sr-only"
+            />
           </div>
 
           <div className="flex flex-col gap-1.5">

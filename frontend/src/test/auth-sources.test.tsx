@@ -745,6 +745,7 @@ describe("Source Detail, SSE Live Progress, Page Grid, and Page Viewer", () => {
       },
     });
 
+    let pageListFetches = 0;
     vi.spyOn(globalThis, "fetch").mockImplementation((input) => {
       const url = input instanceof Request ? input.url : String(input);
       if (url.includes("/api/v1/auth/me")) {
@@ -756,6 +757,7 @@ describe("Source Detail, SSE Live Progress, Page Grid, and Page Viewer", () => {
         );
       }
       if (url.includes("/api/v1/sources/src-live-1/pages")) {
+        pageListFetches += 1;
         return Promise.resolve(
           jsonResponse(
             [
@@ -833,6 +835,10 @@ describe("Source Detail, SSE Live Progress, Page Grid, and Page Viewer", () => {
     );
     expect(screen.getByTestId("source-stage")).toHaveTextContent("validate");
     expect(es.closed).toBe(false);
+    // Moving page counts refresh the page grid, which is a separate query.
+    await waitFor(() => {
+      expect(pageListFetches).toBeGreaterThanOrEqual(2);
+    });
 
     // Emit terminal status -> closes EventSource
     act(() => {

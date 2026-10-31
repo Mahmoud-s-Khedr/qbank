@@ -1,7 +1,7 @@
 WORKER_PROCESSES ?= 4
 WORKER_THREADS ?= 4
 
-.PHONY: infra-up infra-down be-install be-lint be-fmt be-types be-test be-test-unit be-migrate be-openapi fe-install fe-lint fe-types fe-test fe-build api-gen contract-check lint-actions pre-commit-install check be-dev be-worker eval
+.PHONY: infra-up infra-down be-install be-lint be-fmt be-types be-test be-test-unit be-migrate be-openapi fe-install fe-lint fe-types fe-test fe-build api-gen contract-check lint-actions pre-commit-install check e2e e2e-install be-dev be-worker eval
 infra-up:
 	docker compose up -d --wait postgres redis minio
 	docker compose run --rm minio-init
@@ -69,3 +69,9 @@ prod-backup:
 	umask 077; mkdir -p backups
 	umask 077; bash -o pipefail -c '$(PROD_COMPOSE) exec -T postgres pg_dump -U qbank qbank | gzip > backups/qbank-$$(date -u +%Y%m%dT%H%M%SZ).sql.gz'
 	@echo 'Back up object storage separately.'
+
+.PHONY: e2e e2e-install
+e2e-install:
+	pnpm -C frontend exec playwright install chromium
+e2e: infra-up
+	scripts/e2e/run.sh

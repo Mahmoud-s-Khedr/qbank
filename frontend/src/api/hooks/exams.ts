@@ -181,6 +181,8 @@ export function useExamMutations(examId: string) {
   const store = (exam: ExamDetail) => {
     qc.setQueryData(key, exam);
     void qc.invalidateQueries({ queryKey: EXAMS_KEY });
+    // Any edit bumps the revision, which makes the exam's exports stale (see ExamExportsPanel).
+    void qc.invalidateQueries({ queryKey: ["exports", examId] });
   };
 
   const optimistic = <V>(apply: (exam: ExamDetail, vars: V) => ExamDetail) => ({

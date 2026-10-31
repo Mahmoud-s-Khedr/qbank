@@ -142,6 +142,7 @@ export function ExamsPage() {
                     "status",
                     "questions",
                     "points",
+                    "versions",
                     "updated",
                     "actions",
                   ] as const
@@ -179,6 +180,18 @@ export function ExamsPage() {
                   </td>
                   <td className="p-3 tabular-nums">{exam.question_count}</td>
                   <td className="p-3 tabular-nums">{exam.total_points}</td>
+                  <td className="p-3">
+                    <span className="inline-flex items-center gap-2">
+                      <span className="tabular-nums">
+                        {exam.versions_count}
+                      </span>
+                      {exam.has_stale_versions ? (
+                        <Badge variant="warning">
+                          {t("exams.versions.stale")}
+                        </Badge>
+                      ) : null}
+                    </span>
+                  </td>
                   <td className="p-3">
                     {formatRelativeTime(exam.updated_at, i18n.language)}
                   </td>

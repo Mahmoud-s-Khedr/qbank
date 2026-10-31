@@ -1612,6 +1612,10 @@
             "title": "Created At",
             "type": "string"
           },
+          "has_stale_versions": {
+            "title": "Has Stale Versions",
+            "type": "boolean"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -1668,6 +1672,10 @@
             },
             "title": "Versions",
             "type": "array"
+          },
+          "versions_count": {
+            "title": "Versions Count",
+            "type": "integer"
           }
         },
         "required": [
@@ -1681,6 +1689,8 @@
           "revision",
           "question_count",
           "total_points",
+          "versions_count",
+          "has_stale_versions",
           "settings",
           "blueprint",
           "sections",
@@ -1909,6 +1919,10 @@
             "title": "Created At",
             "type": "string"
           },
+          "has_stale_versions": {
+            "title": "Has Stale Versions",
+            "type": "boolean"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
@@ -1948,6 +1962,10 @@
             "format": "date-time",
             "title": "Updated At",
             "type": "string"
+          },
+          "versions_count": {
+            "title": "Versions Count",
+            "type": "integer"
           }
         },
         "required": [
@@ -1960,7 +1978,9 @@
           "status",
           "revision",
           "question_count",
-          "total_points"
+          "total_points",
+          "versions_count",
+          "has_stale_versions"
         ],
         "title": "ExamSummary",
         "type": "object"

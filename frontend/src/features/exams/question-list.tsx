@@ -1,6 +1,7 @@
 import { X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { QuestionOut } from "@/api/hooks/review";
+import { assetImageUrl } from "@/api/hooks/review";
 import { QmdRenderer } from "@/components/qmd/QmdRenderer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -25,7 +26,10 @@ export function QuestionList({
             <div className="flex min-w-0 flex-1 flex-col gap-1 text-sm">
               {question ? (
                 <>
-                  <QmdRenderer source={question.stem} />
+                  <QmdRenderer
+                    source={question.stem}
+                    resolveAsset={assetImageUrl}
+                  />
                   <div className="flex gap-1 text-xs">
                     <Badge variant="secondary">
                       {t(`review.types.${question.type}`)}

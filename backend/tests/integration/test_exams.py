@@ -654,3 +654,24 @@ def test_ai_compose_fills_group_when_single_would_block_it(
     response = client.post(f"{URL}/exams/{exam['id']}/compose", json={"prompt": "three"})
     assert response.status_code == OK, response.text
     assert set(response.json()["selection"][0]) == set(data["group"])
+
+
+@pytest.mark.integration
+def test_exam_list_reports_versions_and_staleness(data: dict[str, Any], client: TestClient) -> None:
+    login(client, "t1@a.com")
+    eid = new_exam(client, data)["id"]
+
+    def listed() -> dict[str, Any]:
+        items = client.get(f"{URL}/exams").json()["items"]
+        return next(e for e in items if e["id"] == eid)
+
+    assert (listed()["versions_count"], listed()["has_stale_versions"]) == (0, False)
+    exam = client.post(
+        f"{URL}/exams/{eid}/items", json={"question_ids": data["singles"][:2]}
+    ).json()
+    client.post(f"{URL}/exams/{eid}/versions", json={"count": 2, "seed": 1})
+    assert (listed()["versions_count"], listed()["has_stale_versions"]) == (2, False)
+    detail = client.get(f"{URL}/exams/{eid}").json()
+    assert (detail["versions_count"], detail["has_stale_versions"]) == (2, False)
+    client.patch(f"{URL}/exam-items/{item_ids(exam)[0]}", json={"points": 9})
+    assert (listed()["versions_count"], listed()["has_stale_versions"]) == (2, True)

@@ -128,10 +128,70 @@ jobs:
       - run: docker run --rm --user "$(id -u):$(id -g)" -v "$PWD:$PWD" -v "$(git rev-parse --path-format=absolute --git-common-dir):$(git rev-parse --path-format=absolute --git-common-dir):ro" -w "$PWD" zricethezav/gitleaks git --verbose --redact
       - run: uv export --directory backend --frozen --no-dev --no-hashes --no-emit-project | uvx pip-audit -r /dev/stdin --strict
       - run: pnpm -C frontend audit --prod --audit-level high
-  # T24 will add e2e here; T10 will add the separate eval.yml workflow.
+  # T10 will add the separate eval.yml workflow.
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    services:
+      postgres:
+        image: postgres:18
+        env:
+          POSTGRES_USER: qbank
+          POSTGRES_PASSWORD: qbank
+          POSTGRES_DB: qbank
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U qbank -d qbank"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+      redis:
+        image: redis:8-alpine
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 2s --health-timeout 3s --health-retries 30
+    env:
+      # The run uses its own throwaway database, local file storage and the scripted fake LLM:
+      # no MinIO, no network LLM calls, no secrets.
+      E2E_DATABASE_URL: postgresql+psycopg://qbank:qbank@localhost:5432/qbank_e2e
+      E2E_REDIS_URL: redis://localhost:6379/7
+    steps:
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.3.3
+        with:
+          enable-cache: true
+      - uses: pnpm/action-setup@v6
+        with:
+          package_json_file: frontend/package.json
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .node-version
+          cache: pnpm
+          cache-dependency-path: frontend/pnpm-lock.yaml
+      - run: make be-install
+      - run: make fe-install
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-e2e-${{ runner.os }}-${{ hashFiles('backend/uv.lock', 'frontend/pnpm-lock.yaml') }}
+      # Backend PDF export drives Chromium (python playwright); the browser tests use the node one.
+      - name: Install Chromium for PDF export
+        run: uv run --directory backend playwright install --with-deps chromium
+      - name: Install Chromium for the browser tests
+        run: pnpm -C frontend exec playwright install --with-deps chromium
+      - name: Full-flow e2e
+        run: scripts/e2e/run.sh
+      - uses: actions/upload-artifact@v7
+        if: failure()
+        with:
+          name: playwright-report
+          path: |
+            frontend/playwright-report
+            frontend/test-results
+          if-no-files-found: ignore
+          retention-days: 7
   all-green:
     if: always()
-    needs: [backend, frontend, contract, docker, security]
+    needs: [backend, frontend, contract, docker, security, e2e]
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:

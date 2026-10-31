@@ -14,7 +14,7 @@ from pydantic import BaseModel, SecretStr
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
-from qbank.config import Settings
+from qbank.config import Settings, get_settings
 from qbank.db import get_engine
 from qbank.llm import (
     BudgetExceeded,
@@ -370,3 +370,32 @@ def test_strict_schema_turns_tuples_into_plain_arrays() -> None:
     }
     # The model still enforces the exact tuple length on validation.
     assert Boxed.model_validate({"box_2d": [1, 2, 3, 4], "mixed": [1, "a"]}).box_2d == (1, 2, 3, 4)
+
+
+def test_scripted_fake_repeats_last_item(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    script = tmp_path / "script.json"
+    script.write_text(json.dumps({"verify": [{"answer": "one"}, {"answer": "two"}]}))
+    monkeypatch.setenv("QBANK_LLM_MODE", "fake")
+    monkeypatch.setenv("QBANK_LLM_FAKE_SCRIPT", str(script))
+    get_settings.cache_clear()
+    try:
+        client = llm_client.get_llm_client()
+    finally:
+        get_settings.cache_clear()
+    assert isinstance(client, FakeLLMClient)
+    answers = [
+        client.complete_json(stage="verify", messages=[], schema=Answer, org_id=None).parsed.answer
+        for _ in range(4)
+    ]
+    assert answers == ["one", "two", "two", "two"]
+    with pytest.raises(ModelNotAllowed):
+        client.complete_json(
+            stage="verify", messages=[], schema=Answer, org_id=None, model_override="unknown"
+        )
+
+
+def test_scripted_fake_rejects_malformed_script(tmp_path: Path) -> None:
+    script = tmp_path / "bad.json"
+    script.write_text(json.dumps({"verify": []}))
+    with pytest.raises(ValueError, match="non-empty"):
+        FakeLLMClient.from_script(script, Settings())
