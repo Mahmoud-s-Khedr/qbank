@@ -72,6 +72,13 @@ _AR_FIGURE_KEYWORDS_RE = re.compile(
     r"(?:^|\s|[،,.؛:(])(?:و|ف|ب|ك|ل|لل|بال|كال|في\s+)?"
     r"(?:الشكل|الصور\u0647|الرسم|المقابل)(?:ان|ين|\u0647|ات)?(?=$|\s|[،,.؛:؟?)])"
 )
+# In Arabic rhetoric «الصورة البيانية/الكلية/الشعرية…» means a figure of speech, not a picture.
+# These phrases are removed before looking for figure references (matched on normalized text,
+# where taa marbuta becomes heh, U+0647). Found on real Arabic-literature workbooks.
+_AR_RHETORICAL_IMAGE_RE = re.compile(
+    r"(?:ال)?صور(?:\u0647)?\s+(?:ال)?"
+    r"(?:بياني\u0647|كلي\u0647|جزئي\u0647|شعري\u0647|فني\u0647|خيالي\u0647|الادبي\u0647|ادبي\u0647)"
+)
 _EN_FIGURE_KEYWORDS_RE = re.compile(
     r"\b(?:figure|diagram|graph|chart|table)s?\b",
     re.IGNORECASE,
@@ -205,7 +212,7 @@ def missing_answer(question: Question, context: ValidationContext) -> list[Issue
 def figure_referenced_not_attached(question: Question, context: ValidationContext) -> list[Issue]:
     """Flag questions whose stem mentions a figure/diagram/table without an attached asset."""
     stem_without_assets = _ASSET_MARKDOWN_RE.sub(" ", question.stem)
-    norm_stem = normalize_ar(stem_without_assets)
+    norm_stem = _AR_RHETORICAL_IMAGE_RE.sub(" ", normalize_ar(stem_without_assets))
     mentions_ar = bool(_AR_FIGURE_KEYWORDS_RE.search(norm_stem))
     mentions_en = bool(_EN_FIGURE_KEYWORDS_RE.search(stem_without_assets))
     if not (mentions_ar or mentions_en):

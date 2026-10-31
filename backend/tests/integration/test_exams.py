@@ -1,6 +1,7 @@
 from collections.abc import Iterator
 from http import HTTPStatus
 from typing import Any
+from uuid import UUID
 
 import pytest
 from fastapi import FastAPI
@@ -675,3 +676,38 @@ def test_exam_list_reports_versions_and_staleness(data: dict[str, Any], client: 
     assert (detail["versions_count"], detail["has_stale_versions"]) == (2, False)
     client.patch(f"{URL}/exam-items/{item_ids(exam)[0]}", json={"points": 9})
     assert (listed()["versions_count"], listed()["has_stale_versions"]) == (2, True)
+
+
+@pytest.mark.integration
+def test_ai_compose_falls_back_to_subject_wide_row(
+    data: dict[str, Any], client: TestClient, monkeypatch: pytest.MonkeyPatch, database: str
+) -> None:
+    """Seen live: questions with no lesson made every AI-planned row empty (count clamped to 0)."""
+    from qbank.llm import FakeLLMClient  # noqa: PLC0415
+    from qbank.models import Chapter  # noqa: PLC0415
+    from qbank.services import compose_ai  # noqa: PLC0415
+
+    engine = create_engine(database)
+    with Session(engine) as db:
+        empty = Chapter(subject_id=UUID(data["subject"]), title="empty", position=9)
+        db.add(empty)
+        db.commit()
+        empty_id = str(empty.id)
+    engine.dispose()
+    fake = FakeLLMClient()
+    monkeypatch.setattr(compose_ai, "get_llm_client", lambda: fake)
+    fake.queue(
+        "compose", {"sections": [{"title": "A", "rows": [{"count": 3, "chapter_ids": [empty_id]}]}]}
+    )
+    fake.queue("compose", {"rows": [{"refs": []}], "rationale": "test"})
+    login(client, "t1@a.com")
+    exam = new_exam(client, data)
+    response = client.post(f"{URL}/exams/{exam['id']}/compose", json={"prompt": "3 questions"})
+    assert response.status_code == OK, response.text
+    body = response.json()
+    assert "count_clamped" in body["warnings"]
+    assert "fallback_subject_wide" in body["warnings"]
+    [row] = body["blueprint"]["sections"][0]["rows"]
+    assert row["chapter_ids"] == []
+    assert row["count"] == 3  # noqa: PLR2004 -- the planned count is kept
+    assert sum(len(r) for r in body["selection"]) == 3  # noqa: PLR2004 -- filled deterministically

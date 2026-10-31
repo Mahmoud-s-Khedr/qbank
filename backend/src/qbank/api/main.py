@@ -55,6 +55,8 @@ def create_app() -> FastAPI:
     structlog.configure(
         processors=[
             structlog.processors.TimeStamper(fmt="iso"),
+            # Render tracebacks into the server log (never into responses).
+            structlog.processors.format_exc_info,
             structlog.processors.JSONRenderer(),
         ],
         logger_factory=structlog.stdlib.LoggerFactory(),
@@ -97,7 +99,7 @@ def create_app() -> FastAPI:
         try:
             response = await call_next(request)
         except Exception:
-            logger.error("unhandled_exception", request_id=request.state.request_id)
+            logger.exception("unhandled_exception", request_id=request.state.request_id)
             response = problem(500, "Internal server error", "internal_error")
         response.headers["X-Request-ID"] = request.state.request_id
         response.headers["X-Content-Type-Options"] = "nosniff"
@@ -136,7 +138,7 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(Exception)
     async def unexpected_error(request: Request, exc: Exception) -> JSONResponse:
-        logger.error("unhandled_exception", request_id=request.state.request_id)
+        logger.error("unhandled_exception", request_id=request.state.request_id, exc_info=exc)
         return problem(500, "Internal server error", "internal_error")
 
     return app

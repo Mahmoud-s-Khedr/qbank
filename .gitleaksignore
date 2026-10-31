@@ -1,0 +1,5 @@
+# Verified false positives (2026-10-31): gitleaks' generic-api-key rule matched across an empty
+# placeholder (e.g. 'POSTGRES_PASSWORD=') onto the next line ('QBANK_ENV=prod'). No secrets involved.
+57cdca736b7edd1ab6dd31dc952a3ad2e5fe1204:.env.prod.example:generic-api-key:4
+57cdca736b7edd1ab6dd31dc952a3ad2e5fe1204:.env.prod.example:generic-api-key:10
+5e373df61b23ead62de05cecfabdebf60a1fdadc:docs/tasks/T25-hardening-deploy.md:generic-api-key:35

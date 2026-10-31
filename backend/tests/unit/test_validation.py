@@ -512,3 +512,18 @@ def test_verify_policy_organization_default_and_source_override() -> None:
     org = Organization(name="Test", settings={"verify_policy": "all"})
     assert get_verify_policy(Source(pipeline_config={}), org) == "all"
     assert get_verify_policy(Source(pipeline_config={"verify": "off"}), org) == "off"
+
+
+def test_rule_figure_ignores_rhetorical_image_phrases() -> None:
+    """«الصورة البيانية» is a figure of speech in Arabic rhetoric, not a picture (seen live)."""
+    ctx = ValidationContext()
+    for stem in (
+        "ميّز الصورة البيانية في قول الشاعر: «رفعته في الوَرَى شيم» في البيت الثاني.",
+        "ميز نوع الصورة البيانية في قول الشاعر: (نَجِدَ الأَمَانَ مَعَ المُنَى)",
+        "دلل على استخدام الشاعر للصورة الكلية في الأبيات.",
+        "اشرح الصور البيانية في النص.",
+    ):
+        assert figure_referenced_not_attached(make_question(stem=stem), ctx) == [], stem
+    # A real picture reference in the same question is still caught.
+    mixed = make_question(stem="ميز الصورة البيانية ثم انظر إلى الشكل المقابل.")
+    assert len(figure_referenced_not_attached(mixed, ctx)) == 1

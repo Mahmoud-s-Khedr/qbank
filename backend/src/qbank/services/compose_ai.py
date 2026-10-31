@@ -16,6 +16,7 @@ from qbank.schemas.exams import (
     BlueprintRow,
     ComposeIn,
     ComposePlan,
+    ComposeSection,
     ComposeSelection,
     ExamDetail,
     ExamProposalOut,
@@ -102,7 +103,12 @@ def compose(db: Session, user: User, exam_id: UUID, data: ComposeIn) -> ExamProp
         }
         for c in chapters
     ]
-    counts = [[str(a) if a else None, b, c, d] for a, b, c, d in inventory]
+    # lesson_id None = approved questions not filed under any lesson (common for real
+    # workbooks whose headings are exam titles rather than chapters).
+    counts = [
+        {"lesson_id": str(a) if a else None, "type": b, "difficulty": c, "count": d}
+        for a, b, c, d in inventory
+    ]
     client = get_llm_client()
     try:
         plan_result = client.complete_json(
@@ -114,7 +120,11 @@ def compose(db: Session, user: User, exam_id: UUID, data: ComposeIn) -> ExamProp
                     "role": "system",
                     "content": (
                         "Plan an exam using only the supplied taxonomy and inventory. "
-                        "Never write questions."
+                        "Never write questions. A row with empty chapter_ids and lesson_ids "
+                        "selects from the whole subject, including questions whose lesson_id "
+                        "is null in the inventory; use such rows when the requested questions "
+                        "are not filed under lessons. Never target a chapter or lesson whose "
+                        "inventory count is zero."
                     ),
                 },
                 {
@@ -132,6 +142,7 @@ def compose(db: Session, user: User, exam_id: UUID, data: ComposeIn) -> ExamProp
             ],
         )
         plan = plan_result.parsed
+        original_rows = [row.model_copy() for section in plan.sections for row in section.rows]
         questions = list(
             db.scalars(
                 select(Question).where(
@@ -161,6 +172,20 @@ def compose(db: Session, user: User, exam_id: UUID, data: ComposeIn) -> ExamProp
                 kept.append(row)
                 rows.append(row)
             section.rows = kept
+        if not rows:
+            # Deterministic fallback: every planned row was empty or unusable. Offer one
+            # subject-wide row (keeping the first planned row's types) instead of nothing.
+            wanted = sum(r.count for r in original_rows) or 10
+            types = original_rows[0].types if original_rows else []
+            fallback = BlueprintRow(types=types, count=1)
+            available = sum(matches(q, _row(fallback)) for q in pool)
+            if available:
+                fallback.count = min(wanted, available)
+                warnings.append("fallback_subject_wide")
+                if not plan.sections:
+                    plan.sections = [ComposeSection(title=plan.title or "1", rows=[])]
+                plan.sections[0].rows = [fallback]
+                rows.append(fallback)
         fixed = [i.question_id for i, _ in exams.rows_of(db, exam.id)]
         sampled = [sample(pool, [_row(row)], seed=0, fixed=fixed, oversample=3)[0] for row in rows]
         by_id = {q.id: q for q in questions}

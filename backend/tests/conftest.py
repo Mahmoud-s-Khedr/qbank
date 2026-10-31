@@ -13,6 +13,10 @@ from sqlalchemy.engine import make_url
 
 # Must run before any qbank import: importing qbank.api.main builds the app and caches Settings.
 os.environ["QBANK_ENV"] = "test"
+# Keep test state (rate-limit counters, broker keys) out of the developer's Redis DB 0.
+os.environ["QBANK_REDIS_URL"] = (
+    os.environ.get("QBANK_REDIS_URL", "redis://localhost:26379/0").rsplit("/", 1)[0] + "/15"
+)
 os.environ["QBANK_LLM_MODE"] = "fake"
 # Shared Redis persists across integration databases; dedicated rate tests use explicit limits.
 os.environ["QBANK_RATE_LOGIN_IP"] = "10000"
