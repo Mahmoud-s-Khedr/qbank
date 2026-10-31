@@ -36,6 +36,10 @@ class PageOut(Output):
     dpi: int | None
 
 
+class PageDetail(PageOut):
+    extraction: dict[str, object] | None
+
+
 class JobOut(Output):
     kind: str
     status: str

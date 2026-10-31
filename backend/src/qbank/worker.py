@@ -191,6 +191,228 @@ def render_one(sid: UUID, org: UUID, page_number: int, document: pymupdf.Documen
     page_done(sid, "render")
 
 
+@dramatiq.actor(max_retries=3)
+def extract_source(source_id: str) -> None:
+    sid = UUID(source_id)
+    with Session(get_engine()) as db:
+        source = db.get(Source, sid)
+        if source is None or source.stage != "extract" or source.status != SourceStatus.extracting:
+            return
+        pending = list(
+            db.scalars(
+                select(SourcePage.page_number)
+                .where(SourcePage.source_id == sid, SourcePage.status == PageStatus.rendered)
+                .order_by(SourcePage.page_number)
+            )
+        )
+    batch_size = get_settings().render_batch_size
+    for offset in range(0, len(pending), batch_size):
+        extract_pages.send(source_id, pending[offset : offset + batch_size])
+    if not pending:
+        page_done(sid, "extract")
+
+
+@dramatiq.actor(max_retries=3, on_retry_exhausted="extract_failed")
+def extract_pages(source_id: str, numbers: list[int]) -> None:
+    from qbank.llm import BudgetExceeded, LLMOutputInvalid, OrgBudgetExceeded, get_llm_client  # noqa: PLC0415
+    from qbank.models import Subject  # noqa: PLC0415
+    from qbank.pipeline.extract import PROMPT_VERSION, extract_page  # noqa: PLC0415
+
+    sid = UUID(source_id)
+    client = get_llm_client()
+    for number in numbers:
+        with Session(get_engine()) as db:
+            source = db.get(Source, sid)
+            page = db.scalar(
+                select(SourcePage).where(
+                    SourcePage.source_id == sid, SourcePage.page_number == number
+                )
+            )
+            if (
+                source is None
+                or source.stage != "extract"
+                or source.status != SourceStatus.extracting
+            ):
+                return
+            if page is None or page.status != PageStatus.rendered:
+                continue
+            subject = db.get(Subject, source.subject_id)
+            if subject is None:
+                raise ValueError("Missing subject")
+            org_id, subject_name, language, grade = (
+                source.org_id,
+                subject.name,
+                subject.language.value,
+                source.grade or subject.grade,
+            )
+        try:
+            data = get_store().get_bytes(keys.page(org_id, sid, number, hires=True))
+            result, cost = extract_page(
+                client,
+                data,
+                subject=subject_name,
+                language=language,
+                grade=grade,
+                org_id=org_id,
+                source_id=sid,
+                max_side=get_settings().extract_image_max_side,
+                fallback_threshold=get_settings().extract_fallback_threshold,
+            )
+        except (BudgetExceeded, OrgBudgetExceeded) as exc:
+            with Session(get_engine()) as db:
+                updated = db.scalar(
+                    update(SourcePage)
+                    .where(
+                        SourcePage.source_id == sid,
+                        SourcePage.page_number == number,
+                        SourcePage.status == PageStatus.rendered,
+                    )
+                    .values(cost_usd=SourcePage.cost_usd + float(exc.cost_usd))
+                    .returning(SourcePage.id)
+                )
+                db.execute(
+                    update(Source)
+                    .where(Source.id == sid, Source.stage == "extract")
+                    .values(
+                        status=SourceStatus.paused,
+                        error=type(exc).__name__,
+                        cost_usd=Source.cost_usd + (float(exc.cost_usd) if updated else 0),
+                    )
+                )
+                db.execute(
+                    update(Job)
+                    .where(Job.ref_id == sid, Job.kind == "ingest")
+                    .values(status="paused", error=type(exc).__name__)
+                )
+                db.commit()
+            return
+        except Exception as exc:
+            with Session(get_engine()) as db:
+                failed_cost = float(exc.cost_usd) if isinstance(exc, LLMOutputInvalid) else 0.0
+                updated = db.scalar(
+                    update(SourcePage)
+                    .where(
+                        SourcePage.source_id == sid,
+                        SourcePage.page_number == number,
+                        SourcePage.status == PageStatus.rendered,
+                    )
+                    .values(
+                        status=PageStatus.failed,
+                        error=str(exc),
+                        cost_usd=SourcePage.cost_usd + failed_cost,
+                    )
+                    .returning(SourcePage.id)
+                )
+                if updated and failed_cost:
+                    db.execute(
+                        update(Source)
+                        .where(Source.id == sid)
+                        .values(cost_usd=Source.cost_usd + failed_cost)
+                    )
+                db.commit()
+        else:
+            with Session(get_engine()) as db:
+                updated = db.scalar(
+                    update(SourcePage)
+                    .where(
+                        SourcePage.source_id == sid,
+                        SourcePage.page_number == number,
+                        SourcePage.status == PageStatus.rendered,
+                    )
+                    .values(
+                        status=PageStatus.extracted,
+                        extraction=result.parsed.model_dump(mode="json"),
+                        page_kind=result.parsed.page_kind,
+                        prompt_version=PROMPT_VERSION,
+                        model=result.model,
+                        cost_usd=SourcePage.cost_usd + float(cost),
+                        error=None,
+                    )
+                    .returning(SourcePage.id)
+                )
+                if updated:
+                    db.execute(
+                        update(Source)
+                        .where(Source.id == sid)
+                        .values(cost_usd=Source.cost_usd + float(cost))
+                    )
+                db.commit()
+        page_done(sid, "extract")
+
+
+@dramatiq.actor(max_retries=3)
+def extract_failed(message: dict[str, object], details: dict[str, object]) -> None:
+    args = message["args"]
+    if not isinstance(args, (list, tuple)) or not isinstance(args[1], (list, tuple)):
+        raise ValueError("Invalid message arguments")
+    sid = UUID(str(args[0]))
+    with Session(get_engine()) as db:
+        source = db.get(Source, sid)
+        if source is None or source.stage != "extract" or source.status != SourceStatus.extracting:
+            return
+        db.execute(
+            update(SourcePage)
+            .where(
+                SourcePage.source_id == sid,
+                SourcePage.page_number.in_(args[1]),
+                SourcePage.status == PageStatus.rendered,
+            )
+            .values(status=PageStatus.failed, error="extract_error: retries exhausted")
+        )
+        db.commit()
+    page_done(sid, "extract")
+
+
+@dramatiq.actor(max_retries=3)
+def materialize_failed(message: dict[str, object], details: dict[str, object]) -> None:
+    args = message["args"]
+    if not isinstance(args, (list, tuple)):
+        raise ValueError("Invalid message arguments")
+    sid = UUID(str(args[0]))
+    with Session(get_engine()) as db:
+        failed = db.scalar(
+            update(Source)
+            .where(
+                Source.id == sid,
+                Source.stage == "materialize",
+                Source.status == SourceStatus.extracting,
+            )
+            .values(status=SourceStatus.failed, error="materialize_error: retries exhausted")
+            .returning(Source.id)
+        )
+        if failed:
+            db.execute(
+                update(Job)
+                .where(Job.ref_id == sid, Job.kind == "ingest")
+                .values(status="failed", error="materialize_error: retries exhausted")
+            )
+        db.commit()
+
+
+@dramatiq.actor(max_retries=3, on_retry_exhausted="materialize_failed")
+def materialize_source(source_id: str) -> None:
+    from qbank.pipeline.materialize import materialize  # noqa: PLC0415 -- avoid import cycle
+
+    sid = UUID(source_id)
+    with Session(get_engine()) as db:
+        source = db.scalar(select(Source).where(Source.id == sid).with_for_update())
+        if (
+            source is None
+            or source.stage != "materialize"
+            or source.status != SourceStatus.extracting
+        ):
+            return
+        old_keys = materialize(db, source)
+        source.stage = None
+        source.status = SourceStatus.ready
+        db.execute(
+            update(Job).where(Job.ref_id == sid, Job.kind == "ingest").values(status="ready")
+        )
+        db.commit()
+    for key in old_keys:
+        get_store().delete(key)
+
+
 if __name__ == "__main__":
     import sys
 

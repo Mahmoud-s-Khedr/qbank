@@ -25,7 +25,23 @@ def start_render(source_id: str) -> object:
     return render_source.send(source_id)
 
 
-STAGES: list[Stage] = [Stage("render", start_render, SourceStatus.rendering, PageStatus.pending)]
+def start_extract(source_id: str) -> object:
+    from qbank.worker import extract_source  # noqa: PLC0415 -- avoids a worker import cycle.
+
+    return extract_source.send(source_id)
+
+
+def start_materialize(source_id: str) -> object:
+    from qbank.worker import materialize_source  # noqa: PLC0415 -- avoids a worker import cycle.
+
+    return materialize_source.send(source_id)
+
+
+STAGES: list[Stage] = [
+    Stage("render", start_render, SourceStatus.rendering, PageStatus.pending),
+    Stage("extract", start_extract, SourceStatus.extracting, PageStatus.rendered),
+    Stage("materialize", start_materialize, SourceStatus.extracting, PageStatus.extracted),
+]
 
 
 def advance(source_id: UUID, finished_stage: str) -> bool:
@@ -34,7 +50,11 @@ def advance(source_id: UUID, finished_stage: str) -> bool:
     with Session(get_engine()) as db:
         winner = db.scalar(
             update(Source)
-            .where(Source.id == source_id, Source.stage == finished_stage)
+            .where(
+                Source.id == source_id,
+                Source.stage == finished_stage,
+                Source.status != SourceStatus.paused,
+            )
             .values(
                 stage=next_stage.name if next_stage else None,
                 status=next_stage.status if next_stage else SourceStatus.ready,

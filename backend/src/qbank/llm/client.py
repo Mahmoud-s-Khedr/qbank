@@ -182,6 +182,7 @@ class OpenRouterClient:
             http_client=self.http_client,
         )
         conversation = list(messages)
+        invalid_cost = Decimal(0)
         for attempt in range(2 if schema else 1):
             reserve = estimate_cost(
                 model, estimate_input_tokens(conversation, schema), config.max_tokens
@@ -264,6 +265,7 @@ class OpenRouterClient:
             except Exception as exc:
                 error = type(exc).__name__
                 if isinstance(exc, ValidationError) and attempt == 0:
+                    invalid_cost += cost
                     conversation.extend(
                         [
                             {"role": "assistant", "content": raw},
@@ -274,7 +276,7 @@ class OpenRouterClient:
                         ]
                     )
                 elif isinstance(exc, ValidationError):
-                    raise LLMOutputInvalid(str(exc)) from exc
+                    raise LLMOutputInvalid(str(exc), cost_usd=invalid_cost + cost) from exc
                 else:
                     raise
             finally:
@@ -297,6 +299,7 @@ class OpenRouterClient:
                     call.error_code = error
                     db.commit()
             if not error:
+                result.cost_usd += invalid_cost
                 if os.environ.get("QBANK_LLM_RECORD") == "1":
                     path = fixture_path(stage, digest)
                     path.parent.mkdir(parents=True, exist_ok=True)
@@ -308,7 +311,7 @@ class OpenRouterClient:
                                 "input_tokens": inp,
                                 "output_tokens": out,
                                 "reasoning_tokens": reasoning,
-                                "cost_usd": str(cost),
+                                "cost_usd": str(result.cost_usd),
                                 "latency_ms": result.latency_ms,
                             },
                             ensure_ascii=False,
