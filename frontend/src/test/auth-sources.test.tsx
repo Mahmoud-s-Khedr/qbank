@@ -787,8 +787,9 @@ describe("Source Detail, SSE Live Progress, Page Grid, and Page Viewer", () => {
         name: "Live Physics Source",
       }),
     ).toBeInTheDocument();
+    // Counts are per current page status; progress is cumulative (5 rendered + 2 extracted).
     expect(screen.getByTestId("stage-count-rendered")).toHaveTextContent(
-      "5 / 10",
+      "7 / 10",
     );
     expect(screen.getByTestId("stage-count-extracted")).toHaveTextContent(
       "2 / 10",
@@ -816,8 +817,8 @@ describe("Source Detail, SSE Live Progress, Page Grid, and Page Viewer", () => {
         status: "validating",
         stage: "validate",
         page_counts: {
-          rendered: 9,
-          extracted: 9,
+          rendered: 0,
+          extracted: 3,
           validated: 6,
           failed: 1,
         },
@@ -1060,5 +1061,18 @@ describe("Source Detail, SSE Live Progress, Page Grid, and Page Viewer", () => {
     expect(await screen.findByTestId("page-viewer-title")).toHaveTextContent(
       "Page 1 of 3",
     );
+  });
+});
+
+describe("cumulativeStageCount", () => {
+  it("counts pages that reached a stage or any later stage", async () => {
+    const { cumulativeStageCount } =
+      await import("@/features/sources/progress");
+    const counts = { rendered: 1, extracted: 2, validated: 3, failed: 4 };
+    expect(cumulativeStageCount(counts, "rendered")).toBe(6);
+    expect(cumulativeStageCount(counts, "extracted")).toBe(5);
+    expect(cumulativeStageCount(counts, "validated")).toBe(3);
+    expect(cumulativeStageCount(counts, "failed")).toBe(4);
+    expect(cumulativeStageCount({}, "rendered")).toBe(0);
   });
 });

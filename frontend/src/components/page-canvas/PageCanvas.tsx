@@ -3,6 +3,7 @@ import {
   type PointerEvent as ReactPointerEvent,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useRef,
   useState,
 } from "react";
@@ -57,6 +58,8 @@ export interface PageCanvasProps {
   onChange?: ((id: string, box: Box) => void) | undefined;
   onCreate?: ((box: Box) => void) | undefined;
   className?: string | undefined;
+  /** Zoom applied when the page (src) first shows. Default: fit the page width. */
+  initialFit?: "none" | "width" | "page" | undefined;
 }
 
 export type ResizeHandle = "nw" | "n" | "ne" | "e" | "se" | "s" | "sw" | "w";
@@ -214,6 +217,7 @@ export function PageCanvas({
   onChange,
   onCreate,
   className,
+  initialFit = "width",
 }: PageCanvasProps) {
   const { t } = useTranslation();
   const [zoom, setZoom] = useState(1);
@@ -290,6 +294,17 @@ export function PageCanvas({
     setZoom(clampZoom(vw / safeWidth));
     setPan({ x: 0, y: 0 });
   };
+
+  // Fit once per page. Skipped when the viewport has no layout yet (e.g. jsdom), keeping zoom 1.
+  useLayoutEffect(() => {
+    const viewport = viewportRef.current;
+    if (initialFit === "none" || !viewport || viewport.clientWidth === 0)
+      return;
+    const byWidth = viewport.clientWidth / safeWidth;
+    const byPage = Math.min(byWidth, viewport.clientHeight / safeHeight);
+    setZoom(clampZoom(initialFit === "width" ? byWidth : byPage));
+    setPan({ x: 0, y: 0 });
+  }, [src, initialFit, safeWidth, safeHeight, clampZoom]);
 
   const handleFitPage = () => {
     const viewport = viewportRef.current;

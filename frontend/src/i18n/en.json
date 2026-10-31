@@ -197,7 +197,8 @@
       "viewerTitle": "Page {{number}} of {{total}}",
       "prevPage": "Previous page",
       "nextPage": "Next page",
-      "closeViewer": "Close page viewer"
+      "closeViewer": "Close page viewer",
+      "resume": "Resume"
     }
   },
   "qmd": {

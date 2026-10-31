@@ -197,7 +197,8 @@
       "viewerTitle": "عرض الصفحة {{number}} من {{total}}",
       "prevPage": "الصفحة السابقة",
       "nextPage": "الصفحة التالية",
-      "closeViewer": "إغلاق عارض الصفحة"
+      "closeViewer": "إغلاق عارض الصفحة",
+      "resume": "استئناف"
     }
   },
   "qmd": {

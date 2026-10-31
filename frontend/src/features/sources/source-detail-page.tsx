@@ -14,6 +14,7 @@ import {
   getPageImageUrl,
   type PageOut,
   useDeleteSource,
+  useResumeSource,
   useSourceDetail,
   useSourceEvents,
   useSourcePages,
@@ -51,6 +52,7 @@ import {
 import { getDirection } from "@/i18n";
 import { formatCostUsd } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { cumulativeStageCount } from "./progress";
 
 export const PAGE_GRID_WINDOW_SIZE = 200;
 
@@ -166,6 +168,7 @@ export function SourceDetailPage() {
   const { data: pagesData } = useSourcePages(id);
   const { data: subjectsData } = useSubjects();
   const deleteMutation = useDeleteSource();
+  const resumeMutation = useResumeSource();
 
   useSourceEvents(id, source?.status);
 
@@ -446,6 +449,19 @@ export function SourceDetailPage() {
               {source.error ?? t("sources.detail.pausedDefaultReason")}
             </p>
           </div>
+          {canWrite ? (
+            <Button
+              variant="outline"
+              size="sm"
+              className="ms-auto"
+              disabled={resumeMutation.isPending}
+              onClick={() => {
+                resumeMutation.mutate(source.id);
+              }}
+            >
+              {t("sources.detail.resume")}
+            </Button>
+          ) : null}
         </div>
       ) : null}
 
@@ -462,7 +478,7 @@ export function SourceDetailPage() {
             className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
           >
             {STAGE_KEYS.map((stageKey) => {
-              const count = pageCounts[stageKey] ?? 0;
+              const count = cumulativeStageCount(pageCounts, stageKey);
               const denominator = Math.max(totalPages, count, 1);
               const pct =
                 totalPages > 0

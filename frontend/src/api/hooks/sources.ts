@@ -172,6 +172,31 @@ export function useDeleteSource() {
   });
 }
 
+export async function resumeSourceRequest(id: string): Promise<void> {
+  const { error, response } = (await apiClient.POST(
+    "/api/v1/sources/{id}/resume",
+    {
+      params: { path: { id } },
+    },
+  )) as {
+    error?: unknown;
+    response: Response;
+  };
+  if (!response.ok || error !== undefined) {
+    throw extractApiError(response.status, error);
+  }
+}
+
+export function useResumeSource() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: resumeSourceRequest,
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: SOURCES_QUERY_KEY });
+    },
+  });
+}
+
 export interface UploadSourceInput {
   file: File;
   subject_id: string;
