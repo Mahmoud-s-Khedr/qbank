@@ -1,6 +1,272 @@
 {
   "components": {
     "schemas": {
+      "AnswerKey": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/AnswerKeyEntry"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "label",
+          "items",
+          "warnings"
+        ],
+        "title": "AnswerKey",
+        "type": "object"
+      },
+      "AnswerKeyEntry": {
+        "properties": {
+          "answer_text": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer Text"
+          },
+          "correct": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Correct"
+          },
+          "number": {
+            "title": "Number",
+            "type": "integer"
+          },
+          "points": {
+            "title": "Points",
+            "type": "number"
+          },
+          "question_id": {
+            "format": "uuid",
+            "title": "Question Id",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "number",
+          "question_id",
+          "type",
+          "correct",
+          "answer_text",
+          "points"
+        ],
+        "title": "AnswerKeyEntry",
+        "type": "object"
+      },
+      "Blueprint": {
+        "properties": {
+          "exclude_question_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Exclude Question Ids",
+            "type": "array"
+          },
+          "exclude_used_in_my_exams": {
+            "default": false,
+            "title": "Exclude Used In My Exams",
+            "type": "boolean"
+          },
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/BlueprintRow"
+            },
+            "minItems": 1,
+            "title": "Rows",
+            "type": "array"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "maximum": 2147483647.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          }
+        },
+        "required": [
+          "rows"
+        ],
+        "title": "Blueprint",
+        "type": "object"
+      },
+      "BlueprintResult": {
+        "properties": {
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/BlueprintRowResult"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "rows",
+          "seed"
+        ],
+        "title": "BlueprintResult",
+        "type": "object"
+      },
+      "BlueprintRow": {
+        "properties": {
+          "chapter_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Chapter Ids",
+            "type": "array"
+          },
+          "count": {
+            "maximum": 500.0,
+            "minimum": 1.0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "difficulty_max": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty Max"
+          },
+          "difficulty_min": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty Min"
+          },
+          "lesson_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Lesson Ids",
+            "type": "array"
+          },
+          "points": {
+            "default": 1,
+            "minimum": 0.0,
+            "title": "Points",
+            "type": "number"
+          },
+          "section_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section Id"
+          },
+          "tags_any": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags Any",
+            "type": "array"
+          },
+          "types": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Types",
+            "type": "array"
+          }
+        },
+        "required": [
+          "count"
+        ],
+        "title": "BlueprintRow",
+        "type": "object"
+      },
+      "BlueprintRowResult": {
+        "properties": {
+          "available": {
+            "title": "Available",
+            "type": "integer"
+          },
+          "requested": {
+            "title": "Requested",
+            "type": "integer"
+          },
+          "selected": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Selected",
+            "type": "array"
+          },
+          "shortfall": {
+            "title": "Shortfall",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "requested",
+          "selected",
+          "shortfall",
+          "available"
+        ],
+        "title": "BlueprintRowResult",
+        "type": "object"
+      },
       "Body_upload_api_v1_sources_post": {
         "properties": {
           "file": {
@@ -129,6 +395,356 @@
         "title": "ChapterTree",
         "type": "object"
       },
+      "ExamDetail": {
+        "properties": {
+          "blueprint": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Blueprint"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "owner_id": {
+            "format": "uuid",
+            "title": "Owner Id",
+            "type": "string"
+          },
+          "question_count": {
+            "title": "Question Count",
+            "type": "integer"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/SectionOut"
+            },
+            "title": "Sections",
+            "type": "array"
+          },
+          "settings": {
+            "$ref": "#/components/schemas/ExamSettings"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "total_points": {
+            "title": "Total Points",
+            "type": "number"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "versions": {
+            "items": {
+              "$ref": "#/components/schemas/VersionOut"
+            },
+            "title": "Versions",
+            "type": "array"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "title",
+          "subject_id",
+          "owner_id",
+          "status",
+          "revision",
+          "question_count",
+          "total_points",
+          "settings",
+          "blueprint",
+          "sections",
+          "versions"
+        ],
+        "title": "ExamDetail",
+        "type": "object"
+      },
+      "ExamHeader": {
+        "properties": {
+          "date": {
+            "default": "",
+            "title": "Date",
+            "type": "string"
+          },
+          "duration_minutes": {
+            "anyOf": [
+              {
+                "maximum": 1000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Minutes"
+          },
+          "exam_title": {
+            "default": "",
+            "title": "Exam Title",
+            "type": "string"
+          },
+          "grade": {
+            "default": "",
+            "title": "Grade",
+            "type": "string"
+          },
+          "instructions": {
+            "default": "",
+            "title": "Instructions",
+            "type": "string"
+          },
+          "school_name": {
+            "default": "",
+            "title": "School Name",
+            "type": "string"
+          },
+          "subject_label": {
+            "default": "",
+            "title": "Subject Label",
+            "type": "string"
+          }
+        },
+        "title": "ExamHeader",
+        "type": "object"
+      },
+      "ExamIn": {
+        "properties": {
+          "settings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExamSettings"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "subject_id"
+        ],
+        "title": "ExamIn",
+        "type": "object"
+      },
+      "ExamLayout": {
+        "properties": {
+          "answer_space_lines": {
+            "default": 4,
+            "maximum": 20.0,
+            "minimum": 0.0,
+            "title": "Answer Space Lines",
+            "type": "integer"
+          },
+          "choices_per_row": {
+            "default": "auto",
+            "enum": [
+              "auto",
+              1,
+              2,
+              4
+            ],
+            "title": "Choices Per Row"
+          },
+          "columns": {
+            "default": 1,
+            "enum": [
+              1,
+              2
+            ],
+            "title": "Columns",
+            "type": "integer"
+          },
+          "digits": {
+            "default": "arabic",
+            "enum": [
+              "arabic",
+              "western"
+            ],
+            "title": "Digits",
+            "type": "string"
+          },
+          "font_size_pt": {
+            "default": 12,
+            "maximum": 16.0,
+            "minimum": 10.0,
+            "title": "Font Size Pt",
+            "type": "integer"
+          }
+        },
+        "title": "ExamLayout",
+        "type": "object"
+      },
+      "ExamSettings": {
+        "properties": {
+          "header": {
+            "$ref": "#/components/schemas/ExamHeader"
+          },
+          "language": {
+            "default": "ar",
+            "enum": [
+              "ar",
+              "en"
+            ],
+            "title": "Language",
+            "type": "string"
+          },
+          "layout": {
+            "$ref": "#/components/schemas/ExamLayout"
+          }
+        },
+        "title": "ExamSettings",
+        "type": "object"
+      },
+      "ExamSummary": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "owner_id": {
+            "format": "uuid",
+            "title": "Owner Id",
+            "type": "string"
+          },
+          "question_count": {
+            "title": "Question Count",
+            "type": "integer"
+          },
+          "revision": {
+            "title": "Revision",
+            "type": "integer"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          },
+          "total_points": {
+            "title": "Total Points",
+            "type": "number"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "title",
+          "subject_id",
+          "owner_id",
+          "status",
+          "revision",
+          "question_count",
+          "total_points"
+        ],
+        "title": "ExamSummary",
+        "type": "object"
+      },
+      "ExamUpdate": {
+        "properties": {
+          "settings": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExamSettings"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "status": {
+            "anyOf": [
+              {
+                "enum": [
+                  "draft",
+                  "final"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Status"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "ExamUpdate",
+        "type": "object"
+      },
       "HTTPValidationError": {
         "properties": {
           "detail": {
@@ -183,32 +799,95 @@
         "title": "ItemIn",
         "type": "object"
       },
-      "ItemUpdate": {
+      "ItemOut": {
         "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "origin": {
+            "title": "Origin",
+            "type": "string"
+          },
+          "points": {
+            "title": "Points",
+            "type": "number"
+          },
           "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "question": {
+            "$ref": "#/components/schemas/QuestionContent"
+          },
+          "question_id": {
+            "format": "uuid",
+            "title": "Question Id",
+            "type": "string"
+          },
+          "section_id": {
+            "format": "uuid",
+            "title": "Section Id",
+            "type": "string"
+          },
+          "stimulus": {
             "anyOf": [
               {
-                "type": "integer"
+                "$ref": "#/components/schemas/StimulusContent"
               },
               {
                 "type": "null"
               }
-            ],
-            "title": "Position"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "section_id",
+          "question_id",
+          "position",
+          "points",
+          "origin",
+          "question"
+        ],
+        "title": "ItemOut",
+        "type": "object"
+      },
+      "ItemsIn": {
+        "properties": {
+          "points": {
+            "default": 1,
+            "minimum": 0.0,
+            "title": "Points",
+            "type": "number"
           },
-          "title": {
+          "question_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Question Ids",
+            "type": "array"
+          },
+          "section_id": {
             "anyOf": [
               {
+                "format": "uuid",
                 "type": "string"
               },
               {
                 "type": "null"
               }
             ],
-            "title": "Title"
+            "title": "Section Id"
           }
         },
-        "title": "ItemUpdate",
+        "required": [
+          "question_ids"
+        ],
+        "title": "ItemsIn",
         "type": "object"
       },
       "JobOut": {
@@ -605,6 +1284,34 @@
         "title": "PageStatus",
         "type": "string"
       },
+      "Page_ExamSummary_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ExamSummary"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "Page[ExamSummary]",
+        "type": "object"
+      },
       "Page_SourceOut_": {
         "properties": {
           "items": {
@@ -687,6 +1394,101 @@
           "next_cursor"
         ],
         "title": "Page[UserOut]",
+        "type": "object"
+      },
+      "QuestionContent": {
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          },
+          "choices": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Choices",
+            "type": "array"
+          },
+          "difficulty": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "number_label": {
+            "title": "Number Label",
+            "type": "string"
+          },
+          "stem": {
+            "title": "Stem",
+            "type": "string"
+          },
+          "stimulus_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stimulus Id"
+          },
+          "stimulus_position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stimulus Position"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "number_label",
+          "type",
+          "stem",
+          "choices",
+          "answer",
+          "difficulty",
+          "tags",
+          "stimulus_id",
+          "stimulus_position"
+        ],
+        "title": "QuestionContent",
         "type": "object"
       },
       "QuestionOut": {
@@ -833,6 +1635,46 @@
         "title": "Reorder",
         "type": "object"
       },
+      "ReorderItems": {
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Ids",
+            "type": "array"
+          },
+          "section_id": {
+            "format": "uuid",
+            "title": "Section Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "section_id",
+          "ids"
+        ],
+        "title": "ReorderItems",
+        "type": "object"
+      },
+      "ReorderSections": {
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Ids",
+            "type": "array"
+          }
+        },
+        "required": [
+          "ids"
+        ],
+        "title": "ReorderSections",
+        "type": "object"
+      },
       "Role": {
         "enum": [
           "admin",
@@ -841,6 +1683,104 @@
         ],
         "title": "Role",
         "type": "string"
+      },
+      "SectionIn": {
+        "properties": {
+          "instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instructions"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title"
+        ],
+        "title": "SectionIn",
+        "type": "object"
+      },
+      "SectionOut": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instructions"
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/ItemOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "position",
+          "instructions",
+          "items"
+        ],
+        "title": "SectionOut",
+        "type": "object"
+      },
+      "SectionUpdate": {
+        "properties": {
+          "instructions": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Instructions"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "SectionUpdate",
+        "type": "object"
       },
       "SourceDetail": {
         "properties": {
@@ -1050,6 +1990,30 @@
         ],
         "title": "SourceStatus",
         "type": "string"
+      },
+      "StimulusContent": {
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "content"
+        ],
+        "title": "StimulusContent",
+        "type": "object"
       },
       "StimulusOut": {
         "properties": {
@@ -1471,6 +2435,159 @@
         ],
         "title": "ValidationError",
         "type": "object"
+      },
+      "VersionOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "exam_revision": {
+            "title": "Exam Revision",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "label": {
+            "title": "Label",
+            "type": "string"
+          },
+          "seed": {
+            "title": "Seed",
+            "type": "integer"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "seed",
+          "exam_revision",
+          "stale",
+          "created_at"
+        ],
+        "title": "VersionOut",
+        "type": "object"
+      },
+      "VersionsIn": {
+        "properties": {
+          "count": {
+            "maximum": 10.0,
+            "minimum": 1.0,
+            "title": "Count",
+            "type": "integer"
+          },
+          "keep_first_as_original": {
+            "default": false,
+            "title": "Keep First As Original",
+            "type": "boolean"
+          },
+          "seed": {
+            "anyOf": [
+              {
+                "maximum": 2147482648.0,
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seed"
+          },
+          "shuffle_choices": {
+            "default": true,
+            "title": "Shuffle Choices",
+            "type": "boolean"
+          },
+          "shuffle_questions": {
+            "default": true,
+            "title": "Shuffle Questions",
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "count"
+        ],
+        "title": "VersionsIn",
+        "type": "object"
+      },
+      "qbank__schemas__exams__ItemUpdate": {
+        "properties": {
+          "points": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Points"
+          },
+          "position": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "section_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Section Id"
+          }
+        },
+        "title": "ItemUpdate",
+        "type": "object"
+      },
+      "qbank__schemas__taxonomy__ItemUpdate": {
+        "properties": {
+          "position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "title": "ItemUpdate",
+        "type": "object"
       }
     }
   },
@@ -1651,7 +2768,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/ItemUpdate"
+                "$ref": "#/components/schemas/qbank__schemas__taxonomy__ItemUpdate"
               }
             }
           },
@@ -1773,6 +2890,966 @@
           }
         },
         "summary": "Reorder Lessons"
+      }
+    },
+    "/api/v1/exam-items/{id}": {
+      "delete": {
+        "operationId": "delete_item_api_v1_exam_items__id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "group",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Group",
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Item",
+        "tags": [
+          "exams"
+        ]
+      },
+      "patch": {
+        "operationId": "edit_item_api_v1_exam_items__id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/qbank__schemas__exams__ItemUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Edit Item",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
+    "/api/v1/exam-sections/{id}": {
+      "delete": {
+        "operationId": "delete_section_api_v1_exam_sections__id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Section",
+        "tags": [
+          "exams"
+        ]
+      },
+      "patch": {
+        "operationId": "edit_section_api_v1_exam_sections__id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SectionUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Edit Section",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
+    "/api/v1/exams": {
+      "get": {
+        "operationId": "list_exams_api_v1_exams_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "draft",
+                    "final",
+                    "archived"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Status"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_ExamSummary_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Exams",
+        "tags": [
+          "exams"
+        ]
+      },
+      "post": {
+        "operationId": "create_exam_api_v1_exams_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExamIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Exam",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
+    "/api/v1/exams/{id}": {
+      "delete": {
+        "operationId": "delete_exam_api_v1_exams__id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Exam",
+        "tags": [
+          "exams"
+        ]
+      },
+      "get": {
+        "operationId": "get_exam_api_v1_exams__id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Exam",
+        "tags": [
+          "exams"
+        ]
+      },
+      "patch": {
+        "operationId": "edit_exam_api_v1_exams__id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExamUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Edit Exam",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
+    "/api/v1/exams/{id}/archive": {
+      "post": {
+        "operationId": "archive_exam_api_v1_exams__id__archive_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Archive Exam",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
+    "/api/v1/exams/{id}/blueprint/apply": {
+      "post": {
+        "operationId": "blueprint_apply_api_v1_exams__id__blueprint_apply_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Blueprint"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Blueprint Apply",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
+    "/api/v1/exams/{id}/blueprint/preview": {
+      "post": {
+        "operationId": "blueprint_preview_api_v1_exams__id__blueprint_preview_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Blueprint"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BlueprintResult"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Blueprint Preview",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
+    "/api/v1/exams/{id}/duplicate": {
+      "post": {
+        "operationId": "duplicate_exam_api_v1_exams__id__duplicate_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Duplicate Exam",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
+    "/api/v1/exams/{id}/items": {
+      "post": {
+        "operationId": "add_items_api_v1_exams__id__items_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ItemsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Items",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
+    "/api/v1/exams/{id}/items/reorder": {
+      "post": {
+        "operationId": "reorder_items_api_v1_exams__id__items_reorder_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderItems"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reorder Items",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
+    "/api/v1/exams/{id}/sections": {
+      "post": {
+        "operationId": "add_section_api_v1_exams__id__sections_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SectionIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Add Section",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
+    "/api/v1/exams/{id}/sections/reorder": {
+      "post": {
+        "operationId": "reorder_sections_api_v1_exams__id__sections_reorder_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReorderSections"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Reorder Sections",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
+    "/api/v1/exams/{id}/versions": {
+      "post": {
+        "operationId": "generate_versions_api_v1_exams__id__versions_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VersionsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/VersionOut"
+                  },
+                  "title": "Response Generate Versions Api V1 Exams  Id  Versions Post",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Generate Versions",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
+    "/api/v1/exams/{id}/versions/{label}/answer-key": {
+      "get": {
+        "operationId": "answer_key_api_v1_exams__id__versions__label__answer_key_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "label",
+            "required": true,
+            "schema": {
+              "title": "Label",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AnswerKey"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Answer Key",
+        "tags": [
+          "exams"
+        ]
       }
     },
     "/api/v1/health": {

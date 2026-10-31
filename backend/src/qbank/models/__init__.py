@@ -7,6 +7,7 @@ from sqlalchemy import (
     Boolean,
     DateTime,
     Enum,
+    Float,
     ForeignKey,
     Integer,
     Numeric,
@@ -246,3 +247,46 @@ class Asset(ModelBase):
     region: Mapped[list[float]] = mapped_column(JSONB)
     width: Mapped[int] = mapped_column(Integer)
     height: Mapped[int] = mapped_column(Integer)
+
+
+class Exam(ModelBase):
+    __tablename__ = "exams"
+    org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id"), index=True)
+    owner_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    subject_id: Mapped[UUID] = mapped_column(ForeignKey("subjects.id"), index=True)
+    title: Mapped[str] = mapped_column(String)
+    settings: Mapped[dict[str, object]] = mapped_column(JSONB)
+    blueprint: Mapped[dict[str, object] | None] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(String, server_default=text("'draft'"))
+    revision: Mapped[int] = mapped_column(Integer, server_default=text("1"))
+
+
+class ExamSection(ModelBase):
+    __tablename__ = "exam_sections"
+    exam_id: Mapped[UUID] = mapped_column(ForeignKey("exams.id", ondelete="CASCADE"), index=True)
+    title: Mapped[str] = mapped_column(String)
+    position: Mapped[int] = mapped_column(Integer)
+    instructions: Mapped[str | None] = mapped_column(String)
+
+
+class ExamItem(ModelBase):
+    __tablename__ = "exam_items"
+    __table_args__ = (UniqueConstraint("exam_id", "question_id"),)
+    exam_id: Mapped[UUID] = mapped_column(ForeignKey("exams.id", ondelete="CASCADE"), index=True)
+    section_id: Mapped[UUID] = mapped_column(
+        ForeignKey("exam_sections.id", ondelete="CASCADE"), index=True
+    )
+    question_id: Mapped[UUID] = mapped_column(ForeignKey("questions.id"), index=True)
+    position: Mapped[int] = mapped_column(Integer)
+    points: Mapped[float] = mapped_column(Float, server_default=text("1"))
+    origin: Mapped[str] = mapped_column(String, server_default=text("'manual'"))
+
+
+class ExamVersion(ModelBase):
+    __tablename__ = "exam_versions"
+    __table_args__ = (UniqueConstraint("exam_id", "label"),)
+    exam_id: Mapped[UUID] = mapped_column(ForeignKey("exams.id", ondelete="CASCADE"), index=True)
+    label: Mapped[str] = mapped_column(String)
+    seed: Mapped[int] = mapped_column(Integer)
+    layout: Mapped[dict[str, object]] = mapped_column(JSONB)
+    exam_revision: Mapped[int] = mapped_column(Integer)
