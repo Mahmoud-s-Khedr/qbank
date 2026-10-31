@@ -59,6 +59,7 @@ class Settings(BaseSettings):
     openrouter_api_key: SecretStr | None = None
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     llm_mode: Literal["live", "fake", "recorded"] = "live"
+    llm_fake_script: str | None = None
     llm_timeout_s: float = 120
     llm_max_retries: int = 3
     llm_stage_models: dict[str, LLMStageConfig] = Field(default_factory=default_stage_models)

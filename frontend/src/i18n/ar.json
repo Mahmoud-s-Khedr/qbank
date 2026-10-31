@@ -608,7 +608,8 @@
       "duplicate": "تكرار",
       "duplicateAria": "تكرار {{title}}",
       "archive": "أرشفة",
-      "archiveAria": "أرشفة {{title}}"
+      "archiveAria": "أرشفة {{title}}",
+      "versions": "النسخ"
     },
     "builder": {
       "back": "العودة إلى الامتحانات",

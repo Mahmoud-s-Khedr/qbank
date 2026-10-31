@@ -121,8 +121,27 @@ def totals(db: Session, exam_ids: Sequence[UUID]) -> dict[UUID, tuple[int, float
     return {exam_id: (int(count), float(points)) for exam_id, count, points in found_rows}
 
 
-def summary(exam: Exam, totals_: dict[UUID, tuple[int, float]]) -> ExamSummary:
+def version_counts(db: Session, exams: Sequence[Exam]) -> dict[UUID, tuple[int, bool]]:
+    """Per exam: (versions generated, whether any was built from an older revision)."""
+    revisions = {e.id: e.revision for e in exams}
+    result: dict[UUID, tuple[int, bool]] = {}
+    for exam_id, exam_revision in db.execute(
+        select(ExamVersion.exam_id, ExamVersion.exam_revision).where(
+            ExamVersion.exam_id.in_(list(revisions))
+        )
+    ):
+        count, stale = result.get(exam_id, (0, False))
+        result[exam_id] = (count + 1, stale or exam_revision < revisions[exam_id])
+    return result
+
+
+def summary(
+    exam: Exam,
+    totals_: dict[UUID, tuple[int, float]],
+    versions_: dict[UUID, tuple[int, bool]] | None = None,
+) -> ExamSummary:
     count, points = totals_.get(exam.id, (0, 0.0))
+    versions_count, stale = (versions_ or {}).get(exam.id, (0, False))
     return ExamSummary(
         id=exam.id,
         created_at=exam.created_at,
@@ -134,6 +153,8 @@ def summary(exam: Exam, totals_: dict[UUID, tuple[int, float]]) -> ExamSummary:
         revision=exam.revision,
         question_count=count,
         total_points=points,
+        versions_count=versions_count,
+        has_stale_versions=stale,
     )
 
 
@@ -170,7 +191,11 @@ def detail(db: Session, exam: Exam) -> ExamDetail:
     versions = db.scalars(
         select(ExamVersion).where(ExamVersion.exam_id == exam.id).order_by(ExamVersion.label)
     )
-    base = summary(exam, {exam.id: (len(rows), sum(i.points for i, _ in rows))})
+    base = summary(
+        exam,
+        {exam.id: (len(rows), sum(i.points for i, _ in rows))},
+        version_counts(db, [exam]),
+    )
     return ExamDetail(
         **base.model_dump(),
         settings=ExamSettings.model_validate(exam.settings),
@@ -238,7 +263,8 @@ def listing(
     except ValueError:
         raise Invalid("invalid_cursor") from None
     counts = totals(db, [e.id for e in exams])
-    return {"items": [summary(e, counts) for e in exams], "next_cursor": next_cursor}
+    version_info = version_counts(db, exams)
+    return {"items": [summary(e, counts, version_info) for e in exams], "next_cursor": next_cursor}
 
 
 def edit(db: Session, user: User, exam_id: UUID, data: ExamUpdate) -> ExamDetail:

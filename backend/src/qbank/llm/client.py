@@ -374,10 +374,26 @@ def fixture_path(stage: str, digest: str) -> Path:
 
 
 class FakeLLMClient:
-    def __init__(self, settings: Settings | None = None) -> None:
+    def __init__(self, settings: Settings | None = None, *, repeat_last: bool = False) -> None:
         self.settings = settings or get_settings()
         self.scripts: dict[str, list[Any]] = {}
         self.calls: list[dict[str, Any]] = []
+        # Scripted e2e mode: an exhausted queue keeps answering with its last item.
+        self.repeat_last = repeat_last
+
+    @classmethod
+    def from_script(cls, path: str | Path, settings: Settings | None = None) -> "FakeLLMClient":
+        """Preload `{stage: [response, ...]}` from a JSON file; queues repeat their last item."""
+        data = json.loads(Path(path).read_text(encoding="utf-8"))
+        if not isinstance(data, dict) or not all(
+            isinstance(items, list) and items for items in data.values()
+        ):
+            raise ValueError("A fake LLM script maps each stage to a non-empty list of responses")
+        client = cls(settings, repeat_last=True)
+        for stage, items in data.items():
+            for item in items:
+                client.queue(stage, item)
+        return client
 
     def queue(self, stage: str, result: Any) -> None:
         self.scripts.setdefault(stage, []).append(result)
@@ -414,7 +430,8 @@ class FakeLLMClient:
                 queue_key = "extract"
             elif stage == "extract" and self.scripts.get("eval"):
                 queue_key = "eval"
-        value = self.scripts[queue_key].pop(0)
+        queue = self.scripts[queue_key]
+        value = queue[0] if self.repeat_last and len(queue) == 1 else queue.pop(0)
         if isinstance(value, Exception):
             raise value
         cost_usd = Decimal(0)
@@ -508,6 +525,8 @@ class RecordedLLMClient(FakeLLMClient):
 def get_llm_client() -> LLMClient:
     settings = get_settings()
     if settings.llm_mode == "fake":
+        if settings.llm_fake_script:
+            return FakeLLMClient.from_script(settings.llm_fake_script, settings)
         return FakeLLMClient(settings)
     if settings.llm_mode == "recorded":
         return RecordedLLMClient(settings)

@@ -2028,6 +2028,8 @@ export interface components {
        * Format: date-time
        */
       created_at: string;
+      /** Has Stale Versions */
+      has_stale_versions: boolean;
       /**
        * Id
        * Format: uuid
@@ -2063,6 +2065,8 @@ export interface components {
       updated_at: string;
       /** Versions */
       versions: components["schemas"]["VersionOut"][];
+      /** Versions Count */
+      versions_count: number;
     };
     /** ExamHeader */
     ExamHeader: {
@@ -2180,6 +2184,8 @@ export interface components {
        * Format: date-time
        */
       created_at: string;
+      /** Has Stale Versions */
+      has_stale_versions: boolean;
       /**
        * Id
        * Format: uuid
@@ -2210,6 +2216,8 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+      /** Versions Count */
+      versions_count: number;
     };
     /** ExamUpdate */
     ExamUpdate: {

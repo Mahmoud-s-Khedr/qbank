@@ -1,6 +1,7 @@
 import { ArrowDown, ArrowUp, Plus, Target, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
+import { assetImageUrl } from "@/api/hooks/review";
 import { QmdRenderer } from "@/components/qmd/QmdRenderer";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -435,7 +436,10 @@ function UnitBlock({
               <Badge variant="info" className="mb-1">
                 {t("exams.builder.stimulus")}
               </Badge>
-              <QmdRenderer source={stimulus.content} />
+              <QmdRenderer
+                source={stimulus.content}
+                resolveAsset={assetImageUrl}
+              />
             </div>
           ) : null}
           {unit.items.map((item) => (
@@ -498,6 +502,7 @@ function ItemRow({
         <QmdRenderer
           className="min-w-0 flex-1 text-sm"
           source={item.question.stem}
+          resolveAsset={assetImageUrl}
         />
       </div>
       <div className="flex flex-wrap items-center gap-2 text-xs">

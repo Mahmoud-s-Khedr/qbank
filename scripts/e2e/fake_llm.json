@@ -1,0 +1,487 @@
+{
+  "extract": [
+    {
+      "page_kind": "questions",
+      "headings": [
+        {
+          "level": "chapter",
+          "text": "الفصل الأول: الخلية",
+          "box_2d": [
+            48,
+            67,
+            107,
+            933
+          ]
+        }
+      ],
+      "stimuli": [],
+      "questions": [
+        {
+          "number_label": "1",
+          "type": "mcq_single",
+          "stem": "ما وظيفة الميتوكوندريا في الخَلِيَّةِ؟",
+          "choices": [
+            {
+              "label": "أ",
+              "content": "إنتاج الطاقة"
+            },
+            {
+              "label": "ب",
+              "content": "تخزين الماء"
+            },
+            {
+              "label": "ج",
+              "content": "بناء الجدار الخلوي"
+            },
+            {
+              "label": "د",
+              "content": "نقل الأكسجين"
+            }
+          ],
+          "answer": {
+            "labels": [
+              "أ"
+            ],
+            "text": null
+          },
+          "stimulus_ref": null,
+          "figures": [],
+          "box_2d": [
+            119,
+            67,
+            249,
+            933
+          ],
+          "continues_from_previous": false,
+          "continues_on_next": false,
+          "confidence": 0.95
+        },
+        {
+          "number_label": "2",
+          "type": "mcq_single",
+          "stem": "أي العضيات التالية تقوم بعملية البناء الضوئي؟",
+          "choices": [
+            {
+              "label": "أ",
+              "content": "النواة"
+            },
+            {
+              "label": "ب",
+              "content": "البلاستيدات الخضراء"
+            },
+            {
+              "label": "ج",
+              "content": "الريبوسومات"
+            },
+            {
+              "label": "د",
+              "content": "الجهاز الغولجي"
+            }
+          ],
+          "answer": {
+            "labels": [
+              "ب"
+            ],
+            "text": null
+          },
+          "stimulus_ref": null,
+          "figures": [],
+          "box_2d": [
+            261,
+            67,
+            392,
+            933
+          ],
+          "continues_from_previous": false,
+          "continues_on_next": false,
+          "confidence": 0.95
+        },
+        {
+          "number_label": "3",
+          "type": "mcq_single",
+          "stem": "ما الجزيء الذي يحمل المعلومات الوراثية؟",
+          "choices": [
+            {
+              "label": "أ",
+              "content": "البروتين"
+            },
+            {
+              "label": "ب",
+              "content": "الدهون"
+            },
+            {
+              "label": "ج",
+              "content": "الحمض النووي"
+            },
+            {
+              "label": "د",
+              "content": "النشا"
+            }
+          ],
+          "answer": {
+            "labels": [
+              "ج"
+            ],
+            "text": null
+          },
+          "stimulus_ref": null,
+          "figures": [],
+          "box_2d": [
+            404,
+            67,
+            534,
+            933
+          ],
+          "continues_from_previous": false,
+          "continues_on_next": false,
+          "confidence": 0.95
+        },
+        {
+          "number_label": "4",
+          "type": "mcq_single",
+          "stem": "يمثل الشكل المقابل خلية نباتية، فما اسم الجزء المشار إليه؟",
+          "choices": [
+            {
+              "label": "أ",
+              "content": "الفجوة العصارية"
+            },
+            {
+              "label": "ب",
+              "content": "النواة"
+            },
+            {
+              "label": "ج",
+              "content": "الغشاء"
+            },
+            {
+              "label": "د",
+              "content": "السيتوبلازم"
+            }
+          ],
+          "answer": {
+            "labels": [
+              "أ"
+            ],
+            "text": null
+          },
+          "stimulus_ref": null,
+          "figures": [
+            {
+              "box_2d": [
+                570,
+                101,
+                736,
+                370
+              ],
+              "kind": "diagram"
+            }
+          ],
+          "box_2d": [
+            546,
+            67,
+            760,
+            933
+          ],
+          "continues_from_previous": false,
+          "continues_on_next": false,
+          "confidence": 0.95
+        }
+      ],
+      "answer_key_entries": [],
+      "page_confidence": 0.95,
+      "notes": ""
+    },
+    {
+      "page_kind": "questions",
+      "headings": [],
+      "stimuli": [
+        {
+          "ref": "S1",
+          "kind": "passage",
+          "intro": null,
+          "content": "تتكاثر البكتيريا بالانقسام الثنائي، إذ تنقسم الخلية الواحدة إلى خليتين متماثلتين في ظروف مناسبة من الحرارة والغذاء، وقد يتكرر ذلك كل عشرين دقيقة.",
+          "box_2d": [
+            338,
+            67,
+            487,
+            933
+          ],
+          "continues_from_previous": false,
+          "continues_on_next": false
+        }
+      ],
+      "questions": [
+        {
+          "number_label": "5",
+          "type": "mcq_single",
+          "stem": "ما الناتج النهائي لعملية التنفس الخلوي الهوائي؟",
+          "choices": [
+            {
+              "label": "أ",
+              "content": "الإيثانول"
+            },
+            {
+              "label": "ب",
+              "content": "حمض اللاكتيك"
+            },
+            {
+              "label": "ج",
+              "content": "الماء وثاني أكسيد الكربون"
+            },
+            {
+              "label": "د",
+              "content": "الجلوكوز"
+            }
+          ],
+          "answer": {
+            "labels": [
+              "ج"
+            ],
+            "text": null
+          },
+          "stimulus_ref": null,
+          "figures": [],
+          "box_2d": [
+            48,
+            67,
+            178,
+            933
+          ],
+          "continues_from_previous": false,
+          "continues_on_next": false,
+          "confidence": 0.95
+        },
+        {
+          "number_label": "6",
+          "type": "mcq_single",
+          "stem": "أي مما يلي ينتقل عبر الغشاء بالانتشار البسيط؟",
+          "choices": [
+            {
+              "label": "أ",
+              "content": "الأكسجين"
+            },
+            {
+              "label": "ب",
+              "content": "البروتينات"
+            },
+            {
+              "label": "ج",
+              "content": "النشا"
+            },
+            {
+              "label": "د",
+              "content": "الحمض النووي"
+            }
+          ],
+          "answer": {
+            "labels": [
+              "أ"
+            ],
+            "text": null
+          },
+          "stimulus_ref": null,
+          "figures": [],
+          "box_2d": [
+            190,
+            67,
+            321,
+            933
+          ],
+          "continues_from_previous": false,
+          "continues_on_next": false,
+          "confidence": 0.95
+        },
+        {
+          "number_label": "7",
+          "type": "mcq_single",
+          "stem": "ما نوع التكاثر الموصوف في القطعة؟",
+          "choices": [
+            {
+              "label": "أ",
+              "content": "جنسي"
+            },
+            {
+              "label": "ب",
+              "content": "انقسام ثنائي"
+            },
+            {
+              "label": "ج",
+              "content": "تبرعم"
+            },
+            {
+              "label": "د",
+              "content": "تجدد"
+            }
+          ],
+          "answer": {
+            "labels": [
+              "ب"
+            ],
+            "text": null
+          },
+          "stimulus_ref": "S1",
+          "figures": [],
+          "box_2d": [
+            499,
+            67,
+            629,
+            933
+          ],
+          "continues_from_previous": false,
+          "continues_on_next": false,
+          "confidence": 0.95
+        },
+        {
+          "number_label": "8",
+          "type": "mcq_single",
+          "stem": "ما العامل الذي يسرّع تكاثر البكتيريا بحسب القطعة؟",
+          "choices": [
+            {
+              "label": "أ",
+              "content": "البرودة الشديدة"
+            },
+            {
+              "label": "ب",
+              "content": "الجفاف"
+            },
+            {
+              "label": "ج",
+              "content": "الحرارة والغذاء المناسبان"
+            },
+            {
+              "label": "د",
+              "content": "الضوء فقط"
+            }
+          ],
+          "answer": {
+            "labels": [
+              "ج"
+            ],
+            "text": null
+          },
+          "stimulus_ref": "S1",
+          "figures": [],
+          "box_2d": [
+            641,
+            67,
+            772,
+            933
+          ],
+          "continues_from_previous": false,
+          "continues_on_next": false,
+          "confidence": 0.95
+        }
+      ],
+      "answer_key_entries": [],
+      "page_confidence": 0.95,
+      "notes": ""
+    }
+  ],
+  "verify": [
+    {
+      "discrepancies": []
+    }
+  ],
+  "classify": [
+    {
+      "items": [
+        {
+          "id": "1",
+          "difficulty": 1,
+          "difficulty_reason": "سؤال مباشر من المنهج",
+          "tags": [
+            "خلية"
+          ]
+        },
+        {
+          "id": "2",
+          "difficulty": 2,
+          "difficulty_reason": "سؤال مباشر من المنهج",
+          "tags": [
+            "عضيات"
+          ]
+        },
+        {
+          "id": "3",
+          "difficulty": 3,
+          "difficulty_reason": "سؤال مباشر من المنهج",
+          "tags": [
+            "وراثة"
+          ]
+        },
+        {
+          "id": "4",
+          "difficulty": 2,
+          "difficulty_reason": "سؤال مباشر من المنهج",
+          "tags": [
+            "شكل"
+          ]
+        },
+        {
+          "id": "5",
+          "difficulty": 3,
+          "difficulty_reason": "سؤال مباشر من المنهج",
+          "tags": [
+            "تنفس"
+          ]
+        },
+        {
+          "id": "6",
+          "difficulty": 2,
+          "difficulty_reason": "سؤال مباشر من المنهج",
+          "tags": [
+            "غشاء"
+          ]
+        },
+        {
+          "id": "7",
+          "difficulty": 2,
+          "difficulty_reason": "سؤال مباشر من المنهج",
+          "tags": [
+            "تكاثر"
+          ]
+        },
+        {
+          "id": "8",
+          "difficulty": 3,
+          "difficulty_reason": "سؤال مباشر من المنهج",
+          "tags": [
+            "تكاثر"
+          ]
+        }
+      ]
+    }
+  ],
+  "compose": [
+    {
+      "title": "اختبار الأحياء المقترح",
+      "duration_minutes": 45,
+      "sections": [
+        {
+          "title": "القسم الأول",
+          "rows": [
+            {
+              "count": 2,
+              "types": [
+                "mcq_single"
+              ],
+              "points": 2
+            }
+          ]
+        }
+      ],
+      "notes": ""
+    },
+    {
+      "rows": [
+        {
+          "refs": [
+            "c1",
+            "c2"
+          ]
+        }
+      ],
+      "rationale": "اختيار سؤالين متوازنين في الصعوبة من بنك الأسئلة."
+    }
+  ]
+}

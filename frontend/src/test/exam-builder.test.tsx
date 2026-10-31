@@ -83,6 +83,8 @@ function exam(sections: Json[], extra: Json = {}): Json {
     updated_at: "2026-01-02T00:00:00Z",
     question_count: items.length,
     total_points: items.length,
+    versions_count: 0,
+    has_stale_versions: false,
     sections,
     versions: [],
     settings: {
@@ -278,6 +280,42 @@ describe("exam list and creation", () => {
     expect(screen.getByLabelText("Exam title")).toHaveValue("Midterm");
     const post = find("POST", "/api/v1/exams")[0];
     expect(post?.body).toMatchObject({ subject_id: "s1", title: "Midterm" });
+  });
+});
+
+describe("exam list versions column", () => {
+  it("shows the versions count and a stale badge", async () => {
+    const base = exam([section([])]);
+    on((c) =>
+      c.path === "/api/v1/exams" && c.method === "GET"
+        ? json({
+            items: [
+              { ...base, id: "e1", title: "Fresh", versions_count: 2 },
+              {
+                ...base,
+                id: "e2",
+                title: "Edited",
+                versions_count: 1,
+                has_stale_versions: true,
+              },
+              { ...base, id: "e3", title: "Plain" },
+            ],
+            next_cursor: null,
+          })
+        : undefined,
+    );
+    setup("/exams");
+    const rows = await screen.findAllByRole("row");
+    const rowOf = (title: string) => {
+      const row = rows.find((r) => within(r).queryByText(title) !== null);
+      if (!row) throw new Error(`No row for ${title}`);
+      return within(row);
+    };
+    expect(rowOf("Fresh").queryByText("Stale")).toBeNull();
+    expect(rowOf("Fresh").getByText("2")).toBeVisible();
+    expect(rowOf("Edited").getByText("1")).toBeVisible();
+    expect(rowOf("Edited").getByText("Stale")).toBeVisible();
+    expect(rowOf("Plain").queryByText("Stale")).toBeNull();
   });
 });
 

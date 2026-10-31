@@ -349,6 +349,7 @@ export function useSourceEvents(
     let eventSource: EventSource | null = null;
     let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
     let attempt = 0;
+    let lastPageCounts = "";
 
     const clearTimer = () => {
       if (reconnectTimer !== null) {
@@ -402,6 +403,19 @@ export function useSourceEvents(
           };
         },
       );
+
+      // The page grid is a separate query: refresh it when the per-stage counts move, so pages
+      // that were rendered while the source was processing show up without a reload.
+      const pageCounts = JSON.stringify(payload.page_counts ?? null);
+      if (
+        pageCounts !== lastPageCounts ||
+        isTerminalSourceStatus(payload.status)
+      ) {
+        lastPageCounts = pageCounts;
+        void queryClient.invalidateQueries({
+          queryKey: sourcePagesQueryKey(sourceId),
+        });
+      }
 
       if (isTerminalSourceStatus(payload.status)) {
         disposed = true;

@@ -130,6 +130,8 @@ class ExamSummary(Output):
     revision: int
     question_count: int
     total_points: float
+    versions_count: int
+    has_stale_versions: bool
 
 
 class ExamDetail(ExamSummary):

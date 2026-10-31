@@ -608,7 +608,8 @@
       "duplicate": "Duplicate",
       "duplicateAria": "Duplicate {{title}}",
       "archive": "Archive",
-      "archiveAria": "Archive {{title}}"
+      "archiveAria": "Archive {{title}}",
+      "versions": "Versions"
     },
     "builder": {
       "back": "Back to exams",
