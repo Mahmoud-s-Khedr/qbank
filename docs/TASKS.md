@@ -17,7 +17,7 @@ Detailed task files (`docs/tasks/Txx-*.md`) are written just before dispatch, so
 | T07 | 1 | Golden set: hand-verified ground-truth JSON for ~15 fixture pages (all types, a stimulus, figures, a continuation) | ag + cc review | argon-high | T00 | done |
 | T08 | 1 | Extraction: PageExtraction schema, prompt v1, extract actor, fallback, stitching, figure cropping | cx | terra / medium | T05,T06 | in progress |
 | T09 | 1 | Structure detection (chapter/lesson tree) + answer-key matching | cx | terra / medium | T08 | todo |
-| T10 | 1 | `qbank-eval` CLI + run on candidate models → MODELS.md results, choose defaults | cx + cc | terra / medium | T07,T08 | todo |
+| T10 | 1 | `qbank-eval` CLI + run on candidate models → MODELS.md results, choose defaults | ag + cc | terra / medium | T07,T08 | todo |
 | T11 | 2 | Validation rules, confidence, verifier pass, Arabic normalization, dedup, classification | cx | terra / medium | T08 | todo |
 | T12 | 3 | Review APIs: question/stimulus CRUD, audit log, split/merge, re-crop, re-extract with diff, bulk approve | cx | terra / medium | T11 | todo |
 | T13 | 3 | Shared UI: QmdRenderer, QmdEditor, PageCanvas (zoom/pan/boxes/draw) | ag | flash or argon (complex UI only) | T02 | done |
