@@ -28,7 +28,7 @@ Detailed task files (`docs/tasks/Txx-*.md`) are written just before dispatch, so
 | T18 | 5 | Exams: model/API, sections, blueprint sampler, stimulus grouping, versions/shuffling (hypothesis tests) | cc-sonnet | sonnet 5.5 | T16 | done |
 | T19 | 5 | AI-assisted composition (compose stage) | cx | terra / medium | T18,T06 | in progress |
 | T20 | 5 | Exam builder UI (blueprint, manual cart, AI assistant, sections, versions) | ag | flash or argon (complex UI only) | T18,T19 | todo |
-| T21 | 6 | PDF export: HTML templates, fonts, KaTeX, layout options, answer key, bubble sheet | cc-sonnet | sonnet 5.5 | T18 | in progress |
+| T21 | 6 | PDF export: HTML templates, fonts, KaTeX, layout options, answer key, bubble sheet | cc-sonnet | sonnet 5.5 | T18 | done |
 | T22 | 6 | DOCX export via Pandoc + reference.docx (RTL, OMML) | cx | terra / medium | T21 | todo |
 | T23 | 6 | Export/preview UI, exam templates, admin settings (users, models, spend cap), cost dashboard | ag | flash or argon (complex UI only) | T21,T22 | todo |
 | T24 | 7 | E2E: Playwright full flow on fixtures in CI with recorded LLM | cx | terra / medium | T15,T20,T23 | todo |
@@ -54,3 +54,4 @@ cc: T00, T03 review, every merge, T10 decision, integration fixes, final accepta
 | 2026-10-31 | T06 (+1 review round) | codex medium | 5h 58→68%, weekly 50→51% |
 | 2026-10-31 | T08 (+1 continue round) | codex medium | 5h 68→91%, weekly 51→55%; live run test-2027 $0.0208 |
 | 2026-10-31 | T18 | cc-sonnet 5.5 sub-agent | ~120k subagent tokens, 12 min |
+| 2026-10-31 | T21 | cc-sonnet 5.5 sub-agent | ~195k subagent tokens, 20 min |
