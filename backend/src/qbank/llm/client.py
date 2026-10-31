@@ -29,7 +29,7 @@ from qbank.llm.errors import (
     ModelNotAllowed,
     ModelTooExpensive,
 )
-from qbank.llm.pricing import PRICES, estimate_cost, prices
+from qbank.llm.pricing import PRICES, estimate_cost, prices, reasoning_payload
 from qbank.models import LLMCall
 
 T = TypeVar("T", bound=BaseModel)
@@ -208,11 +208,7 @@ class OpenRouterClient:
                     "temperature": config.temperature,
                     "extra_body": {
                         "usage": {"include": True},
-                        "reasoning": (
-                            {"enabled": False}
-                            if config.reasoning == "off"
-                            else {"effort": config.reasoning}
-                        ),
+                        "reasoning": reasoning_payload(model, config.reasoning),
                     },
                 }
                 if schema:

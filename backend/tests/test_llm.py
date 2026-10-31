@@ -340,3 +340,11 @@ def test_reap_stale_reservation(database: str) -> None:
         assert row.status == "abandoned"
         assert row.cost_usd == Decimal("0.01")
         assert row.reserved_usd == 0
+
+
+def test_reasoning_off_maps_to_minimal_effort_for_models_that_require_it() -> None:
+    from qbank.llm.pricing import reasoning_payload  # noqa: PLC0415 -- local to keep the test self-contained
+
+    assert reasoning_payload("google/gemini-3.8-flash", "off") == {"effort": "minimal"}
+    assert reasoning_payload("openai/gpt-6-luna", "off") == {"enabled": False}
+    assert reasoning_payload("openai/gpt-6-luna", "low") == {"effort": "low"}

@@ -14,6 +14,9 @@ PRICES = {
     "anthropic/claude-haiku-5.5": (Decimal("0.10"), Decimal("0.50")),
     "nvidia/nemotron-3.5-super-vl:free": (Decimal(0), Decimal(0)),
 }
+# Models whose endpoint rejects `reasoning: {enabled: false}` (verified live, 2026-10-31).
+# For these, "off" is sent as the lowest effort instead.
+REASONING_REQUIRED = frozenset({"google/gemini-3.8-flash"})
 CACHE = Path(".data/llm-prices.json")
 
 
@@ -43,3 +46,11 @@ def refresh_prices() -> None:
             ]
     CACHE.parent.mkdir(parents=True, exist_ok=True)
     CACHE.write_text(json.dumps(result, indent=2))
+
+
+def reasoning_payload(model: str, setting: str) -> dict[str, object]:
+    if setting != "off":
+        return {"effort": setting}
+    if model in REASONING_REQUIRED:
+        return {"effort": "minimal"}
+    return {"enabled": False}
