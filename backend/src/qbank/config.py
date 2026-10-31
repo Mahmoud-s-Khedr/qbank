@@ -5,7 +5,7 @@ from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 MIN_SECRET_LENGTH = 32
-DEV_JWT_SECRET = "local-development-only"  # noqa: S105 -- public development default
+DEV_JWT_SECRET = "local-development-only-not-for-production"  # noqa: S105 -- public development default
 
 
 class Settings(BaseSettings):

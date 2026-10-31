@@ -1,4 +1,4 @@
-.PHONY: infra-up infra-down be-install be-lint be-fmt be-types be-test be-test-unit be-migrate be-openapi fe-install fe-lint fe-types fe-test fe-build api-gen check
+.PHONY: infra-up infra-down be-install be-lint be-fmt be-types be-test be-test-unit be-migrate be-openapi fe-install fe-lint fe-types fe-test fe-build api-gen contract-check lint-actions pre-commit-install check
 infra-up:
 	docker compose up -d --wait postgres redis minio
 	docker compose run --rm minio-init
@@ -22,16 +22,24 @@ be-migrate:
 be-openapi:
 	uv run --directory backend python -m qbank.api.openapi_dump
 fe-install:
-	pnpm -C frontend install
+	pnpm -C frontend install --frozen-lockfile
 fe-lint:
 	pnpm -C frontend lint
 fe-types:
 	pnpm -C frontend typecheck
 fe-test:
-	pnpm -C frontend test
+	pnpm -C frontend test:coverage
 fe-build:
 	pnpm -C frontend build
 api-gen: be-openapi
 	@if [ -d frontend ]; then pnpm -C frontend api:gen; fi
-check: be-lint be-types be-test
-	@if [ -f frontend/package.json ]; then $(MAKE) fe-lint fe-types fe-test fe-build; fi
+contract-check:
+	$(MAKE) api-gen
+	git diff --exit-code -- backend/openapi.json frontend/src/api/schema.d.ts
+lint-actions:
+	docker run --rm -v "$(CURDIR):/repo" -w /repo rhysd/actionlint
+pre-commit-install:
+	pre-commit install --install-hooks
+	pre-commit install --hook-type pre-push
+check: be-lint be-types be-test contract-check lint-actions
+	@if [ -f frontend/package.json ]; then $(MAKE) fe-lint fe-types fe-test fe-build && pnpm -C frontend format:check; fi

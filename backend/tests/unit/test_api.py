@@ -56,12 +56,12 @@ def test_unhandled(app: FastAPI, client: TestClient) -> None:
 def test_settings(monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("QBANK_ENV", "test")
     monkeypatch.setenv("QBANK_CORS_ORIGINS", '["https://example.com"]')
-    monkeypatch.setenv("QBANK_JWT_SECRET", "secret")
+    monkeypatch.setenv("QBANK_JWT_SECRET", "test-secret-at-least-32-characters-long")
     get_settings.cache_clear()
     settings = get_settings()
     assert settings.env == "test"
     assert settings.cors_origins == ["https://example.com"]
-    assert settings.jwt_secret.get_secret_value() == "secret"
+    assert settings.jwt_secret.get_secret_value() == "test-secret-at-least-32-characters-long"
     assert "secret" not in repr(settings.jwt_secret)
     assert isinstance(Settings(), Settings)
     get_settings.cache_clear()
