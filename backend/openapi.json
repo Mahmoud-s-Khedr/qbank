@@ -4,10 +4,15 @@
       "Health": {
         "properties": {
           "db": {
+            "enum": [
+              "ok",
+              "down"
+            ],
             "title": "Db",
             "type": "string"
           },
           "status": {
+            "const": "ok",
             "default": "ok",
             "title": "Status",
             "type": "string"

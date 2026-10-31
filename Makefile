@@ -1,6 +1,7 @@
 .PHONY: infra-up infra-down be-install be-lint be-fmt be-types be-test be-test-unit be-migrate be-openapi fe-install fe-lint fe-types fe-test fe-build api-gen check
 infra-up:
-	docker compose up -d --wait
+	docker compose up -d --wait postgres redis minio
+	docker compose run --rm minio-init
 infra-down:
 	docker compose down
 be-install:

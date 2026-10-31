@@ -11,9 +11,9 @@ class Settings(BaseSettings):
     )
 
     env: Literal["dev", "test", "prod"] = "dev"
-    database_url: str = "postgresql+psycopg://qbank:qbank@localhost:55432/qbank"
-    redis_url: str = "redis://localhost:56379/0"
-    s3_endpoint_url: str = "http://localhost:59000"
+    database_url: str = "postgresql+psycopg://qbank:qbank@localhost:25432/qbank"
+    redis_url: str = "redis://localhost:26379/0"
+    s3_endpoint_url: str = "http://localhost:29000"
     s3_bucket: str = "qbank"
     s3_access_key: str = "qbanklocal"
     s3_secret_key: SecretStr = SecretStr("qbanklocalpassword")

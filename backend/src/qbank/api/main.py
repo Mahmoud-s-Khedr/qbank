@@ -2,7 +2,7 @@ import logging
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from importlib.metadata import version
-from typing import Annotated
+from typing import Annotated, Literal
 from uuid import uuid4
 
 import structlog
@@ -24,9 +24,9 @@ logger = structlog.get_logger()
 
 
 class Health(BaseModel):
-    status: str = "ok"
+    status: Literal["ok"] = "ok"
     version: str
-    db: str
+    db: Literal["ok", "down"]
 
 
 def problem(status: int, detail: str, code: str) -> JSONResponse:
