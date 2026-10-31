@@ -39,7 +39,7 @@ jobs:
         with:
           enable-cache: true
       - run: make be-install
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-${{ runner.os }}-${{ hashFiles('backend/uv.lock') }}
@@ -169,7 +169,7 @@ jobs:
           cache-dependency-path: frontend/pnpm-lock.yaml
       - run: make be-install
       - run: make fe-install
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: playwright-e2e-${{ runner.os }}-${{ hashFiles('backend/uv.lock', 'frontend/pnpm-lock.yaml') }}
