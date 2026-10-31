@@ -9,12 +9,15 @@ from qbank.schemas.exams import (
     AnswerKey,
     Blueprint,
     BlueprintResult,
+    ComposeIn,
     ExamDetail,
     ExamIn,
     ExamSummary,
     ExamUpdate,
     ItemsIn,
     ItemUpdate,
+    ProposalApply,
+    ProposalOut,
     ReorderItems,
     ReorderSections,
     SectionIn,
@@ -22,6 +25,7 @@ from qbank.schemas.exams import (
     VersionOut,
     VersionsIn,
 )
+from qbank.services import compose_ai
 from qbank.services import exam_generation as generation
 from qbank.services import exams as service
 
@@ -127,3 +131,23 @@ def generate_versions(id: UUID, data: VersionsIn, db: DB, user: Current) -> list
 @router.get("/exams/{id}/versions/{label}/answer-key", response_model=AnswerKey)
 def answer_key(id: UUID, label: str, db: DB, user: Current) -> AnswerKey:
     return generation.answer_key(db, user, id, label)
+
+
+@router.post("/exams/{id}/compose", response_model=ProposalOut)
+def compose_exam(id: UUID, data: ComposeIn, db: DB, user: Current) -> ProposalOut:
+    return compose_ai.compose(db, user, id, data)
+
+
+@router.get("/exams/{id}/proposals", response_model=list[ProposalOut])
+def list_proposals(id: UUID, db: DB, user: Current) -> list[ProposalOut]:
+    return compose_ai.listing(db, user, id)
+
+
+@router.post("/exam-proposals/{id}/apply", response_model=ExamDetail)
+def apply_proposal(id: UUID, data: ProposalApply, db: DB, user: Current) -> ExamDetail:
+    return compose_ai.apply(db, user, id, data)
+
+
+@router.post("/exam-proposals/{id}/discard", response_model=ProposalOut)
+def discard_proposal(id: UUID, db: DB, user: Current) -> ProposalOut:
+    return compose_ai.discard(db, user, id)

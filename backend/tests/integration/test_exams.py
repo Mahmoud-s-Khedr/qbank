@@ -464,3 +464,193 @@ def test_blueprint(data: dict[str, Any], client: TestClient) -> None:
         ],
         int,
     )
+
+
+@pytest.mark.integration
+def test_ai_compose_apply_discard_and_failures(
+    data: dict[str, Any], client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from qbank.llm import BudgetExceeded, FakeLLMClient, LLMOutputInvalid  # noqa: PLC0415
+    from qbank.services import compose_ai  # noqa: PLC0415
+
+    fake = FakeLLMClient()
+    monkeypatch.setattr(compose_ai, "get_llm_client", lambda: fake)
+    login(client, "t1@a.com")
+    exam = new_exam(client, data)
+    url = f"{URL}/exams/{exam['id']}/compose"
+    plan = {"sections": [{"title": "A", "rows": [{"count": 2}]}]}
+    fake.queue("compose", plan)
+    fake.queue("compose", {"rows": [{"refs": ["unknown"]}], "rationale": "A test"})
+    response = client.post(url, json={"prompt": "Two questions"})
+    assert response.status_code == OK, response.text
+    proposal = response.json()
+    assert "unknown_ref" in proposal["warnings"]
+    assert len(proposal["selection"][0]) == 2  # noqa: PLR2004
+    proposal_id = proposal["proposal_id"]
+    first = proposal["selection"][0][0]
+    # Replace one selected question with another approved, nonduplicate single.
+    choices = [x for x in data["singles"] if x not in proposal["selection"][0]]
+    applied = client.post(
+        f"{URL}/exam-proposals/{proposal_id}/apply",
+        json={"edits": {"remove_question_ids": [first], "add_question_ids": [choices[-1]]}},
+    )
+    assert applied.status_code == OK, applied.text
+    assert first not in question_ids(applied.json())
+    assert choices[-1] in question_ids(applied.json())
+    assert applied.json()["revision"] == 2  # noqa: PLR2004
+    assert applied.json()["blueprint"]["proposal_id"] == proposal_id
+    assert client.post(f"{URL}/exam-proposals/{proposal_id}/discard").status_code == CONFLICT
+    fake.queue("compose", plan)
+    fake.queue("compose", {"rows": [{"refs": []}], "rationale": "test"})
+    proposal2 = client.post(url, json={"prompt": "Again"}).json()
+    assert (
+        client.post(f"{URL}/exam-proposals/{proposal2['proposal_id']}/discard").json()["status"]
+        == "discarded"
+    )
+    before = len(client.get(f"{URL}/exams/{exam['id']}/proposals").json())
+    fake.queue("compose", BudgetExceeded())
+    assert client.post(url, json={"prompt": "Budget"}).status_code == HTTPStatus.PAYMENT_REQUIRED
+    fake.queue("compose", LLMOutputInvalid("bad"))
+    assert client.post(url, json={"prompt": "Invalid"}).status_code == HTTPStatus.BAD_GATEWAY
+    assert len(client.get(f"{URL}/exams/{exam['id']}/proposals").json()) == before
+    login(client, "t2@a.com")
+    assert client.get(f"{URL}/exams/{exam['id']}/proposals").status_code == NOT_FOUND
+
+
+@pytest.mark.integration
+def test_ai_compose_validates_plan_groups_and_duplicates(
+    data: dict[str, Any], client: TestClient, monkeypatch: pytest.MonkeyPatch, database: str
+) -> None:
+    from uuid import uuid4  # noqa: PLC0415
+
+    from sqlalchemy import update  # noqa: PLC0415
+
+    from qbank.llm import FakeLLMClient  # noqa: PLC0415
+    from qbank.services import compose_ai  # noqa: PLC0415
+
+    engine = create_engine(database)
+    with Session(engine) as db:
+        db.execute(update(Question).where(Question.id.in_(data["group"])).values(tags=["group"]))
+        db.commit()
+    engine.dispose()
+    fake = FakeLLMClient()
+    monkeypatch.setattr(compose_ai, "get_llm_client", lambda: fake)
+    login(client, "t1@a.com")
+    exam = new_exam(client, data)
+    fake.queue(
+        "compose",
+        {
+            "sections": [
+                {
+                    "title": "A",
+                    "rows": [
+                        {"count": 50, "tags_any": ["group"]},
+                        {"count": 1, "lesson_ids": [str(uuid4())]},
+                    ],
+                }
+            ]
+        },
+    )
+    fake.queue("compose", {"rows": [{"refs": ["c1"]}], "rationale": "Group"})
+    response = client.post(f"{URL}/exams/{exam['id']}/compose", json={"prompt": "group"})
+    assert response.status_code == OK, response.text
+    proposal = response.json()
+    assert set(proposal["selection"][0]) == set(data["group"])
+    assert proposal["blueprint"]["sections"][0]["rows"][0]["count"] == 3  # noqa: PLR2004
+    assert set(proposal["warnings"]) >= {"unknown_taxonomy_id", "count_clamped"}
+    bad = client.post(
+        f"{URL}/exam-proposals/{proposal['proposal_id']}/apply",
+        json={"edits": {"remove_question_ids": [data["group"][0]]}},
+    )
+    assert bad.status_code == UNPROCESSABLE
+    ok = client.post(f"{URL}/exam-proposals/{proposal['proposal_id']}/apply", json={})
+    assert ok.status_code == OK, ok.text
+    assert question_ids(ok.json()) == data["group"]
+
+    exam2 = new_exam(client, data)
+    fake.queue("compose", {"sections": [{"title": "B", "rows": [{"count": 500}]}]})
+    fake.queue("compose", {"rows": [{"refs": []}], "rationale": "All"})
+    response = client.post(f"{URL}/exams/{exam2['id']}/compose", json={"prompt": "all"})
+    assert response.status_code == OK, response.text
+    ids = response.json()["selection"][0]
+    assert not ({data["singles"][0], data["duplicate"]} <= set(ids))
+    import json  # noqa: PLC0415
+
+    payload = json.loads(fake.calls[-1]["messages"][1]["content"])
+    assert len(payload["candidates"]) <= 120  # noqa: PLR2004
+    assert len(json.dumps(payload["candidates"], ensure_ascii=False).encode()) <= 6000  # noqa: PLR2004
+
+
+@pytest.mark.integration
+def test_ai_compose_caps_large_candidate_payload(
+    data: dict[str, Any], client: TestClient, monkeypatch: pytest.MonkeyPatch, database: str
+) -> None:
+    import json  # noqa: PLC0415
+
+    from qbank.llm import FakeLLMClient  # noqa: PLC0415
+    from qbank.services import compose_ai  # noqa: PLC0415
+
+    engine = create_engine(database)
+    with Session(engine) as db:
+        original = db.get(Question, data["singles"][0])
+        assert original is not None
+        for position in range(150):
+            db.add(
+                Question(
+                    org_id=original.org_id,
+                    subject_id=original.subject_id,
+                    source_id=original.source_id,
+                    position=position + 100,
+                    number_label=str(position),
+                    type=original.type,
+                    stem="سؤال طويل " * 100,
+                    choices=original.choices,
+                    language=original.language,
+                    regions=[],
+                    status="approved",
+                    confidence=1.0,
+                    tags=["اختبار"],
+                    difficulty=2,
+                )
+            )
+        db.commit()
+    engine.dispose()
+    fake = FakeLLMClient()
+    monkeypatch.setattr(compose_ai, "get_llm_client", lambda: fake)
+    fake.queue("compose", {"sections": [{"title": "A", "rows": [{"count": 100}]}]})
+    fake.queue("compose", {"rows": [{"refs": []}], "rationale": "test"})
+    login(client, "t1@a.com")
+    exam = new_exam(client, data)
+    response = client.post(f"{URL}/exams/{exam['id']}/compose", json={"prompt": "many"})
+    assert response.status_code == OK, response.text
+    candidates = json.loads(fake.calls[-1]["messages"][1]["content"])["candidates"]
+    assert len(candidates) < 100  # noqa: PLR2004 -- proves the cap was exercised
+    assert len(json.dumps(candidates, ensure_ascii=False).encode()) <= 6000  # noqa: PLR2004
+
+
+@pytest.mark.integration
+def test_ai_compose_fills_group_when_single_would_block_it(
+    data: dict[str, Any], client: TestClient, monkeypatch: pytest.MonkeyPatch, database: str
+) -> None:
+    from sqlalchemy import update  # noqa: PLC0415
+
+    from qbank.llm import FakeLLMClient  # noqa: PLC0415
+    from qbank.services import compose_ai  # noqa: PLC0415
+
+    engine = create_engine(database)
+    with Session(engine) as db:
+        ids = [*data["group"], data["singles"][1]]
+        db.execute(update(Question).where(Question.id.in_(ids)).values(tags=["special"]))
+        db.commit()
+    engine.dispose()
+    fake = FakeLLMClient()
+    monkeypatch.setattr(compose_ai, "get_llm_client", lambda: fake)
+    fake.queue(
+        "compose", {"sections": [{"title": "A", "rows": [{"count": 3, "tags_any": ["special"]}]}]}
+    )
+    fake.queue("compose", {"rows": [{"refs": ["c1"]}], "rationale": "test"})
+    login(client, "t1@a.com")
+    exam = new_exam(client, data)
+    response = client.post(f"{URL}/exams/{exam['id']}/compose", json={"prompt": "three"})
+    assert response.status_code == OK, response.text
+    assert set(response.json()["selection"][0]) == set(data["group"])

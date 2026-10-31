@@ -191,3 +191,48 @@ class AnswerKey(BaseModel):
     label: str
     items: list[AnswerKeyEntry]
     warnings: list[str]
+
+
+class ComposeIn(BaseModel):
+    prompt: str = Field(min_length=1, max_length=4000)
+    language: Literal["ar", "en"] = "ar"
+
+
+class ComposeSection(BaseModel):
+    title: str = Field(min_length=1, max_length=200)
+    rows: list[BlueprintRow]
+
+
+class ComposePlan(BaseModel):
+    title: str | None = None
+    duration_minutes: int | None = Field(default=None, ge=1, le=1000)
+    sections: list[ComposeSection]
+    notes: str = ""
+
+
+class ComposeSelectionRow(BaseModel):
+    refs: list[str]
+
+
+class ComposeSelection(BaseModel):
+    rows: list[ComposeSelectionRow]
+    rationale: str
+
+
+class ProposalOut(BaseModel):
+    proposal_id: UUID
+    blueprint: ComposePlan
+    selection: list[list[UUID]]
+    rationale: str
+    warnings: list[str]
+    cost_usd: float
+    status: str
+
+
+class ProposalEdits(BaseModel):
+    remove_question_ids: list[UUID] = Field(default_factory=list)
+    add_question_ids: list[UUID] = Field(default_factory=list)
+
+
+class ProposalApply(BaseModel):
+    edits: ProposalEdits = Field(default_factory=ProposalEdits)

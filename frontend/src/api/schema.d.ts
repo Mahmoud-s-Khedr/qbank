@@ -159,6 +159,40 @@ export interface paths {
     patch: operations["edit_item_api_v1_exam_items__id__patch"];
     trace?: never;
   };
+  "/api/v1/exam-proposals/{id}/apply": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Apply Proposal */
+    post: operations["apply_proposal_api_v1_exam_proposals__id__apply_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/exam-proposals/{id}/discard": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Discard Proposal */
+    post: operations["discard_proposal_api_v1_exam_proposals__id__discard_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/exam-sections/{id}": {
     parameters: {
       query?: never;
@@ -302,6 +336,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/exams/{id}/compose": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Compose Exam */
+    post: operations["compose_exam_api_v1_exams__id__compose_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/exams/{id}/duplicate": {
     parameters: {
       query?: never;
@@ -365,6 +416,23 @@ export interface paths {
     put?: never;
     /** Reorder Items */
     post: operations["reorder_items_api_v1_exams__id__items_reorder_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/exams/{id}/proposals": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Proposals */
+    get: operations["list_proposals_api_v1_exams__id__proposals_get"];
+    put?: never;
+    post?: never;
     delete?: never;
     options?: never;
     head?: never;
@@ -1227,7 +1295,7 @@ export interface components {
     AcceptOut: {
       /** Applied */
       applied: string[];
-      proposal: components["schemas"]["ProposalOut"];
+      proposal: components["schemas"]["qbank__schemas__review__ProposalOut"];
       /** Skipped */
       skipped: components["schemas"]["SkippedItem"][];
     };
@@ -1529,6 +1597,38 @@ export interface components {
     ChoiceSplit: {
       /** Choice Index */
       choice_index: number;
+    };
+    /** ComposeIn */
+    ComposeIn: {
+      /**
+       * Language
+       * @default ar
+       * @enum {string}
+       */
+      language: "ar" | "en";
+      /** Prompt */
+      prompt: string;
+    };
+    /** ComposePlan */
+    ComposePlan: {
+      /** Duration Minutes */
+      duration_minutes?: number | null;
+      /**
+       * Notes
+       * @default
+       */
+      notes: string;
+      /** Sections */
+      sections: components["schemas"]["ComposeSection"][];
+      /** Title */
+      title?: string | null;
+    };
+    /** ComposeSection */
+    ComposeSection: {
+      /** Rows */
+      rows: components["schemas"]["BlueprintRow"][];
+      /** Title */
+      title: string;
     };
     /**
      * DraftQuestion
@@ -2138,10 +2238,14 @@ export interface components {
       /** Next Cursor */
       next_cursor: string | null;
     };
+    /** ProposalApply */
+    ProposalApply: {
+      edits?: components["schemas"]["ProposalEdits"];
+    };
     /** ProposalDetail */
     ProposalDetail: {
       diff: components["schemas"]["ProposalDiff"];
-      proposal: components["schemas"]["ProposalOut"];
+      proposal: components["schemas"]["qbank__schemas__review__ProposalOut"];
     };
     /** ProposalDiff */
     ProposalDiff: {
@@ -2154,47 +2258,12 @@ export interface components {
       /** Unchanged */
       unchanged: string[];
     };
-    /** ProposalOut */
-    ProposalOut: {
-      /** Cost Usd */
-      cost_usd: number;
-      /**
-       * Created At
-       * Format: date-time
-       */
-      created_at: string;
-      /** Created By */
-      created_by: string | null;
-      /** Extraction */
-      extraction: {
-        [key: string]: unknown;
-      };
-      /**
-       * Id
-       * Format: uuid
-       */
-      id: string;
-      /** Model */
-      model: string;
-      /**
-       * Page Id
-       * Format: uuid
-       */
-      page_id: string;
-      /** Page Number */
-      page_number: number;
-      /**
-       * Source Id
-       * Format: uuid
-       */
-      source_id: string;
-      /** Status */
-      status: string;
-      /**
-       * Updated At
-       * Format: date-time
-       */
-      updated_at: string;
+    /** ProposalEdits */
+    ProposalEdits: {
+      /** Add Question Ids */
+      add_question_ids?: string[];
+      /** Remove Question Ids */
+      remove_question_ids?: string[];
     };
     /** QuestionContent */
     QuestionContent: {
@@ -3053,6 +3122,67 @@ export interface components {
       /** Section Id */
       section_id?: string | null;
     };
+    /** ProposalOut */
+    qbank__schemas__exams__ProposalOut: {
+      blueprint: components["schemas"]["ComposePlan"];
+      /** Cost Usd */
+      cost_usd: number;
+      /**
+       * Proposal Id
+       * Format: uuid
+       */
+      proposal_id: string;
+      /** Rationale */
+      rationale: string;
+      /** Selection */
+      selection: string[][];
+      /** Status */
+      status: string;
+      /** Warnings */
+      warnings: string[];
+    };
+    /** ProposalOut */
+    qbank__schemas__review__ProposalOut: {
+      /** Cost Usd */
+      cost_usd: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Created By */
+      created_by: string | null;
+      /** Extraction */
+      extraction: {
+        [key: string]: unknown;
+      };
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Model */
+      model: string;
+      /**
+       * Page Id
+       * Format: uuid
+       */
+      page_id: string;
+      /** Page Number */
+      page_number: number;
+      /**
+       * Source Id
+       * Format: uuid
+       */
+      source_id: string;
+      /** Status */
+      status: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
     /** ItemUpdate */
     qbank__schemas__taxonomy__ItemUpdate: {
       /** Position */
@@ -3395,6 +3525,72 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ExamDetail"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  apply_proposal_api_v1_exam_proposals__id__apply_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ProposalApply"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExamDetail"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  discard_proposal_api_v1_exam_proposals__id__discard_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["qbank__schemas__exams__ProposalOut"];
         };
       };
       /** @description Validation Error */
@@ -3896,6 +4092,41 @@ export interface operations {
       };
     };
   };
+  compose_exam_api_v1_exams__id__compose_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ComposeIn"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["qbank__schemas__exams__ProposalOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   duplicate_exam_api_v1_exams__id__duplicate_post: {
     parameters: {
       query?: never;
@@ -4050,6 +4281,37 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ExamDetail"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  list_proposals_api_v1_exams__id__proposals_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["qbank__schemas__exams__ProposalOut"][];
         };
       };
       /** @description Validation Error */
@@ -4521,7 +4783,7 @@ export interface operations {
           [name: string]: unknown;
         };
         content: {
-          "application/json": components["schemas"]["ProposalOut"];
+          "application/json": components["schemas"]["qbank__schemas__review__ProposalOut"];
         };
       };
       /** @description Validation Error */
