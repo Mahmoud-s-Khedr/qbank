@@ -53,6 +53,20 @@ function mockHealthFetch(
           headers: { "Content-Type": "application/json" },
         }),
       );
+    if (url.endsWith("/api/v1/exams?limit=100"))
+      return Promise.resolve(
+        new Response('{"items":[],"next_cursor":null}', {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    if (url.includes("/api/v1/subjects"))
+      return Promise.resolve(
+        new Response('{"items":[],"next_cursor":null}', {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
     if (url.includes("/api/v1/exam-templates"))
       return Promise.resolve(
         new Response('{"items":[],"next_cursor":null}', {
