@@ -29,7 +29,7 @@ Detailed task files (`docs/tasks/Txx-*.md`) are written just before dispatch, so
 | T19 | 5 | AI-assisted composition (compose stage) | cx | terra / medium | T18,T06 | in progress |
 | T20 | 5 | Exam builder UI (blueprint, manual cart, AI assistant, sections, versions) | ag | flash or argon (complex UI only) | T18,T19 | todo |
 | T21 | 6 | PDF export: HTML templates, fonts, KaTeX, layout options, answer key, bubble sheet | cc-sonnet | sonnet 5.5 | T18 | done |
-| T22 | 6 | DOCX export via Pandoc + reference.docx (RTL, OMML) | cc-sonnet | sonnet 5.5 | T21 | in progress |
+| T22 | 6 | DOCX export via Pandoc + reference.docx (RTL, OMML) | cc-sonnet | sonnet 5.5 | T21 | done |
 | T23 | 6 | Export/preview UI, exam templates, admin settings (users, models, spend cap), cost dashboard | ag | flash or argon (complex UI only) | T21,T22 | todo |
 | T24 | 7 | E2E: Playwright full flow on fixtures in CI with recorded LLM | cx | terra / medium | T15,T20,T23 | todo |
 | T25 | 7 | Hardening: security review, rate limits, logging, prod compose + Caddy, README/deploy docs | cx + cc | terra / medium | T24 | todo |
@@ -55,3 +55,5 @@ cc: T00, T03 review, every merge, T10 decision, integration fixes, final accepta
 | 2026-10-31 | T08 (+1 continue round) | codex medium | 5h 68→91%, weekly 51→55%; live run test-2027 $0.0208 |
 | 2026-10-31 | T18 | cc-sonnet 5.5 sub-agent | ~120k subagent tokens, 12 min |
 | 2026-10-31 | T21 | cc-sonnet 5.5 sub-agent | ~195k subagent tokens, 20 min |
+| 2026-10-31 | T11 | agy argon-high | — |
+| 2026-10-31 | T22 | cc-sonnet 5.5 sub-agent | ~156k subagent tokens, 19 min |
