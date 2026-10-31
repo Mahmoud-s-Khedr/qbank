@@ -35,6 +35,7 @@ dev = [
     "pytest-cov",
     "httpx",
     "boto3-stubs[s3]>=1.43.123",
+    "hypothesis>=6.170.14",
 ]
 
 [build-system]
