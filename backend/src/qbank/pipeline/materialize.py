@@ -22,6 +22,15 @@ WHITE_THRESHOLD = 245
 PINNED = ("جميع ما سبق", "كل ما سبق", "لا شيء مما سبق", "all of the above", "none of the above")
 
 
+# Fill-in placeholders printed as runs of dots/ellipses/underscores become the QMD blank `____`.
+# Done deterministically here because models often copy the dots verbatim (seen in live runs).
+BLANK_RUN = re.compile(r"\.(?:\s?\.){3,}|…(?:\s?…)+|_{4,}")
+
+
+def normalize_blanks(text: str) -> str:
+    return BLANK_RUN.sub("____", text)
+
+
 def pinned(content: str) -> bool:
     return any(pattern in content.casefold() for pattern in PINNED)
 
@@ -231,7 +240,7 @@ def materialize(db: Session, source: Source) -> list[str]:  # noqa: PLR0912 -- p
                 org_id=source.org_id,
                 source_id=source.id,
                 kind=item.value.kind,
-                content=content,
+                content=normalize_blanks(content),
                 regions=item.regions,
                 status="draft",
                 metadata_json={"notes": item.notes, "intro": item.value.intro},
@@ -242,7 +251,7 @@ def materialize(db: Session, source: Source) -> list[str]:  # noqa: PLR0912 -- p
         q = item.value
         if not isinstance(q, ExtractedQuestion):
             raise TypeError("Expected question")
-        stem = q.stem
+        stem = normalize_blanks(q.stem)
         for page, box in item.figures:
             stem += "\n" + crop(db, source, page, box)
         stimulus_id = None
@@ -262,7 +271,7 @@ def materialize(db: Session, source: Source) -> list[str]:  # noqa: PLR0912 -- p
         choices = [
             {
                 "label": c.label,
-                "content": c.content,
+                "content": normalize_blanks(c.content),
                 "is_correct": c.label in labels if q.answer else None,
                 "pinned": pinned(c.content),
             }

@@ -101,3 +101,12 @@ def test_extract_fallback() -> None:
         "extract",
         "extract_strong",
     ]
+
+
+def test_normalize_blanks_turns_dot_runs_into_qmd_blanks() -> None:
+    from qbank.pipeline.materialize import normalize_blanks  # noqa: PLC0415 -- keeps import local to this test
+
+    assert normalize_blanks("عظمة القص تتصف بأنها..........") == "عظمة القص تتصف بأنها____"
+    assert normalize_blanks("x = ......... و ……") == "x = ____ و ____"
+    assert normalize_blanks("ينتهي بنقطة.") == "ينتهي بنقطة."
+    assert normalize_blanks("ثلاث نقاط... فقط") == "ثلاث نقاط... فقط"
