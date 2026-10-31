@@ -22,7 +22,7 @@ Detailed task files (`docs/tasks/Txx-*.md`) are written just before dispatch, so
 | T12 | 3 | Review APIs: question/stimulus CRUD, audit log, split/merge, re-crop, re-extract with diff, bulk approve | cc-sonnet | sonnet 5.5 | T11 | done |
 | T13 | 3 | Shared UI: QmdRenderer, QmdEditor, PageCanvas (zoom/pan/boxes/draw) | ag | flash or argon (complex UI only) | T02 | done |
 | T14 | 3 | Sources UI: upload, list, detail w/ live progress, page grid, costs | ag | flash or argon (complex UI only) | T05,T13 | done |
-| T15 | 3 | Review workspace UI (split view, issues, editor, shortcuts, split/merge, re-crop, re-extract diff) | ag | flash or argon (complex UI only) | T12,T13 | todo |
+| T15 | 3 | Review workspace UI (split view, issues, editor, shortcuts, split/merge, re-crop, re-extract diff) | cc-sonnet | sonnet 5.5 | T12,T13 | in progress |
 | T16 | 4 | Bank search API (FTS + trigram + facets), bulk metadata edit, manual question create | ag | argon-high | T11 | in progress |
 | T17 | 4 | Bank UI + taxonomy manager UI | ag | flash or argon (complex UI only) | T16,T13 | todo |
 | T18 | 5 | Exams: model/API, sections, blueprint sampler, stimulus grouping, versions/shuffling (hypothesis tests) | cc-sonnet | sonnet 5.5 | T16 | done |
