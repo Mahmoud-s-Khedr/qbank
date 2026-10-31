@@ -7,15 +7,6 @@ const EXAM_TITLE = "امتحان الأحياء النهائي";
 const SCHOOL_NAME = "مدرسة النور النموذجية";
 const VERSION_A = "أ";
 
-/** The bank search box label comes from the T17 locale keys, which may not exist yet. */
-function bankSearchPlaceholder(): string | null {
-  try {
-    return t("bank.search.placeholder");
-  } catch {
-    return null;
-  }
-}
-
 test.describe.configure({ mode: "serial" });
 
 test("editor uploads the workbook and extraction finishes", async ({
@@ -114,17 +105,12 @@ test("editor reviews, edits and approves every question", async ({ page }) => {
 test("teacher finds a question in the bank ignoring tashkeel", async ({
   page,
 }) => {
-  // The /bank page is still a placeholder until the T17 UI lands on this branch (its locale
-  // keys do not exist yet). The tashkeel-insensitive search itself is also covered below,
-  // through the exam builder's bank tab, which runs against the same backend search.
-  const placeholder = bankSearchPlaceholder();
-  test.skip(
-    placeholder === null,
-    "The bank search UI (T17) is not on this branch yet",
-  );
   await login(page, "teacher");
   await page.goto("/bank");
-  await page.getByPlaceholder(placeholder ?? "").fill("الخلية");
+  await page
+    .getByLabel(t("bank.search.subjectSelect"))
+    .selectOption({ label: SUBJECT_NAME });
+  await page.getByPlaceholder(t("bank.search.placeholder")).fill("الخلية");
   const result = page.getByRole("article").filter({ hasText: "الميتوكوندريا" });
   await expect(result).toBeVisible();
   await result.click();
