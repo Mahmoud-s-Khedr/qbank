@@ -24,13 +24,15 @@ def extract_page(  # noqa: PLR0913 -- page context and call controls are indepen
     client: LLMClient,
     image: bytes,
     *,
-    subject: str,
-    language: str,
-    grade: str | None,
-    org_id: UUID,
-    source_id: UUID,
-    max_side: int,
-    fallback_threshold: float,
+    subject: str = "اللغة العربية",
+    language: str = "ar",
+    grade: str | None = None,
+    org_id: UUID | None = None,
+    source_id: UUID | None = None,
+    max_side: int = 1600,
+    fallback_threshold: float = 0.5,
+    model_override: str | None = None,
+    stage: str = "extract",
 ) -> tuple[LLMResult[PageExtraction], Decimal]:
     prompt = Template(PROMPT_PATH.read_text(), undefined=StrictUndefined).render(
         subject=subject, language=language, grade=grade or ""
@@ -42,17 +44,18 @@ def extract_page(  # noqa: PLR0913 -- page context and call controls are indepen
         }
     ]
 
-    def call(stage: str) -> LLMResult[PageExtraction]:
+    def call(call_stage: str) -> LLMResult[PageExtraction]:
         return client.complete_json(
-            stage=stage,
+            stage=call_stage,
             messages=messages,
             schema=PageExtraction,
             org_id=org_id,
             source_id=source_id,
+            model_override=model_override,
         )
 
     try:
-        first = call("extract")
+        first = call(stage)
     except LLMOutputInvalid as exc:
         try:
             strong = call("extract_strong")

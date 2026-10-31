@@ -1,7 +1,7 @@
 WORKER_PROCESSES ?= 4
 WORKER_THREADS ?= 4
 
-.PHONY: infra-up infra-down be-install be-lint be-fmt be-types be-test be-test-unit be-migrate be-openapi fe-install fe-lint fe-types fe-test fe-build api-gen contract-check lint-actions pre-commit-install check be-dev be-worker
+.PHONY: infra-up infra-down be-install be-lint be-fmt be-types be-test be-test-unit be-migrate be-openapi fe-install fe-lint fe-types fe-test fe-build api-gen contract-check lint-actions pre-commit-install check be-dev be-worker eval
 infra-up:
 	docker compose up -d --wait postgres redis minio
 	docker compose run --rm minio-init
@@ -50,3 +50,5 @@ be-dev:
 	uv run --directory backend uvicorn qbank.api.main:app --reload
 be-worker:
 	uv run --directory backend dramatiq qbank.worker --processes $(WORKER_PROCESSES) --threads $(WORKER_THREADS)
+eval:
+	uv run --directory backend qbank-eval --models "$(MODELS)" --max-cost "$(MAX_COST)" $(if $(PAGES),--pages "$(PAGES)",) $(if $(REPEAT),--repeat "$(REPEAT)",) $(if $(OUT),--out "$(OUT)",) $(if $(DRY_RUN),--dry-run,) $(EVAL_ARGS)

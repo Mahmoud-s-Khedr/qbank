@@ -19,6 +19,7 @@ def default_stage_models() -> dict[str, LLMStageConfig]:
     return {
         "extract": LLMStageConfig(model="google/gemini-3.8-flash"),
         "extract_strong": LLMStageConfig(model="google/gemini-3.8-flash", reasoning="low"),
+        "eval": LLMStageConfig(model="google/gemini-3.8-flash"),
         "verify": LLMStageConfig(model="openai/gpt-6-luna"),
         **{
             stage: LLMStageConfig(model="anthropic/claude-haiku-5.5")

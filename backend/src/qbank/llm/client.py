@@ -166,7 +166,9 @@ class OpenRouterClient:
     ) -> Any:
         from qbank.services.llm_costs import reserve_call  # noqa: PLC0415 -- avoid import cycle
 
-        config = self.settings.llm_stage_models[stage]
+        config = (
+            self.settings.llm_stage_models.get(stage) or self.settings.llm_stage_models["extract"]
+        )
         model = model_override or config.model
         digest = request_hash(model, stage, messages, schema.__name__ if schema else "text")
         guard_model(self.settings, model)
@@ -378,7 +380,10 @@ class FakeLLMClient:
         source_id: UUID | None,
         model_override: str | None,
     ) -> Any:
-        model = model_override or self.settings.llm_stage_models[stage].model
+        stage_cfg = (
+            self.settings.llm_stage_models.get(stage) or self.settings.llm_stage_models["extract"]
+        )
+        model = model_override or stage_cfg.model
         guard_model(self.settings, model)
         digest = request_hash(model, stage, messages, schema.__name__ if schema else "text")
         self.calls.append(
@@ -392,9 +397,32 @@ class FakeLLMClient:
                 "request_hash": digest,
             }
         )
-        value = self.scripts[stage].pop(0)
+        queue_key = stage
+        if not self.scripts.get(queue_key):
+            if stage == "eval" and self.scripts.get("extract"):
+                queue_key = "extract"
+            elif stage == "extract" and self.scripts.get("eval"):
+                queue_key = "eval"
+        value = self.scripts[queue_key].pop(0)
         if isinstance(value, Exception):
             raise value
+        cost_usd = Decimal(0)
+        latency_ms = 0
+        inp_tokens = 0
+        out_tokens = 0
+        reas_tokens = 0
+        if isinstance(value, LLMResult):
+            cost_usd = value.cost_usd
+            latency_ms = value.latency_ms
+            inp_tokens = value.input_tokens
+            out_tokens = value.output_tokens
+            reas_tokens = value.reasoning_tokens
+            value = value.parsed
+        elif isinstance(value, tuple):
+            cost_usd = Decimal(str(value[1]))
+            if len(value) > 2:  # noqa: PLR2004 -- optional latency element in tuple
+                latency_ms = int(value[2])
+            value = value[0]
         parsed: Any
         if schema:
             parsed = schema.model_validate(value)
@@ -402,7 +430,9 @@ class FakeLLMClient:
         else:
             parsed = str(value)
             raw = parsed
-        return LLMResult(parsed, raw, model, 0, 0, 0, Decimal(0), 0, digest)
+        return LLMResult(
+            parsed, raw, model, inp_tokens, out_tokens, reas_tokens, cost_usd, latency_ms, digest
+        )
 
     def complete_json(  # noqa: PLR0913 -- task-specified call parameters
         self,
