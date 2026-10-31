@@ -14,10 +14,22 @@ dependencies = [
     "uuid-utils",
     "argon2-cffi>=25.1.0",
     "pyjwt>=2.15.1",
+    "pymupdf<2",
+    "boto3>=1.43.123",
+    "dramatiq[redis]>=2.2.1",
+    "pillow>=13.0.0",
+    "python-multipart>=0.0.32",
 ]
 
 [dependency-groups]
-dev = ["ruff", "mypy", "pytest", "pytest-cov", "httpx"]
+dev = [
+    "ruff",
+    "mypy",
+    "pytest",
+    "pytest-cov",
+    "httpx",
+    "boto3-stubs[s3]>=1.43.123",
+]
 
 [build-system]
 requires = ["hatchling"]

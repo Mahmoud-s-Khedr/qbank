@@ -45,6 +45,13 @@ def get_engine() -> Engine:
     return create_engine(get_settings().database_url, connect_args={"connect_timeout": 2})
 
 
+def reset_engine() -> None:
+    """Close pooled connections and forget the cached engine (settings may have changed)."""
+    if get_engine.cache_info().currsize:
+        get_engine().dispose()
+    get_engine.cache_clear()
+
+
 def get_db() -> Iterator[Session]:
     with Session(get_engine()) as session:
         yield session

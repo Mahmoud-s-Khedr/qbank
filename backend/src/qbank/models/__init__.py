@@ -76,3 +76,79 @@ class Lesson(ModelBase):
     )
     title: Mapped[str] = mapped_column(String)
     position: Mapped[int] = mapped_column(Integer)
+
+
+class SourceStatus(StrEnum):
+    uploaded = "uploaded"
+    rendering = "rendering"
+    extracting = "extracting"
+    validating = "validating"
+    ready = "ready"
+    failed = "failed"
+    paused = "paused"
+
+
+class PageStatus(StrEnum):
+    pending = "pending"
+    rendered = "rendered"
+    extracted = "extracted"
+    validated = "validated"
+    failed = "failed"
+
+
+class PageKind(StrEnum):
+    cover = "cover"
+    blank = "blank"
+    toc = "toc"
+    section_divider = "section_divider"
+    questions = "questions"
+    answer_key = "answer_key"
+    answer_sheet = "answer_sheet"
+    other = "other"
+
+
+class Source(ModelBase):
+    __tablename__ = "sources"
+    org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id"), index=True)
+    subject_id: Mapped[UUID] = mapped_column(ForeignKey("subjects.id"), index=True)
+    title: Mapped[str] = mapped_column(String)
+    grade: Mapped[str | None] = mapped_column(String)
+    file_key: Mapped[str] = mapped_column(String)
+    page_count: Mapped[int | None] = mapped_column(Integer)
+    status: Mapped[SourceStatus] = mapped_column(Enum(SourceStatus, name="source_status"))
+    stage: Mapped[str | None] = mapped_column(String)
+    error: Mapped[str | None] = mapped_column(String)
+    pipeline_config: Mapped[dict[str, object]] = mapped_column(
+        JSONB, server_default=text("'{}'::jsonb")
+    )
+    cost_usd: Mapped[float] = mapped_column(server_default=text("0"))
+
+
+class SourcePage(ModelBase):
+    __tablename__ = "source_pages"
+    __table_args__ = (UniqueConstraint("source_id", "page_number"),)
+    source_id: Mapped[UUID] = mapped_column(
+        ForeignKey("sources.id", ondelete="CASCADE"), index=True
+    )
+    page_number: Mapped[int] = mapped_column(Integer)
+    page_kind: Mapped[PageKind | None] = mapped_column(Enum(PageKind, name="page_kind"))
+    image_key: Mapped[str | None] = mapped_column(String)
+    width_px: Mapped[int | None] = mapped_column(Integer)
+    height_px: Mapped[int | None] = mapped_column(Integer)
+    dpi: Mapped[int | None] = mapped_column(Integer)
+    status: Mapped[PageStatus] = mapped_column(Enum(PageStatus, name="page_status"))
+    error: Mapped[str | None] = mapped_column(String)
+    extraction: Mapped[dict[str, object] | None] = mapped_column(JSONB)
+    prompt_version: Mapped[str | None] = mapped_column(String)
+    model: Mapped[str | None] = mapped_column(String)
+    cost_usd: Mapped[float] = mapped_column(server_default=text("0"))
+
+
+class Job(ModelBase):
+    __tablename__ = "jobs"
+    org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id"), index=True)
+    kind: Mapped[str] = mapped_column(String)
+    status: Mapped[str] = mapped_column(String)
+    progress: Mapped[dict[str, object]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
+    error: Mapped[str | None] = mapped_column(String)
+    ref_id: Mapped[UUID] = mapped_column(ForeignKey("sources.id", ondelete="CASCADE"), index=True)
