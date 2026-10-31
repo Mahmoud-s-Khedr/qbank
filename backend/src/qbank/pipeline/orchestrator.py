@@ -37,10 +37,31 @@ def start_materialize(source_id: str) -> object:
     return materialize_source.send(source_id)
 
 
+def start_validate(source_id: str) -> object:
+    from qbank.worker import validate_source  # noqa: PLC0415 -- avoids a worker import cycle.
+
+    return validate_source.send(source_id)
+
+
+def start_verify(source_id: str) -> object:
+    from qbank.worker import verify_source  # noqa: PLC0415 -- avoids a worker import cycle.
+
+    return verify_source.send(source_id)
+
+
+def start_classify(source_id: str) -> object:
+    from qbank.worker import classify_source  # noqa: PLC0415 -- avoids a worker import cycle.
+
+    return classify_source.send(source_id)
+
+
 STAGES: list[Stage] = [
     Stage("render", start_render, SourceStatus.rendering, PageStatus.pending),
     Stage("extract", start_extract, SourceStatus.extracting, PageStatus.rendered),
     Stage("materialize", start_materialize, SourceStatus.extracting, PageStatus.extracted),
+    Stage("validate", start_validate, SourceStatus.validating, PageStatus.extracted),
+    Stage("verify", start_verify, SourceStatus.validating, PageStatus.extracted),
+    Stage("classify", start_classify, SourceStatus.validating, PageStatus.extracted),
 ]
 
 

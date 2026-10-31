@@ -46,3 +46,17 @@ class JobOut(Output):
     progress: dict[str, object]
     error: str | None
     ref_id: UUID
+
+
+class IssueSummary(BaseModel):
+    code: str
+    severity: str
+    count: int
+
+
+class SourceSummary(BaseModel):
+    question_counts: dict[str, int]
+    issues_by_code: dict[str, int]
+    issues_by_severity: dict[str, int]
+    issues: list[IssueSummary]
+    spend_by_stage: dict[str, float]

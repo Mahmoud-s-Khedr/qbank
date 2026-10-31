@@ -1,7 +1,17 @@
+from datetime import datetime
 from uuid import UUID
 
 from qbank.models import Language
 from qbank.schemas.common import Output
+
+
+class ValidationIssueOut(Output):
+    code: str
+    severity: str
+    message: str
+    details: dict[str, object]
+    resolved_at: datetime | None
+    resolved_by: UUID | None
 
 
 class QuestionOut(Output):
@@ -19,6 +29,11 @@ class QuestionOut(Output):
     regions: list[dict[str, object]]
     status: str
     confidence: float
+    duplicate_of_id: UUID | None
+    difficulty: int | None
+    difficulty_reason: str | None
+    tags: list[str]
+    issues: list[ValidationIssueOut]
 
 
 class StimulusOut(Output):

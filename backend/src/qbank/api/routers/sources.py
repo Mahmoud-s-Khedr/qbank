@@ -17,7 +17,15 @@ from qbank.db import get_engine
 from qbank.models import Asset, Job, Question, Source, SourcePage, SourceStatus, Stimulus
 from qbank.schemas.bank import QuestionOut, StimulusOut
 from qbank.schemas.common import Page
-from qbank.schemas.sources import JobOut, PageDetail, PageOut, SourceDetail, SourceOut, UploadResult
+from qbank.schemas.sources import (
+    JobOut,
+    PageDetail,
+    PageOut,
+    SourceDetail,
+    SourceOut,
+    SourceSummary,
+    UploadResult,
+)
 from qbank.services import sources as service
 from qbank.services.unit_of_work import found
 from qbank.storage import get_store, keys
@@ -54,6 +62,11 @@ def listing(  # noqa: PLR0913, PLR0917 -- independent query parameters.
 @router.get("/sources/{id}", response_model=SourceDetail)
 def detail(id: UUID, db: DB, user: Current) -> SourceDetail:
     return service.detail(db, user.org_id, id)
+
+
+@router.get("/sources/{id}/summary", response_model=SourceSummary)
+def summary(id: UUID, db: DB, user: Current) -> SourceSummary:
+    return service.summary(db, user.org_id, id)
 
 
 @router.post("/sources/{id}/resume", response_model=SourceOut)

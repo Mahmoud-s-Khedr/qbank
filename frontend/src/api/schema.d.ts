@@ -680,6 +680,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/sources/{id}/summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Summary */
+    get: operations["summary_api_v1_sources__id__summary_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/subjects": {
     parameters: {
       query?: never;
@@ -1230,6 +1247,15 @@ export interface components {
       /** Version */
       version: string;
     };
+    /** IssueSummary */
+    IssueSummary: {
+      /** Code */
+      code: string;
+      /** Count */
+      count: number;
+      /** Severity */
+      severity: string;
+    };
     /** ItemIn */
     ItemIn: {
       /** Title */
@@ -1514,11 +1540,19 @@ export interface components {
        * Format: date-time
        */
       created_at: string;
+      /** Difficulty */
+      difficulty: number | null;
+      /** Difficulty Reason */
+      difficulty_reason: string | null;
+      /** Duplicate Of Id */
+      duplicate_of_id: string | null;
       /**
        * Id
        * Format: uuid
        */
       id: string;
+      /** Issues */
+      issues: components["schemas"]["ValidationIssueOut"][];
       language: components["schemas"]["Language"];
       /** Number Label */
       number_label: string;
@@ -1546,6 +1580,8 @@ export interface components {
        * Format: uuid
        */
       subject_id: string;
+      /** Tags */
+      tags: string[];
       /** Type */
       type: string;
       /**
@@ -1697,6 +1733,27 @@ export interface components {
       | "ready"
       | "failed"
       | "paused";
+    /** SourceSummary */
+    SourceSummary: {
+      /** Issues */
+      issues: components["schemas"]["IssueSummary"][];
+      /** Issues By Code */
+      issues_by_code: {
+        [key: string]: number;
+      };
+      /** Issues By Severity */
+      issues_by_severity: {
+        [key: string]: number;
+      };
+      /** Question Counts */
+      question_counts: {
+        [key: string]: number;
+      };
+      /** Spend By Stage */
+      spend_by_stage: {
+        [key: string]: number;
+      };
+    };
     /** StimulusContent */
     StimulusContent: {
       /** Content */
@@ -1926,6 +1983,38 @@ export interface components {
       msg: string;
       /** Error Type */
       type: string;
+    };
+    /** ValidationIssueOut */
+    ValidationIssueOut: {
+      /** Code */
+      code: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Details */
+      details: {
+        [key: string]: unknown;
+      };
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Message */
+      message: string;
+      /** Resolved At */
+      resolved_at: string | null;
+      /** Resolved By */
+      resolved_by: string | null;
+      /** Severity */
+      severity: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
     };
     /** VersionOut */
     VersionOut: {
@@ -3634,6 +3723,37 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["StimulusOut"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  summary_api_v1_sources__id__summary_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SourceSummary"];
         };
       };
       /** @description Validation Error */
