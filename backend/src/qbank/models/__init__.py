@@ -82,6 +82,10 @@ class Chapter(ModelBase):
     title: Mapped[str] = mapped_column(String)
     position: Mapped[int] = mapped_column(Integer)
 
+    metadata_json: Mapped[dict[str, object]] = mapped_column(
+        "metadata", JSONB, server_default=text("'{}'::jsonb")
+    )
+
 
 class Lesson(ModelBase):
     __tablename__ = "lessons"
@@ -90,6 +94,10 @@ class Lesson(ModelBase):
     )
     title: Mapped[str] = mapped_column(String)
     position: Mapped[int] = mapped_column(Integer)
+
+    metadata_json: Mapped[dict[str, object]] = mapped_column(
+        "metadata", JSONB, server_default=text("'{}'::jsonb")
+    )
 
 
 class SourceStatus(StrEnum):
@@ -136,6 +144,9 @@ class Source(ModelBase):
         JSONB, server_default=text("'{}'::jsonb")
     )
     cost_usd: Mapped[float] = mapped_column(server_default=text("0"))
+    metadata_json: Mapped[dict[str, object]] = mapped_column(
+        "metadata", JSONB, server_default=text("'{}'::jsonb")
+    )
 
 
 class SourcePage(ModelBase):
@@ -232,6 +243,8 @@ class Question(ModelBase):
     difficulty: Mapped[int | None] = mapped_column(Integer)
     difficulty_reason: Mapped[str | None] = mapped_column(String)
     difficulty_source: Mapped[str | None] = mapped_column(String)
+    taxonomy_source: Mapped[str | None] = mapped_column(String)
+    answer_source: Mapped[str | None] = mapped_column(String)
     language: Mapped[Language] = mapped_column(Enum(Language, name="subject_language"))
     tags: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'::text[]"))
     regions: Mapped[list[dict[str, object]]] = mapped_column(JSONB)

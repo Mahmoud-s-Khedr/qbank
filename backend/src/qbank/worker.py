@@ -490,6 +490,42 @@ def _pause_source_on_budget(
 
 
 @dramatiq.actor(max_retries=3)
+def structure_source(source_id: str) -> None:
+    from qbank.pipeline.structure import structure_source as run_structure  # noqa: PLC0415
+
+    sid = UUID(source_id)
+    with Session(get_engine()) as db:
+        source = db.scalar(select(Source).where(Source.id == sid))
+        if (
+            source is None
+            or source.stage != "structure"
+            or source.status != SourceStatus.validating
+        ):
+            return
+        run_structure(db, source)
+        db.commit()
+    orchestrator.advance(sid, "structure")
+
+
+@dramatiq.actor(max_retries=3)
+def answer_keys_source(source_id: str) -> None:
+    from qbank.pipeline.answer_keys import answer_keys_source as run_answer_keys  # noqa: PLC0415
+
+    sid = UUID(source_id)
+    with Session(get_engine()) as db:
+        source = db.scalar(select(Source).where(Source.id == sid).with_for_update())
+        if (
+            source is None
+            or source.stage != "answer_keys"
+            or source.status != SourceStatus.validating
+        ):
+            return
+        run_answer_keys(db, source)
+        db.commit()
+    orchestrator.advance(sid, "answer_keys")
+
+
+@dramatiq.actor(max_retries=3)
 def validate_failed(message: dict[str, object], details: dict[str, object]) -> None:
     args = message["args"]
     if not isinstance(args, (list, tuple)):

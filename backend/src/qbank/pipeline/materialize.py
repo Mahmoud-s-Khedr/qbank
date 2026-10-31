@@ -328,6 +328,7 @@ def materialize(db: Session, source: Source) -> list[str]:
                 stem=stem,
                 choices=choices,
                 answer=q.answer.text if q.answer else None,
+                answer_source="extracted" if q.answer else None,
                 language=subject.language,
                 regions=item.regions,
                 status="draft",
