@@ -78,6 +78,7 @@ class Settings(BaseSettings):
     cookie_secure: bool = False
     session_ttl_minutes: int = 720
     cors_origins: list[str] = ["http://localhost:5173"]
+    log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
     @model_validator(mode="after")
     def validate_production(self) -> "Settings":

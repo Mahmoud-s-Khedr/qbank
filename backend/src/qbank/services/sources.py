@@ -1,6 +1,7 @@
 from typing import BinaryIO, cast
 from uuid import UUID
 
+import pymupdf
 from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
@@ -43,6 +44,15 @@ def upload(  # noqa: PLR0913, PLR0917 -- upload fields are independent inputs.
     fileobj.seek(0, 2)
     if fileobj.tell() > get_settings().max_upload_mb * 1024 * 1024:
         raise TooLargeError()
+    fileobj.seek(0)
+    try:
+        # PyMuPDF does not type its document constructor.
+        with pymupdf.open(stream=fileobj.read(), filetype="pdf") as document:  # type: ignore[no-untyped-call]
+            if document.is_encrypted or document.metadata.get("encryption"):
+                raise Invalid("encrypted_pdf")
+    except pymupdf.FileDataError:
+        # Rendering performs the remaining PDF validation asynchronously.
+        pass
     fileobj.seek(0)
     sid = new_uuid()
     key = keys.original(org_id, sid)

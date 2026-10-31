@@ -33,6 +33,44 @@ def test_not_found(client: TestClient) -> None:
     assert response.json()["status"] == HTTPStatus.NOT_FOUND
 
 
+def test_security_headers(client: TestClient, monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("QBANK_COOKIE_SECURE", "true")
+    get_settings.cache_clear()
+    try:
+        response = client.get("/missing")
+        assert response.headers["x-content-type-options"] == "nosniff"
+        assert response.headers["x-frame-options"] == "DENY"
+        assert response.headers["referrer-policy"] == "same-origin"
+        assert response.headers["permissions-policy"] == (
+            "camera=(), microphone=(), geolocation=()"
+        )
+        assert response.headers["strict-transport-security"].startswith("max-age=")
+    finally:
+        get_settings.cache_clear()
+
+
+def test_access_log_does_not_include_credentials(
+    client: TestClient, caplog: pytest.LogCaptureFixture
+) -> None:
+    import logging  # noqa: PLC0415
+
+    client.cookies.set("private", "secret-cookie")
+    with caplog.at_level(logging.INFO):
+        response = client.post("/missing?password=secret-query")
+    assert response.status_code == HTTPStatus.NOT_FOUND
+    assert '"path": "/missing"' in caplog.text
+    assert '"status": 404' in caplog.text
+    assert '"request_id":' in caplog.text
+    assert '"user_id":' in caplog.text
+    assert '"org_id":' in caplog.text
+    assert '"duration_ms":' in caplog.text
+    access_log = " ".join(
+        record.message for record in caplog.records if record.name == "qbank.api.main"
+    )
+    assert "secret-query" not in access_log
+    assert "secret-cookie" not in access_log
+
+
 def test_validation(app: FastAPI, client: TestClient) -> None:
     @app.get("/validate")
     def validate(value: int) -> int:

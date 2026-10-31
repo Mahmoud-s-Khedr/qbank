@@ -25,6 +25,8 @@ def current_user(request: Request, db: Annotated[Session, Depends(get_db)]) -> U
         user = get(db, User, UUID(claims["org"]), UUID(claims["sub"]))
         if user is None or not user.is_active or user.role.value != claims["role"]:
             raise ValueError
+        request.state.user_id = str(user.id)
+        request.state.org_id = str(user.org_id)
         return user
     except (KeyError, ValueError, TypeError, jwt.InvalidTokenError):
         raise Unauthorized() from None
