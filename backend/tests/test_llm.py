@@ -1,8 +1,11 @@
 import base64
 import json
+from concurrent.futures import ThreadPoolExecutor
+from datetime import UTC, datetime, timedelta
 from decimal import Decimal
 from io import BytesIO
 from pathlib import Path
+from threading import Event
 
 import httpx
 import pytest
@@ -28,6 +31,7 @@ from qbank.llm import (
 from qbank.llm import client as llm_client
 from qbank.llm.pricing import estimate_cost
 from qbank.models import LLMCall, Organization
+from qbank.services.llm_costs import reap_reservations
 
 
 class Answer(BaseModel):
@@ -242,3 +246,97 @@ def test_rate_limit_retry(database: str) -> None:
     result = client.complete_text(stage="verify", messages=[], org_id=None)
     assert result.parsed == "ok"
     assert len(requests) == 2  # noqa: PLR2004 -- rate limit followed by success
+    with Session(get_engine()) as db:
+        call = db.scalar(select(LLMCall))
+        assert call is not None
+        assert call.attempts == 2  # noqa: PLR2004 -- both HTTP attempts are counted
+        assert call.reserved_usd == 0
+
+
+@pytest.mark.integration
+def test_concurrent_reservations(database: str) -> None:
+    entered = Event()
+    release = Event()
+    requests: list[httpx.Request] = []
+
+    def reply(request: httpx.Request) -> httpx.Response:
+        requests.append(request)
+        entered.set()
+        assert release.wait(10)
+        return httpx.Response(
+            200,
+            json={
+                "id": "test",
+                "object": "chat.completion",
+                "created": 0,
+                "model": "openai/gpt-6-luna",
+                "choices": [
+                    {
+                        "index": 0,
+                        "finish_reason": "stop",
+                        "message": {"role": "assistant", "content": "ok"},
+                    }
+                ],
+                "usage": {
+                    "prompt_tokens": 1,
+                    "completion_tokens": 1,
+                    "total_tokens": 2,
+                    "cost": 0.000001,
+                },
+            },
+        )
+
+    settings = Settings(openrouter_api_key=SecretStr("test"), llm_budget_usd=0.003)
+    client = OpenRouterClient(settings, httpx.Client(transport=httpx.MockTransport(reply)))
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        first = pool.submit(client.complete_text, stage="verify", messages=[], org_id=None)
+        try:
+            assert entered.wait(10)
+            second = pool.submit(client.complete_text, stage="verify", messages=[], org_id=None)
+            with pytest.raises(BudgetExceeded):
+                second.result(timeout=10)
+            with Session(get_engine()) as db:
+                row = db.scalar(select(LLMCall))
+                assert row is not None
+                assert row.status == "reserved"
+                assert row.reserved_usd > 0
+        finally:
+            release.set()
+        assert first.result(timeout=10).parsed == "ok"
+    assert len(requests) == 1
+    with Session(get_engine()) as db:
+        row = db.scalar(select(LLMCall))
+        assert row is not None
+        assert row.status == "success"
+        assert row.reserved_usd == 0
+        assert row.cost_usd == Decimal("0.000001")
+        assert row.attempts == 1
+
+
+@pytest.mark.integration
+def test_reap_stale_reservation(database: str) -> None:
+    with Session(get_engine()) as db:
+        db.add(
+            LLMCall(
+                stage="verify",
+                model="openai/gpt-6-luna",
+                request_hash="test",
+                created_at=datetime.now(UTC) - timedelta(hours=2),
+                input_tokens=0,
+                output_tokens=0,
+                reasoning_tokens=0,
+                cost_usd=Decimal(0),
+                reserved_usd=Decimal("0.01"),
+                attempts=0,
+                latency_ms=0,
+                status="reserved",
+            )
+        )
+        db.commit()
+    assert reap_reservations(Settings()) == 1
+    with Session(get_engine()) as db:
+        row = db.scalar(select(LLMCall))
+        assert row is not None
+        assert row.status == "abandoned"
+        assert row.cost_usd == Decimal("0.01")
+        assert row.reserved_usd == 0

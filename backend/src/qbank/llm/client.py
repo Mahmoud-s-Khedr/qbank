@@ -3,52 +3,36 @@
 import base64
 import hashlib
 import json
+import math
 import os
+import random
 import time
 from dataclasses import dataclass
 from decimal import Decimal
+from http import HTTPStatus
 from io import BytesIO
 from pathlib import Path
 from typing import Any, Protocol, TypeVar, cast
 from uuid import UUID
 
 import httpx
-from openai import OpenAI
+from openai import APIConnectionError, APIStatusError, APITimeoutError, OpenAI
 from PIL import Image
 from pydantic import BaseModel, ValidationError
 from sqlalchemy.orm import Session
 
 from qbank.config import Settings, get_settings
 from qbank.db import get_engine
+from qbank.llm.errors import (
+    LLMNotConfigured,
+    LLMOutputInvalid,
+    ModelNotAllowed,
+    ModelTooExpensive,
+)
 from qbank.llm.pricing import PRICES, estimate_cost, prices
-from qbank.models import LLMCall, Organization
-from qbank.services.llm_costs import org_month_spend, total_spend
+from qbank.models import LLMCall
 
 T = TypeVar("T", bound=BaseModel)
-
-
-class LLMNotConfigured(Exception):  # noqa: N818 -- task-specified public exception name
-    pass
-
-
-class ModelNotAllowed(Exception):  # noqa: N818 -- task-specified public exception name
-    pass
-
-
-class ModelTooExpensive(Exception):  # noqa: N818 -- task-specified public exception name
-    pass
-
-
-class BudgetExceeded(Exception):  # noqa: N818 -- task-specified public exception name
-    pass
-
-
-class OrgBudgetExceeded(Exception):  # noqa: N818 -- task-specified public exception name
-    pass
-
-
-class LLMOutputInvalid(Exception):  # noqa: N818 -- task-specified public exception name
-    pass
 
 
 @dataclass
@@ -126,6 +110,28 @@ def guard_model(settings: Settings, model: str) -> None:
         raise ModelTooExpensive(model)
 
 
+def estimate_input_tokens(messages: list[dict[str, Any]], schema: type[BaseModel] | None) -> int:
+    """Estimate text generously and count each image separately."""
+
+    def measure(value: Any) -> tuple[int, int]:
+        if isinstance(value, dict):
+            if value.get("type") == "image_url":
+                return (0, 1)
+            parts = [measure(v) for v in value.values()]
+        elif isinstance(value, list):
+            parts = [measure(v) for v in value]
+        elif isinstance(value, str):
+            return (len(value), 0)
+        else:
+            return (0, 0)
+        return (sum(x for x, _ in parts), sum(y for _, y in parts))
+
+    length, images = measure(messages)
+    if schema:
+        length += len(json.dumps(schema.model_json_schema(), ensure_ascii=False))
+    return math.ceil(length / 3.5) + images * 1300 + 100
+
+
 def strict_schema(schema: dict[str, Any]) -> dict[str, Any]:
     if isinstance(schema, dict):
         for value in schema.values():
@@ -149,20 +155,7 @@ class OpenRouterClient:
         self.settings = settings or get_settings()
         self.http_client = http_client
 
-    def _guard(self, model: str, org_id: UUID | None) -> None:
-        guard_model(self.settings, model)
-        with Session(get_engine()) as db:
-            if total_spend(db) >= Decimal(str(self.settings.llm_budget_usd)):
-                raise BudgetExceeded()
-            if org_id is not None:
-                org = db.get(Organization, org_id)
-                if org is None:
-                    raise ValueError("Unknown organization")
-                cap = org.settings.get("llm_monthly_cap_usd")
-                if cap is not None and org_month_spend(db, org_id) >= Decimal(str(cap)):
-                    raise OrgBudgetExceeded()
-
-    def _call(  # noqa: PLR0913, PLR0917 -- task-specified call parameters
+    def _call(  # noqa: PLR0913, PLR0917, PLR0912, PLR0915 -- request lifecycle and ledger are coupled
         self,
         stage: str,
         messages: list[dict[str, Any]],
@@ -171,6 +164,8 @@ class OpenRouterClient:
         source_id: UUID | None,
         model_override: str | None,
     ) -> Any:
+        from qbank.services.llm_costs import reserve_call  # noqa: PLC0415 -- avoid import cycle
+
         config = self.settings.llm_stage_models[stage]
         model = model_override or config.model
         digest = request_hash(model, stage, messages, schema.__name__ if schema else "text")
@@ -183,16 +178,28 @@ class OpenRouterClient:
             base_url=self.settings.openrouter_base_url,
             default_headers={"HTTP-Referer": "https://qbank.local", "X-Title": "Qbank"},
             timeout=self.settings.llm_timeout_s,
-            max_retries=self.settings.llm_max_retries,
+            max_retries=0,
             http_client=self.http_client,
         )
         conversation = list(messages)
         for attempt in range(2 if schema else 1):
-            self._guard(model, org_id)
+            reserve = estimate_cost(
+                model, estimate_input_tokens(conversation, schema), config.max_tokens
+            )
+            call_id = reserve_call(
+                self.settings,
+                org_id=org_id,
+                source_id=source_id,
+                stage=stage,
+                model=model,
+                request_hash=digest,
+                reserve=reserve,
+            )
             started = time.monotonic()
             inp = out = reasoning = 0
             cost = Decimal(0)
             error = None
+            attempts = 0
             try:
                 kwargs: dict[str, Any] = {
                     "model": model,
@@ -217,8 +224,24 @@ class OpenRouterClient:
                             "schema": strict_schema(schema.model_json_schema()),
                         },
                     }
-                response = client.chat.completions.create(**kwargs)
+                for retry in range(self.settings.llm_max_retries + 1):
+                    attempts += 1
+                    try:
+                        response = client.chat.completions.create(**kwargs)
+                        break
+                    except (APIConnectionError, APITimeoutError, APIStatusError) as exc:
+                        retryable = (
+                            not isinstance(exc, APIStatusError)
+                            or exc.status_code == HTTPStatus.TOO_MANY_REQUESTS
+                            or exc.status_code >= HTTPStatus.INTERNAL_SERVER_ERROR
+                        )
+                        if not retryable or retry == self.settings.llm_max_retries:
+                            raise
+                        time.sleep(min(8.0, 0.5 * (2**retry)) * random.uniform(0.75, 1.0))  # noqa: S311 -- retry jitter is not security-sensitive
                 usage = response.usage
+                if usage is None:
+                    # Unknown usage must not silently release the budget reservation.
+                    cost = reserve
                 if usage:
                     inp, out = usage.prompt_tokens, usage.completion_tokens
                     details = usage.completion_tokens_details
@@ -260,22 +283,22 @@ class OpenRouterClient:
                     raise
             finally:
                 with Session(get_engine()) as db:
-                    db.add(
-                        LLMCall(
-                            org_id=org_id,
-                            source_id=source_id,
-                            stage=stage,
-                            model=model,
-                            input_tokens=inp,
-                            output_tokens=out,
-                            reasoning_tokens=reasoning,
-                            cost_usd=cost,
-                            latency_ms=int((time.monotonic() - started) * 1000),
-                            status="failed" if error else "success",
-                            error_code=error,
-                            request_hash=digest,
-                        )
-                    )
+                    call = db.get(LLMCall, call_id, with_for_update=True)
+                    if call is None:
+                        raise RuntimeError("Reserved LLM call disappeared")
+                    # OpenRouter normally reports usage only for successful HTTP attempts;
+                    # failed attempts therefore have no reported cost to add.
+                    if call.status == "abandoned":
+                        cost = max(cost, call.cost_usd)
+                    call.input_tokens = inp
+                    call.output_tokens = out
+                    call.reasoning_tokens = reasoning
+                    call.cost_usd = cost
+                    call.reserved_usd = Decimal(0)
+                    call.attempts = attempts
+                    call.latency_ms = int((time.monotonic() - started) * 1000)
+                    call.status = "failed" if error else "success"
+                    call.error_code = error
                     db.commit()
             if not error:
                 if os.environ.get("QBANK_LLM_RECORD") == "1":

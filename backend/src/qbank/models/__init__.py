@@ -176,6 +176,8 @@ class LLMCall(ModelBase):
     output_tokens: Mapped[int] = mapped_column(Integer)
     reasoning_tokens: Mapped[int] = mapped_column(Integer)
     cost_usd: Mapped[Decimal] = mapped_column(Numeric(18, 9))
+    reserved_usd: Mapped[Decimal] = mapped_column(Numeric(18, 9), server_default=text("0"))
+    attempts: Mapped[int] = mapped_column(Integer, server_default=text("0"))
     latency_ms: Mapped[int] = mapped_column(Integer)
     status: Mapped[str] = mapped_column(String)
     error_code: Mapped[str | None] = mapped_column(String)

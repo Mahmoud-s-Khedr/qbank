@@ -10,7 +10,7 @@ from qbank.db import get_engine
 from qbank.llm import OpenRouterClient, image_part
 from qbank.llm.pricing import refresh_prices
 from qbank.models import Chapter, Language, Lesson, Organization, Role, Subject, User
-from qbank.services.llm_costs import org_month_spend, spend_by, total_spend
+from qbank.services.llm_costs import org_month_spend, reap_reservations, spend_by, total_spend
 
 
 def create_admin(db: Session, org_name: str, email: str, password: str, name: str) -> None:
@@ -97,12 +97,16 @@ def main() -> None:
     admin.add_argument("--name")
     commands.add_parser("seed-dev")
     commands.add_parser("llm-spend")
+    commands.add_parser("llm-reap")
     prices = commands.add_parser("llm-prices")
     prices.add_argument("--refresh", action="store_true", required=True)
     ping = commands.add_parser("llm-ping")
     ping.add_argument("--model", required=True)
     ping.add_argument("--image")
     args = parser.parse_args()
+    if args.command == "llm-reap":
+        print(f"Abandoned reservations: {reap_reservations(get_settings())}")  # noqa: T201 -- CLI output
+        return
     if args.command == "llm-prices":
         refresh_prices()
         return
