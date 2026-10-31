@@ -744,3 +744,29 @@ def test_storage_retry_exhaustion_fails_remaining_pages(  # noqa: PLR0915 -- ful
         reset_engine()
         get_store.cache_clear()
         get_settings.cache_clear()
+
+
+@pytest.mark.integration
+def test_org_settings_permissions_and_validation(
+    setup_core: dict[str, str], client: TestClient
+) -> None:
+    login(client, "teacher@example.com")
+    assert client.get("/api/v1/org/settings").status_code == HTTPStatus.FORBIDDEN
+    login(client, "a@example.com")
+    response = client.patch(
+        "/api/v1/org/settings",
+        json={"name": "Updated", "verify_policy": "all", "llm_monthly_cap_usd": 5},
+    )
+    assert response.status_code == HTTPStatus.OK
+    assert response.json()["verify_policy"] == "all"
+    assert client.get("/api/v1/org/settings").json()["name"] == "Updated"
+    assert (
+        client.patch("/api/v1/org/settings", json={"extract_model": "unknown"}).status_code
+        == HTTPStatus.UNPROCESSABLE_ENTITY
+    )
+    assert (
+        client.patch("/api/v1/org/settings", json={"llm_monthly_cap_usd": -1}).status_code
+        == HTTPStatus.UNPROCESSABLE_ENTITY
+    )
+    login(client, "b@example.com")
+    assert client.get("/api/v1/org/settings").json()["name"] == "B"

@@ -218,7 +218,7 @@ def extract_source(source_id: str) -> None:
 @dramatiq.actor(max_retries=3, on_retry_exhausted="extract_failed")
 def extract_pages(source_id: str, numbers: list[int]) -> None:
     from qbank.llm import BudgetExceeded, LLMOutputInvalid, OrgBudgetExceeded, get_llm_client  # noqa: PLC0415
-    from qbank.models import Subject  # noqa: PLC0415
+    from qbank.models import Organization, Subject  # noqa: PLC0415
     from qbank.pipeline.extract import PROMPT_VERSION, extract_page  # noqa: PLC0415
 
     sid = UUID(source_id)
@@ -242,6 +242,11 @@ def extract_pages(source_id: str, numbers: list[int]) -> None:
             subject = db.get(Subject, source.subject_id)
             if subject is None:
                 raise ValueError("Missing subject")
+            org = db.get(Organization, source.org_id)
+            configured_model = (source.pipeline_config or {}).get(
+                "extract_model", (org.settings or {}).get("extract_model") if org else None
+            )
+            model_override = configured_model if isinstance(configured_model, str) else None
             org_id, subject_name, language, grade = (
                 source.org_id,
                 subject.name,
@@ -258,6 +263,7 @@ def extract_pages(source_id: str, numbers: list[int]) -> None:
                 grade=grade,
                 org_id=org_id,
                 source_id=sid,
+                model_override=model_override,
                 max_side=get_settings().extract_image_max_side,
                 fallback_threshold=get_settings().extract_fallback_threshold,
             )
@@ -558,7 +564,7 @@ def verify_failed(message: dict[str, object], details: dict[str, object]) -> Non
 @dramatiq.actor(max_retries=3, on_retry_exhausted="verify_failed")
 def verify_source(source_id: str) -> None:  # noqa: PLR0915 -- page loop + budget/invalid handling
     from qbank.llm import BudgetExceeded, LLMOutputInvalid, OrgBudgetExceeded, get_llm_client  # noqa: PLC0415
-    from qbank.models import Question  # noqa: PLC0415
+    from qbank.models import Organization, Question  # noqa: PLC0415
     from qbank.pipeline.validate import validate_source as run_validate  # noqa: PLC0415
     from qbank.pipeline.verify import (  # noqa: PLC0415
         apply_discrepancies,
@@ -574,7 +580,7 @@ def verify_source(source_id: str) -> None:  # noqa: PLR0915 -- page loop + budge
         source = db.get(Source, sid)
         if source is None or source.stage != "verify" or source.status != SourceStatus.validating:
             return
-        policy = get_verify_policy(source)
+        policy = get_verify_policy(source, db.get(Organization, source.org_id))
         if policy == "off":
             orchestrator.advance(sid, "verify")
             return

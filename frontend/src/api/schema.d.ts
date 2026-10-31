@@ -664,6 +664,24 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/org/settings": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Org Settings */
+    get: operations["get_org_settings_api_v1_org_settings_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Update Org Settings */
+    patch: operations["update_org_settings_api_v1_org_settings_patch"];
+    trace?: never;
+  };
   "/api/v1/page-proposals/{id}": {
     parameters: {
       query?: never;
@@ -2187,6 +2205,44 @@ export interface components {
       price_in_per_m: string;
       /** Price Out Per M */
       price_out_per_m: string;
+    };
+    /** OrgSettings */
+    OrgSettings: {
+      /**
+       * Default Digits
+       * @default arabic
+       * @enum {string}
+       */
+      default_digits: "arabic" | "western";
+      /** Default Template Id */
+      default_template_id?: string | null;
+      /** Extract Model */
+      extract_model: string;
+      /** Llm Monthly Cap Usd */
+      llm_monthly_cap_usd?: number | null;
+      /** Name */
+      name: string;
+      /**
+       * Verify Policy
+       * @default low_confidence
+       * @enum {string}
+       */
+      verify_policy: "off" | "low_confidence" | "all";
+    };
+    /** OrgSettingsPatch */
+    OrgSettingsPatch: {
+      /** Default Digits */
+      default_digits?: ("arabic" | "western") | null;
+      /** Default Template Id */
+      default_template_id?: string | null;
+      /** Extract Model */
+      extract_model?: string | null;
+      /** Llm Monthly Cap Usd */
+      llm_monthly_cap_usd?: number | null;
+      /** Name */
+      name?: string | null;
+      /** Verify Policy */
+      verify_policy?: ("off" | "low_confidence" | "all") | null;
     };
     /** PageDetail */
     PageDetail: {
@@ -4812,6 +4868,59 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["ModelOut"][];
+        };
+      };
+    };
+  };
+  get_org_settings_api_v1_org_settings_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrgSettings"];
+        };
+      };
+    };
+  };
+  update_org_settings_api_v1_org_settings_patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["OrgSettingsPatch"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["OrgSettings"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
         };
       };
     };

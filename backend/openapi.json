@@ -2147,6 +2147,156 @@
         "title": "ModelOut",
         "type": "object"
       },
+      "OrgSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "default_digits": {
+            "default": "arabic",
+            "enum": [
+              "arabic",
+              "western"
+            ],
+            "title": "Default Digits",
+            "type": "string"
+          },
+          "default_template_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Template Id"
+          },
+          "extract_model": {
+            "title": "Extract Model",
+            "type": "string"
+          },
+          "llm_monthly_cap_usd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Monthly Cap Usd"
+          },
+          "name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "verify_policy": {
+            "default": "low_confidence",
+            "enum": [
+              "off",
+              "low_confidence",
+              "all"
+            ],
+            "title": "Verify Policy",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "extract_model"
+        ],
+        "title": "OrgSettings",
+        "type": "object"
+      },
+      "OrgSettingsPatch": {
+        "additionalProperties": false,
+        "properties": {
+          "default_digits": {
+            "anyOf": [
+              {
+                "enum": [
+                  "arabic",
+                  "western"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Digits"
+          },
+          "default_template_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Template Id"
+          },
+          "extract_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extract Model"
+          },
+          "llm_monthly_cap_usd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Monthly Cap Usd"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "verify_policy": {
+            "anyOf": [
+              {
+                "enum": [
+                  "off",
+                  "low_confidence",
+                  "all"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verify Policy"
+          }
+        },
+        "title": "OrgSettingsPatch",
+        "type": "object"
+      },
       "PageDetail": {
         "properties": {
           "created_at": {
@@ -7241,6 +7391,66 @@
           }
         },
         "summary": "Models"
+      }
+    },
+    "/api/v1/org/settings": {
+      "get": {
+        "operationId": "get_org_settings_api_v1_org_settings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgSettings"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Org Settings",
+        "tags": [
+          "organization"
+        ]
+      },
+      "patch": {
+        "operationId": "update_org_settings_api_v1_org_settings_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrgSettingsPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgSettings"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Org Settings",
+        "tags": [
+          "organization"
+        ]
       }
     },
     "/api/v1/page-proposals/{id}": {
