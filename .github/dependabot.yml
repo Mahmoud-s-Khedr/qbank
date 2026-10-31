@@ -1,6 +1,7 @@
 version: 2
 updates:
   - package-ecosystem: uv
+    cooldown: {default-days: 3}  # skip releases younger than 3 days (supply-chain safety)
     directory: /backend
     schedule: {interval: weekly}
     open-pull-requests-limit: 5
@@ -8,6 +9,7 @@ updates:
     groups:
       minor-patch: {update-types: [minor, patch]}
   - package-ecosystem: npm
+    cooldown: {default-days: 3}  # skip releases younger than 3 days (supply-chain safety)
     directory: /frontend
     schedule: {interval: weekly}
     open-pull-requests-limit: 5

@@ -1,0 +1,3 @@
+# Supply-chain safety: only install package versions that have been public for at least 1 day.
+# Set explicitly so local installs, CI and Dependabot resolve the same way.
+minimumReleaseAge: 1440
