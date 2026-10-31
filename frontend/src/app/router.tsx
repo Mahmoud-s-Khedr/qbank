@@ -12,6 +12,7 @@ import { LoginPage } from "@/features/auth/login-page";
 import { BankPage } from "@/features/bank/bank-page";
 import { ExamExportsPage } from "@/features/exports/exam-exports-panel";
 import { ExamBuilderPage } from "@/features/exams/builder-page";
+import { TaxonomyPage } from "@/features/bank/taxonomy-page";
 import { ExamsPage } from "@/features/exams/exams-page";
 import { ReviewPage } from "@/features/review/review-page";
 import { ReviewWorkspacePage } from "@/features/review/review-workspace-page";
@@ -58,6 +59,10 @@ export const routes: RouteObject[] = [
           {
             path: "bank",
             element: <BankPage />,
+          },
+          {
+            path: "bank/taxonomy",
+            element: <TaxonomyPage />,
           },
           {
             path: "exams",
