@@ -1,0 +1,129 @@
+name: qbank-prod
+x-app: &app
+  image: qbank-prod-backend
+  env_file: .env.prod
+  environment: &app-env
+    QBANK_DATABASE_URL: postgresql+psycopg://qbank:${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}@postgres:5432/qbank
+    QBANK_REDIS_URL: redis://redis:6379/0
+    QBANK_TRUSTED_PROXIES: '["172.29.25.2/32"]'
+  networks: [internal]
+
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: qbank
+      POSTGRES_DB: qbank
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD}
+    volumes: [postgres_data:/var/lib/postgresql]
+    networks: [internal]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U qbank -d qbank']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  redis:
+    image: redis:8-alpine
+    networks: [internal]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  minio:
+    profiles: [minio]
+    image: cgr.dev/chainguard/minio:latest
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: ${QBANK_S3_ACCESS_KEY}
+      MINIO_ROOT_PASSWORD: ${QBANK_S3_SECRET_KEY}
+    volumes: [minio_data:/data]
+    networks: [internal]
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD-SHELL, 'mc ready local']
+      interval: 5s
+      timeout: 3s
+      retries: 30
+  minio-init:
+    profiles: [minio]
+    image: cgr.dev/chainguard/minio:latest
+    depends_on:
+      minio: {condition: service_healthy}
+    environment:
+      QBANK_S3_ACCESS_KEY: ${QBANK_S3_ACCESS_KEY}
+      QBANK_S3_SECRET_KEY: ${QBANK_S3_SECRET_KEY}
+      QBANK_S3_BUCKET: ${QBANK_S3_BUCKET}
+    entrypoint: ["/bin/sh", "-c", 'mc alias set local http://minio:9000 "$$QBANK_S3_ACCESS_KEY" "$$QBANK_S3_SECRET_KEY" && mc mb --ignore-existing "local/$$QBANK_S3_BUCKET"']
+    networks: [internal]
+    restart: "no"
+  migrate:
+    <<: *app
+    command: [alembic, -c, alembic.ini, upgrade, head]
+    depends_on:
+      postgres: {condition: service_healthy}
+    restart: "no"
+  api:
+    <<: *app
+    build: ./backend
+    command: [uvicorn, qbank.api.main:app, --host, 0.0.0.0, --port, "8000", --workers, '${API_WORKERS:-2}', --proxy-headers, --forwarded-allow-ips, 172.29.25.2, --no-access-log]
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+      minio-init: {condition: service_completed_successfully, required: false}
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, python, -c, "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/v1/ready', timeout=7)"]
+      interval: 10s
+      timeout: 8s
+      retries: 12
+      start_period: 30s
+  worker:
+    <<: *app
+    command: [dramatiq, qbank.worker, --processes, '${WORKER_PROCESSES:-2}', --threads, '${WORKER_THREADS:-4}']
+    depends_on:
+      migrate: {condition: service_completed_successfully}
+      redis: {condition: service_healthy}
+    deploy:
+      replicas: ${WORKER_REPLICAS:-1}
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD, python, -c, "import redis,os; assert redis.Redis.from_url(os.environ['QBANK_REDIS_URL'], socket_connect_timeout=2).ping()"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 30s
+  caddy:
+    build: ./frontend
+    image: qbank-prod-frontend
+    environment:
+      QBANK_SITE_ADDRESS: ${QBANK_DOMAIN:?set QBANK_DOMAIN}
+    ports:
+      - '${CADDY_HTTP_PORT:-80}:80'
+      - '${CADDY_HTTPS_PORT:-443}:443'
+    volumes: [caddy_data:/data, caddy_config:/config]
+    networks:
+      internal:
+        ipv4_address: 172.29.25.2
+    depends_on:
+      api: {condition: service_healthy}
+    restart: unless-stopped
+    healthcheck:
+      test: [CMD-SHELL, 'wget -q -O /dev/null http://127.0.0.1:2019/config/']
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 20s
+networks:
+  internal:
+    ipam:
+      config:
+        - subnet: 172.29.25.0/24
+          ip_range: 172.29.25.128/25
+volumes:
+  postgres_data:
+  minio_data:
+  caddy_data:
+  caddy_config:

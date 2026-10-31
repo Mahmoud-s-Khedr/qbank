@@ -7,6 +7,7 @@ from pydantic import BaseModel, field_validator
 from qbank.models import Role
 from qbank.schemas.auth import Login
 from qbank.schemas.common import Output
+from qbank.security.passwords import validate_password
 
 
 class UserOut(Output):
@@ -21,6 +22,8 @@ class UserOut(Output):
 class UserCreate(Login):
     name: str
     role: Role
+
+    _validate_password = field_validator("password")(validate_password)
 
     @field_validator("email")
     @classmethod

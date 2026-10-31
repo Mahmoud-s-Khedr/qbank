@@ -36,6 +36,7 @@ from qbank.schemas.review import (
     StimulusCreate,
     StimulusPatch,
 )
+from qbank.security.ratelimit import user_limit
 from qbank.services import figures, proposals, stimuli
 from qbank.services import review as service
 
@@ -170,6 +171,7 @@ def reject_stimulus(id: UUID, db: DB, user: Writer) -> Stimulus:
 def reextract(
     id: UUID, number: int, db: DB, user: Writer, data: ReextractIn | None = None
 ) -> ReextractOut:
+    user_limit("ai", user.id)
     model = data.model if data else None
     return ReextractOut(job_id=proposals.start_reextract(db, user, id, number, model))
 
@@ -178,6 +180,7 @@ def reextract(
 def extract_region(  # noqa: PLR0913, PLR0917 -- path, body and injected dependencies
     id: UUID, number: int, data: ExtractRegionIn, db: DB, user: Writer, client: Client
 ) -> DraftQuestion:
+    user_limit("ai", user.id)
     return proposals.extract_region(db, client, user, id, number, data)
 
 

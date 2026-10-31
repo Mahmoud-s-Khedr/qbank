@@ -32,3 +32,11 @@ def authenticate(db: Session, email: str, password: str) -> User:
 
 def issue_cookie_data(user: User) -> tuple[str, str]:
     return create_token(user), token_urlsafe(32)
+
+
+def change_password(db: Session, user: User, current: str, new: str) -> None:
+    if not verify_password(current, user.password_hash):
+        raise Unauthorized("invalid_credentials")
+    user.password_hash = hasher.hash(new)
+    user.token_version += 1
+    save(db)

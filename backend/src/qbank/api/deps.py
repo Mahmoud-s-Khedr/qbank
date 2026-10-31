@@ -20,11 +20,18 @@ def current_user(request: Request, db: Annotated[Session, Depends(get_db)]) -> U
             token,
             get_settings().jwt_secret.get_secret_value(),
             algorithms=["HS256"],
-            options={"require": ["sub", "org", "role", "exp", "iat", "jti"]},
+            options={"require": ["sub", "org", "role", "exp", "iat", "jti", "token_version"]},
         )
         user = get(db, User, UUID(claims["org"]), UUID(claims["sub"]))
-        if user is None or not user.is_active or user.role.value != claims["role"]:
+        if (
+            user is None
+            or not user.is_active
+            or user.role.value != claims["role"]
+            or user.token_version != claims["token_version"]
+        ):
             raise ValueError
+        request.state.user_id = str(user.id)
+        request.state.org_id = str(user.org_id)
         return user
     except (KeyError, ValueError, TypeError, jwt.InvalidTokenError):
         raise Unauthorized() from None

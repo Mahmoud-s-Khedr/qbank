@@ -10,10 +10,12 @@ from qbank.db import get_engine
 from qbank.llm import OpenRouterClient, image_part
 from qbank.llm.pricing import refresh_prices
 from qbank.models import Chapter, Language, Lesson, Organization, Role, Subject, User
+from qbank.security.passwords import validate_password
 from qbank.services.llm_costs import org_month_spend, reap_reservations, spend_by, total_spend
 
 
 def create_admin(db: Session, org_name: str, email: str, password: str, name: str) -> None:
+    validate_password(password)
     org = db.scalar(select(Organization).where(Organization.name == org_name))
     if org is None:
         org = Organization(name=org_name)

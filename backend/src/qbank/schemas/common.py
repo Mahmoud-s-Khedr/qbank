@@ -21,3 +21,10 @@ class HealthOut(BaseModel):
     status: Literal["ok"] = "ok"
     version: str
     db: Literal["ok", "down"]
+
+
+class ReadyOut(BaseModel):
+    status: Literal["ok", "down"]
+    db: Literal["ok", "down"]
+    redis: Literal["ok", "down"]
+    storage: Literal["ok", "down"]

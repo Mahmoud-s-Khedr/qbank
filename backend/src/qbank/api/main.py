@@ -1,4 +1,5 @@
 import logging
+import time
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from importlib.metadata import version
@@ -58,7 +59,8 @@ def create_app() -> FastAPI:
         ],
         logger_factory=structlog.stdlib.LoggerFactory(),
     )
-    logging.basicConfig(level=logging.INFO)
+    logging.basicConfig(level=get_settings().log_level)
+    logging.getLogger().setLevel(get_settings().log_level)
     app = FastAPI(title="Qbank", version=version("qbank"))
     app.add_middleware(
         CORSMiddleware,
@@ -91,8 +93,28 @@ def create_app() -> FastAPI:
     ) -> Response:
         # IDs are generated locally so untrusted headers cannot inject log content.
         request.state.request_id = str(uuid4())
-        response = await call_next(request)
+        started = time.monotonic()
+        try:
+            response = await call_next(request)
+        except Exception:
+            logger.error("unhandled_exception", request_id=request.state.request_id)
+            response = problem(500, "Internal server error", "internal_error")
         response.headers["X-Request-ID"] = request.state.request_id
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "same-origin"
+        response.headers["Permissions-Policy"] = "camera=(), microphone=(), geolocation=()"
+        if get_settings().cookie_secure:
+            response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        logger.info(
+            "access",
+            request_id=request.state.request_id,
+            user_id=getattr(request.state, "user_id", None),
+            org_id=getattr(request.state, "org_id", None),
+            path=request.url.path,
+            status=response.status_code,
+            duration_ms=round((time.monotonic() - started) * 1000, 2),
+        )
         return response
 
     @app.exception_handler(DomainError)
@@ -102,7 +124,10 @@ def create_app() -> FastAPI:
     @app.exception_handler(HTTPException)
     async def http_error(request: Request, exc: HTTPException) -> JSONResponse:
         if isinstance(exc.detail, dict):
-            return problem(exc.status_code, str(exc.detail["message"]), str(exc.detail["code"]))
+            response = problem(exc.status_code, str(exc.detail["message"]), str(exc.detail["code"]))
+            if exc.headers:
+                response.headers.update(exc.headers)
+            return response
         return problem(exc.status_code, str(exc.detail), "http_error")
 
     @app.exception_handler(RequestValidationError)
@@ -111,7 +136,7 @@ def create_app() -> FastAPI:
 
     @app.exception_handler(Exception)
     async def unexpected_error(request: Request, exc: Exception) -> JSONResponse:
-        logger.exception("unhandled_exception", request_id=request.state.request_id)
+        logger.error("unhandled_exception", request_id=request.state.request_id)
         return problem(500, "Internal server error", "internal_error")
 
     return app

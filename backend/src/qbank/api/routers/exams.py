@@ -25,6 +25,7 @@ from qbank.schemas.exams import (
     VersionOut,
     VersionsIn,
 )
+from qbank.security.ratelimit import user_limit
 from qbank.services import compose_ai
 from qbank.services import exam_generation as generation
 from qbank.services import exams as service
@@ -135,6 +136,7 @@ def answer_key(id: UUID, label: str, db: DB, user: Current) -> AnswerKey:
 
 @router.post("/exams/{id}/compose", response_model=ExamProposalOut)
 def compose_exam(id: UUID, data: ComposeIn, db: DB, user: Current) -> ExamProposalOut:
+    user_limit("ai", user.id)
     return compose_ai.compose(db, user, id, data)
 
 

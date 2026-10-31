@@ -52,3 +52,20 @@ be-worker:
 	uv run --directory backend dramatiq qbank.worker --processes $(WORKER_PROCESSES) --threads $(WORKER_THREADS)
 eval:
 	uv run --directory backend qbank-eval --models "$(MODELS)" --max-cost "$(MAX_COST)" $(if $(PAGES),--pages "$(PAGES)",) $(if $(REPEAT),--repeat "$(REPEAT)",) $(if $(OUT),--out "$(OUT)",) $(if $(DRY_RUN),--dry-run,) $(EVAL_ARGS)
+
+PROD_COMPOSE = docker compose --env-file .env.prod -f docker-compose.prod.yml
+.PHONY: prod-build prod-up prod-down prod-logs prod-admin prod-backup
+prod-build:
+	$(PROD_COMPOSE) build
+prod-up:
+	$(PROD_COMPOSE) up -d --build --wait
+prod-down:
+	$(PROD_COMPOSE) down $(ARGS)
+prod-logs:
+	$(PROD_COMPOSE) logs -f $(ARGS)
+prod-admin:
+	$(PROD_COMPOSE) exec api python -m qbank.cli create-admin $(ARGS)
+prod-backup:
+	umask 077; mkdir -p backups
+	umask 077; bash -o pipefail -c '$(PROD_COMPOSE) exec -T postgres pg_dump -U qbank qbank | gzip > backups/qbank-$$(date -u +%Y%m%dT%H%M%SZ).sql.gz'
+	@echo 'Back up object storage separately.'

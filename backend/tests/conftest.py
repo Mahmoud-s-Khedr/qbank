@@ -14,6 +14,9 @@ from sqlalchemy.engine import make_url
 # Must run before any qbank import: importing qbank.api.main builds the app and caches Settings.
 os.environ["QBANK_ENV"] = "test"
 os.environ["QBANK_LLM_MODE"] = "fake"
+# Shared Redis persists across integration databases; dedicated rate tests use explicit limits.
+os.environ["QBANK_RATE_LOGIN_IP"] = "10000"
+os.environ["QBANK_RATE_LOGIN_EMAIL"] = "10000"
 os.environ["QBANK_JWT_SECRET"] = "test-only-secret-at-least-32-bytes-long"  # noqa: S105 -- test-only value
 
 from qbank.api.main import create_app
