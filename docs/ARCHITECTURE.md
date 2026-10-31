@@ -95,7 +95,7 @@ All tables have `id UUID PK (uuid7)`, `created_at` and `updated_at`. Tenant tabl
 | `chapters` | subject_id, title, position |
 | `lessons` | chapter_id, title, position |
 | `sources` | org_id, subject_id, title, grade, file_key, page_count, status (`uploaded`/`rendering`/`extracting`/`validating`/`ready`/`failed`/`paused`), pipeline_config JSONB, cost_usd |
-| `source_pages` | source_id, page_number, image_key, width_px, height_px, dpi, status (`pending`/`rendered`/`extracted`/`validated`/`failed`), error, extraction JSONB (raw validated LLM output), prompt_version, model, cost_usd |
+| `source_pages` | source_id, page_number, page_kind, image_key, width_px, height_px, dpi, status (`pending`/`rendered`/`extracted`/`validated`/`failed`), error, extraction JSONB (raw validated LLM output), prompt_version, model, cost_usd |
 | `stimuli` | org_id, source_id, kind (`passage`/`poem`/`figure`/`table`/`case`), content (QMD), regions JSONB |
 | `questions` | org_id, subject_id, chapter_id?, lesson_id?, source_id?, stimulus_id?, stimulus_position, number_label, type, stem (QMD), choices JSONB `[{label, content, is_correct, pinned}]`, answer (QMD), explanation (QMD), difficulty smallint, difficulty_reason, difficulty_source (`ai`/`human`), language, tags text[], regions JSONB, status, confidence real, content_hash, duplicate_of_id?, search_vector tsvector (generated), version int |
 | `assets` | org_id, source_page_id?, kind (`figure`/`table`/`logo`), image_key, region JSONB, width, height |
@@ -141,6 +141,7 @@ upload ─▶ render (per page) ─▶ extract (per page, parallel) ─▶ stitc
 
 - **Orchestrator** (`pipeline/orchestrator.py`): a per-source state machine. Each stage is a Dramatiq actor. Per-page stages fan out and a barrier (count of pages in the terminal state) triggers the next stage. All stages are idempotent and keyed by (source_id, page_number, stage, prompt_version). Workers can restart at any time.
 - **Render**: PyMuPDF at 200 DPI (config) → WebP for display and PNG at 300 DPI kept for figure cropping. Each page is wrapped in try/except, so a broken page becomes `failed` with its error recorded.
+- **Page kind**: every page is classified (`cover`/`blank`/`toc`/`section_divider`/`questions`/`answer_key`/`answer_sheet`/`other`) in the same extract call. Only `questions` and `answer_key` pages produce items. Workbooks contain many non-question pages, e.g. `test-exams.pdf` pp. 1–5 and 44–60 (blank OMR sheets).
 - **Extract**: one LLM call per page, image + prompt + a JSON schema derived from `pipeline/schema.py::PageExtraction` via `response_format={"type":"json_schema"}`. The prompt carries the subject/language and the previous page's last item (for continuation). Output: `headings[]`, `stimuli[]`, `questions[]`, `answer_key_entries[]`, `continues_from_previous: bool`, `continues_on_next: bool`, `page_confidence`. Validated with Pydantic, with one repair retry on failure.
 - **Stitch**: merges an item flagged `continues_on_next` with page N+1's first item flagged `continues_from_previous`.
 - **Figures**: crop from the 300 DPI render, tightened with OpenCV (trim whitespace, keep labels), then stored as an asset and referenced in QMD.
