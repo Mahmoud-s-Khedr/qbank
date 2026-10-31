@@ -55,6 +55,7 @@ class User(ModelBase):
     email: Mapped[str] = mapped_column(String, unique=True)
     name: Mapped[str] = mapped_column(String)
     password_hash: Mapped[str] = mapped_column(String)
+    token_version: Mapped[int] = mapped_column(Integer, default=0, server_default=text("0"))
     role: Mapped[Role] = mapped_column(Enum(Role, name="user_role"))
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default=text("true"))
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))

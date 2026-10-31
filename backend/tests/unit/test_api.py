@@ -89,6 +89,7 @@ def test_unhandled(app: FastAPI, client: TestClient) -> None:
     response = client.get("/fail")
     assert response.status_code == HTTPStatus.INTERNAL_SERVER_ERROR
     assert "private details" not in response.text
+    assert response.headers["x-frame-options"] == "DENY"
 
 
 def test_settings(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -108,3 +109,46 @@ def test_settings(monkeypatch: pytest.MonkeyPatch) -> None:
 def test_uuid() -> None:
     expected_version = 7
     assert new_uuid().version == expected_version
+
+
+@pytest.mark.parametrize("down", [None, "db", "redis", "storage"])
+def test_ready_dependencies(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch, down: str | None
+) -> None:
+    from qbank.services import health  # noqa: PLC0415
+
+    for name, function in (
+        ("db", "readiness_database_ok"),
+        ("redis", "redis_ok"),
+        ("storage", "storage_ok"),
+    ):
+        monkeypatch.setattr(health, function, lambda *, ok=name != down: ok)
+    response = client.get("/api/v1/ready")
+    assert response.status_code == (503 if down else 200)
+    assert response.json() == {
+        "status": "down" if down else "ok",
+        **{name: "down" if name == down else "ok" for name in ("db", "redis", "storage")},
+    }
+
+
+def test_rate_limit_response_has_retry_after(
+    client: TestClient, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    from fastapi import HTTPException  # noqa: PLC0415
+
+    from qbank.api.routers import auth  # noqa: PLC0415
+
+    def reject(*args: object) -> None:
+        raise HTTPException(
+            429,
+            detail={"code": "rate_limited", "message": "Rate limit exceeded"},
+            headers={"Retry-After": "42"},
+        )
+
+    monkeypatch.setattr(auth, "login_limit", reject)
+    response = client.post(
+        "/api/v1/auth/login", json={"email": "a@example.com", "password": "redacted"}
+    )
+    assert response.status_code == HTTPStatus.TOO_MANY_REQUESTS
+    assert response.json()["code"] == "rate_limited"
+    assert response.headers["Retry-After"] == "42"

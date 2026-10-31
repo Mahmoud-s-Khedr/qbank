@@ -26,6 +26,7 @@ def create_token(user: User) -> str:
             "sub": str(user.id),
             "org": str(user.org_id),
             "role": user.role.value,
+            "token_version": user.token_version,
             "iat": now,
             "exp": now + timedelta(minutes=settings.session_ttl_minutes),
             "jti": str(uuid4()),

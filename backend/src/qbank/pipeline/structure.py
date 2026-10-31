@@ -128,7 +128,7 @@ def structure_source(  # noqa: PLR0912, PLR0915 -- plan construction and assignm
             ):
                 plan = candidate
         except Exception:  # Budget and provider errors both use the fallback.
-            logger.warning("Structure planning failed; using heading fallback", exc_info=True)
+            logger.warning("Structure planning failed; using heading fallback")
     events: list[tuple[int, float, UUID, UUID | None]] = []
     chapter: Chapter | None = None
     for item in plan:

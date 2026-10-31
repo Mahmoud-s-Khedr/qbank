@@ -394,7 +394,7 @@ def test_scoping_validation_and_failures(
     drain(queued)
     (failed,) = client.get(f"{URL}/exams/{exam_id}/exports").json()
     assert failed["status"] == "failed"
-    assert "chromium crashed" in failed["error"]
+    assert failed["error"] == "export_failed"
     assert client.get(f"{URL}/exports/{failed['id']}/download").status_code == HTTPStatus.CONFLICT
 
     login(client, "t2@a.com")  # another teacher cannot see the exam, so neither its exports

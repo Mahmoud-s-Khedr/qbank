@@ -26,6 +26,7 @@ from qbank.schemas.sources import (
     SourceSummary,
     UploadResult,
 )
+from qbank.security.ratelimit import user_limit
 from qbank.services import sources as service
 from qbank.services.review import get_visible
 from qbank.services.unit_of_work import found
@@ -44,6 +45,7 @@ def upload(  # noqa: PLR0913, PLR0917 -- multipart fields are separate API input
     title: Annotated[str, Form()],
     grade: Annotated[str | None, Form()] = None,
 ) -> UploadResult:
+    user_limit("upload", user.id)
     item, job_id = service.upload(db, user.org_id, subject_id, title, grade, file.file)
     return UploadResult(source=SourceOut.model_validate(item), job_id=job_id)
 

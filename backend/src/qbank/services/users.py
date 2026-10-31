@@ -41,6 +41,10 @@ def edit_user(id: UUID, data: UserUpdate, db: Session, org_id: UUID, actor_id: U
         data.is_active is False or (data.role is not None and data.role != Role.admin)
     ):
         raise Invalid("self_change_forbidden")
+    if (data.role is not None and data.role != item.role) or (
+        data.is_active is False and item.is_active
+    ):
+        item.token_version += 1
     update(item, data)
     save(db)
     return item

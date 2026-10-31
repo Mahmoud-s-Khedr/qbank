@@ -78,6 +78,13 @@ class Settings(BaseSettings):
     cookie_secure: bool = False
     session_ttl_minutes: int = 720
     cors_origins: list[str] = ["http://localhost:5173"]
+    trusted_proxies: list[str] = []
+    rate_login_ip: int = 50
+    rate_login_email: int = 10
+    rate_login_window: int = 900
+    rate_upload: int = 20
+    rate_ai: int = 30
+    rate_user_window: int = 3600
     log_level: Literal["DEBUG", "INFO", "WARNING", "ERROR"] = "INFO"
 
     @model_validator(mode="after")
@@ -85,6 +92,18 @@ class Settings(BaseSettings):
         secret = self.jwt_secret.get_secret_value()
         if self.worker_cache_max_mb <= 0 or self.render_batch_size <= 0:
             raise ValueError("Cache size and batch size must be positive")
+        if (
+            min(
+                self.rate_login_ip,
+                self.rate_login_email,
+                self.rate_login_window,
+                self.rate_upload,
+                self.rate_ai,
+                self.rate_user_window,
+            )
+            <= 0
+        ):
+            raise ValueError("Rate limits and windows must be positive")
         if self.session_ttl_minutes <= 0:
             raise ValueError("session_ttl_minutes must be positive")
         if self.env == "prod" and (

@@ -74,8 +74,11 @@ def setup_core(database: str, app: FastAPI) -> Iterator[dict[str, str]]:
     engine.dispose()
 
 
-def login(client: TestClient, email: str) -> None:
-    response = client.post("/api/v1/auth/login", json={"email": email, "password": "password"})
+TEST_PASSWORD = "password"  # noqa: S105 -- fixture accounts use a test-only password.
+
+
+def login(client: TestClient, email: str, password: str = TEST_PASSWORD) -> None:
+    response = client.post("/api/v1/auth/login", json={"email": email, "password": password})
     assert response.status_code == HTTPStatus.OK, response.text
     client.headers["X-CSRF-Token"] = client.cookies["qbank_csrf"]
 
@@ -241,7 +244,12 @@ def test_user_management_and_invalid_moves(setup_core: dict[str, str], client: T
     prefix = "/api/v1"
     response = client.post(
         f"{prefix}/users",
-        json={"email": "NEW@EXAMPLE.COM", "name": "New", "password": "password", "role": "teacher"},
+        json={
+            "email": "NEW@EXAMPLE.COM",
+            "name": "New",
+            "password": "A-long-test-passphrase!",
+            "role": "teacher",
+        },
     )
     assert response.status_code == HTTPStatus.CREATED
     assert response.json()["email"] == "new@example.com"
@@ -255,7 +263,7 @@ def test_user_management_and_invalid_moves(setup_core: dict[str, str], client: T
             json={
                 "email": "new@example.com",
                 "name": "New",
-                "password": "password",
+                "password": "A-long-test-passphrase!",
                 "role": "teacher",
             },
         ).status_code
@@ -311,17 +319,27 @@ def test_created_email_is_normalized_and_can_login(
     for email in ("bad", "a@", "@example.com", "x y@example.com"):
         response = client.post(
             "/api/v1/users",
-            json={"email": email, "name": "New", "password": "password", "role": "teacher"},
+            json={
+                "email": email,
+                "name": "New",
+                "password": "A-long-test-passphrase!",
+                "role": "teacher",
+            },
         )
         assert response.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
     response = client.post(
         "/api/v1/users",
-        json={"email": "  Foo@X.com  ", "name": "New", "password": "password", "role": "teacher"},
+        json={
+            "email": "  Foo@X.com  ",
+            "name": "New",
+            "password": "A-long-test-passphrase!",
+            "role": "teacher",
+        },
     )
     assert response.status_code == HTTPStatus.CREATED
     assert response.json()["email"] == "foo@x.com"
     assert client.post("/api/v1/auth/logout").status_code == HTTPStatus.NO_CONTENT
-    login(client, "FOO@x.COM")
+    login(client, "FOO@x.COM", "A-long-test-passphrase!")
     assert client.get("/api/v1/auth/me").json()["email"] == "foo@x.com"
 
 
@@ -749,7 +767,7 @@ def test_storage_retry_exhaustion_fails_remaining_pages(  # noqa: PLR0915 -- ful
         assert all(
             page["status"] == "failed" and "storage_error:" in page["error"] for page in pages
         )
-        assert all("disk unavailable" in page["error"] for page in pages)
+        assert all("disk unavailable" not in page["error"] for page in pages)
     finally:
         worker.stop()
         reset_engine()
@@ -852,3 +870,54 @@ def test_cost_summary_scoped(setup_core: dict[str, str], client: TestClient, dat
     assert Decimal(data["average_cost_per_page"]) == Decimal("0.07")
     login(client, "b@example.com")
     assert Decimal(client.get("/api/v1/costs/summary").json()["total_usd"]) == 0
+
+
+@pytest.mark.integration
+def test_password_change_revokes_existing_tokens(
+    setup_core: dict[str, str], client: TestClient
+) -> None:
+    login(client, "a@example.com")
+    old = client.cookies["qbank_session"]
+    bad = client.post(
+        "/api/v1/auth/change-password",
+        json={"current_password": "wrong", "new_password": "a safe phrase for testing"},
+    )
+    assert bad.status_code == HTTPStatus.UNAUTHORIZED
+    weak = client.post(
+        "/api/v1/auth/change-password",
+        json={"current_password": "password", "new_password": "1234567890"},
+    )
+    assert weak.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    changed = client.post(
+        "/api/v1/auth/change-password",
+        json={"current_password": "password", "new_password": "a safe phrase for testing"},
+    )
+    assert changed.status_code == HTTPStatus.NO_CONTENT
+    client.cookies.set("qbank_session", old, domain="testserver.local", path="/")
+    assert client.get("/api/v1/auth/me").status_code == HTTPStatus.UNAUTHORIZED
+    response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "a@example.com", "password": "a safe phrase for testing"},
+    )
+    assert response.status_code == HTTPStatus.OK
+
+
+@pytest.mark.integration
+@pytest.mark.parametrize("change", [{"role": "editor"}, {"is_active": False}])
+def test_privilege_change_revokes_session(
+    setup_core: dict[str, str], client: TestClient, change: dict[str, object]
+) -> None:
+    login(client, "teacher@example.com")
+    old = client.cookies["qbank_session"]
+    login(client, "a@example.com")
+    assert (
+        client.patch(f"/api/v1/users/{setup_core['teacher@example.com']}", json=change).status_code
+        == HTTPStatus.OK
+    )
+    restore = {"role": "teacher"} if "role" in change else {"is_active": True}
+    assert (
+        client.patch(f"/api/v1/users/{setup_core['teacher@example.com']}", json=restore).status_code
+        == HTTPStatus.OK
+    )
+    client.cookies.set("qbank_session", old, domain="testserver.local", path="/")
+    assert client.get("/api/v1/auth/me").status_code == HTTPStatus.UNAUTHORIZED

@@ -16,11 +16,15 @@ from qbank.models import Job, LLMCall, PageStatus, Source, SourcePage, SourceSta
 from qbank.pipeline import orchestrator
 from qbank.pipeline.orchestrator import page_done
 from qbank.pipeline.pdf_cache import get_pdf_cache
+from qbank.security.worker_logging import MessageLog, configure_worker_logging
 from qbank.services import exports as exports_service
 from qbank.services import proposals
 from qbank.storage import get_store, keys
 
-dramatiq.set_broker(RedisBroker(url=get_settings().redis_url))  # type: ignore[no-untyped-call]  # Dramatiq lacks constructor types.
+configure_worker_logging()
+broker = RedisBroker(url=get_settings().redis_url)  # type: ignore[no-untyped-call]  # Dramatiq lacks constructor types.
+broker.add_middleware(MessageLog())
+dramatiq.set_broker(broker)
 
 
 def fail_source(source_id: UUID, error: str) -> None:
@@ -104,10 +108,6 @@ def render_failed(message: dict[str, object], details: dict[str, object]) -> Non
     numbers = args[1]
     if not isinstance(numbers, (list, tuple)):
         raise ValueError("Invalid page numbers")
-    options = message.get("options", {})
-    if not isinstance(options, dict):
-        raise ValueError("Invalid message options")
-    trace = str(options.get("traceback", "storage failure")).strip().splitlines()[-1]
     with Session(get_engine()) as db:
         db.execute(
             update(SourcePage)
@@ -116,7 +116,7 @@ def render_failed(message: dict[str, object], details: dict[str, object]) -> Non
                 SourcePage.page_number.in_(numbers),
                 SourcePage.status == PageStatus.pending,
             )
-            .values(status=PageStatus.failed, error=f"storage_error: {trace}")
+            .values(status=PageStatus.failed, error="storage_error: retry limit reached")
         )
         db.commit()
     page_done(sid, "render")
@@ -157,7 +157,7 @@ def render_one(sid: UUID, org: UUID, page_number: int, document: pymupdf.Documen
         image.save(output, format="WEBP")
         display_data = output.getvalue()
         hires_data = hires.tobytes("png")
-    except Exception as exc:
+    except Exception:
         with Session(get_engine()) as db:
             db.execute(
                 update(SourcePage)
@@ -166,7 +166,7 @@ def render_one(sid: UUID, org: UUID, page_number: int, document: pymupdf.Documen
                     SourcePage.page_number == page_number,
                     SourcePage.status == PageStatus.pending,
                 )
-                .values(status=PageStatus.failed, error=str(exc))
+                .values(status=PageStatus.failed, error="render_error")
             )
             db.commit()
         page_done(sid, "render")
@@ -307,7 +307,7 @@ def extract_pages(source_id: str, numbers: list[int]) -> None:
                     )
                     .values(
                         status=PageStatus.failed,
-                        error=str(exc),
+                        error="extract_error",
                         cost_usd=SourcePage.cost_usd + failed_cost,
                     )
                     .returning(SourcePage.id)

@@ -21,7 +21,6 @@ from qbank.storage import ObjectStore, get_store, keys
 
 logger = structlog.get_logger()
 CHUNK = 64 * 1024
-MAX_ERROR = 500
 UNSAFE = re.compile(r'[\x00-\x1f\x7f/\\:*?"<>|]+')
 PDF_TYPE = "application/pdf"
 DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
@@ -184,12 +183,12 @@ def render_one(db: Session, export_id: UUID, store: ObjectStore | None = None) -
         key = keys.export(exam.org_id, export.id, extension(export.kind))
         store.put_bytes(key, data, media_type(export.kind))
     except Exception as exc:  # any failure must be recorded on the export row
-        logger.warning("export_failed", export_id=str(export_id), error=str(exc))
+        logger.warning("export_failed", export_id=str(export_id), error_type=type(exc).__name__)
         db.rollback()
         export = db.get(Export, export_id)
         if export is not None:
             export.status = "failed"
-            export.error = str(exc)[:MAX_ERROR]
+            export.error = "export_failed"
             db.commit()
         return
     export.exam_revision = revision

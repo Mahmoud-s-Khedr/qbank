@@ -1,3 +1,5 @@
+import tempfile
+from shutil import copyfileobj
 from typing import BinaryIO, cast
 from uuid import UUID
 
@@ -46,10 +48,14 @@ def upload(  # noqa: PLR0913, PLR0917 -- upload fields are independent inputs.
         raise TooLargeError()
     fileobj.seek(0)
     try:
-        # PyMuPDF does not type its document constructor.
-        with pymupdf.open(stream=fileobj.read(), filetype="pdf") as document:  # type: ignore[no-untyped-call]
-            if document.is_encrypted or document.metadata.get("encryption"):
-                raise Invalid("encrypted_pdf")
+        # Keep large uploads on disk rather than making an unbounded in-memory copy.
+        with tempfile.NamedTemporaryFile(suffix=".pdf") as temporary:
+            copyfileobj(fileobj, temporary)
+            temporary.flush()
+            # PyMuPDF does not type its document constructor.
+            with pymupdf.open(temporary.name) as document:  # type: ignore[no-untyped-call]
+                if document.is_encrypted or document.metadata.get("encryption"):
+                    raise Invalid("encrypted_pdf")
     except pymupdf.FileDataError:
         # Rendering performs the remaining PDF validation asynchronously.
         pass

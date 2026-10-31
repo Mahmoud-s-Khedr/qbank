@@ -55,6 +55,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/auth/change-password": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Change Password */
+    post: operations["change_password_api_v1_auth_change_password_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/auth/login": {
     parameters: {
       query?: never;
@@ -1058,6 +1075,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/ready": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Ready */
+    get: operations["ready_api_v1_ready_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/sources": {
     parameters: {
       query?: never;
@@ -1805,6 +1839,13 @@ export interface components {
       status?: string | null;
       /** Version */
       version?: number | null;
+    };
+    /** ChangePassword */
+    ChangePassword: {
+      /** Current Password */
+      current_password: string;
+      /** New Password */
+      new_password: string;
     };
     /** ChangedItem */
     ChangedItem: {
@@ -3038,6 +3079,29 @@ export interface components {
       /** Count */
       count: number;
     };
+    /** ReadyOut */
+    ReadyOut: {
+      /**
+       * Db
+       * @enum {string}
+       */
+      db: "ok" | "down";
+      /**
+       * Redis
+       * @enum {string}
+       */
+      redis: "ok" | "down";
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "ok" | "down";
+      /**
+       * Storage
+       * @enum {string}
+       */
+      storage: "ok" | "down";
+    };
     /** ReextractIn */
     ReextractIn: {
       /** Model */
@@ -3789,6 +3853,37 @@ export interface operations {
         content: {
           "application/json": components["schemas"]["AssetOut"];
         };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  change_password_api_v1_auth_change_password_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChangePassword"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       /** @description Validation Error */
       422: {
@@ -6139,6 +6234,26 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  ready_api_v1_ready_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ReadyOut"];
         };
       };
     };
