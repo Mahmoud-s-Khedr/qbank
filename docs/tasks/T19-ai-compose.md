@@ -9,6 +9,7 @@ with a short rationale. **The AI never writes questions. It only picks ids from 
 ## Scope
 `backend/**`. Build on: `exams/sampler.py` (`BlueprintRow`, filters, duplicate clusters, stimulus groups), `services/exams.py`, `services/exam_generation.py`,
 `llm/` (`complete_json`, stage `compose` → `anthropic/claude-haiku-5.5`, guards, budget errors), `api/routers/exams.py`. **No live LLM calls in tests.**
+**Migrations:** use `down_revision` = the current head (`uv run --directory backend alembic heads`) and name the file `t19_compose.py`. Other tasks are adding migrations in parallel, and the orchestrator re-parents at merge.
 
 ## Flow: `POST /api/v1/exams/{id}/compose` `{prompt, language?}` → 200 `{proposal_id, blueprint, selection, rationale, warnings, cost_usd}`
 1. **Plan (LLM call 1):** the prompt + the subject's chapter/lesson tree (ids and titles) + inventory counts of approved questions per lesson × type × difficulty
