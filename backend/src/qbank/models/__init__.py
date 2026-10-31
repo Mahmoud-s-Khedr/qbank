@@ -5,6 +5,7 @@ from uuid import UUID
 
 from sqlalchemy import (
     Boolean,
+    Computed,
     DateTime,
     Enum,
     Float,
@@ -17,7 +18,7 @@ from sqlalchemy import (
     UniqueConstraint,
     text,
 )
-from sqlalchemy.dialects.postgresql import ARRAY, JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB, TSVECTOR
 from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from qbank.db import Base, Timestamps, UUIDPk
@@ -222,6 +223,54 @@ class Question(ModelBase):
             postgresql_using="gin",
             postgresql_ops={"normalized_text": "gin_trgm_ops"},
         ),
+        Index(
+            "ix_questions_search_vector",
+            "search_vector",
+            postgresql_using="gin",
+        ),
+        Index(
+            "ix_questions_tags_gin",
+            "tags",
+            postgresql_using="gin",
+        ),
+        Index(
+            "ix_questions_org_subject_status",
+            "org_id",
+            "subject_id",
+            "status",
+        ),
+        Index(
+            "ix_questions_org_created_id",
+            "org_id",
+            "created_at",
+            "id",
+        ),
+        Index(
+            "ix_questions_org_difficulty_id",
+            "org_id",
+            "difficulty",
+            "id",
+        ),
+        Index(
+            "ix_questions_org_source_order",
+            "org_id",
+            "source_id",
+            "position",
+            "id",
+            postgresql_where=text("duplicate_of_id IS NULL"),
+        ),
+        Index(
+            "ix_questions_facets",
+            "org_id",
+            "subject_id",
+            "chapter_id",
+            "lesson_id",
+            "source_id",
+            "type",
+            "difficulty",
+            "status",
+            postgresql_where=text("duplicate_of_id IS NULL"),
+        ),
     )
     org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id"), index=True)
     subject_id: Mapped[UUID] = mapped_column(ForeignKey("subjects.id"), index=True)
@@ -229,8 +278,8 @@ class Question(ModelBase):
     source_id: Mapped[UUID | None] = mapped_column(
         ForeignKey("sources.id", ondelete="CASCADE"), index=True
     )
-    chapter_id: Mapped[UUID | None] = mapped_column(ForeignKey("chapters.id"))
-    lesson_id: Mapped[UUID | None] = mapped_column(ForeignKey("lessons.id"))
+    chapter_id: Mapped[UUID | None] = mapped_column(ForeignKey("chapters.id"), index=True)
+    lesson_id: Mapped[UUID | None] = mapped_column(ForeignKey("lessons.id"), index=True)
     stimulus_id: Mapped[UUID | None] = mapped_column(ForeignKey("stimuli.id"))
     stimulus_position: Mapped[int | None] = mapped_column(Integer)
     position: Mapped[int] = mapped_column(Integer)
@@ -251,6 +300,10 @@ class Question(ModelBase):
     status: Mapped[str] = mapped_column(String, server_default=text("'draft'"))
     confidence: Mapped[float] = mapped_column()
     normalized_text: Mapped[str] = mapped_column(Text, default="", server_default=text("''"))
+    search_vector: Mapped[str] = mapped_column(
+        TSVECTOR,
+        Computed("to_tsvector('simple', coalesce(normalized_text, ''))", persisted=True),
+    )
     content_hash: Mapped[str | None] = mapped_column(String)
     duplicate_of_id: Mapped[UUID | None] = mapped_column(ForeignKey("questions.id"))
     version: Mapped[int] = mapped_column(Integer, server_default=text("1"))

@@ -273,6 +273,354 @@
         "title": "AssetOut",
         "type": "object"
       },
+      "BankFacets": {
+        "properties": {
+          "chapters": {
+            "items": {
+              "$ref": "#/components/schemas/ChapterFacet"
+            },
+            "title": "Chapters",
+            "type": "array"
+          },
+          "difficulties": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Difficulties",
+            "type": "object"
+          },
+          "lessons": {
+            "items": {
+              "$ref": "#/components/schemas/LessonFacet"
+            },
+            "title": "Lessons",
+            "type": "array"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceFacet"
+            },
+            "title": "Sources",
+            "type": "array"
+          },
+          "statuses": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Statuses",
+            "type": "object"
+          },
+          "tags": {
+            "items": {
+              "$ref": "#/components/schemas/TagCount"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          },
+          "types": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Types",
+            "type": "object"
+          }
+        },
+        "required": [
+          "total",
+          "chapters",
+          "lessons",
+          "types",
+          "difficulties",
+          "statuses",
+          "sources",
+          "tags"
+        ],
+        "title": "BankFacets",
+        "type": "object"
+      },
+      "BankQuestionOut": {
+        "properties": {
+          "chapter_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Id"
+          },
+          "chapter_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Chapter Title"
+          },
+          "choices_count": {
+            "title": "Choices Count",
+            "type": "integer"
+          },
+          "difficulty": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty"
+          },
+          "has_figure": {
+            "title": "Has Figure",
+            "type": "boolean"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "issues_count": {
+            "$ref": "#/components/schemas/IssuesCount"
+          },
+          "lesson_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lesson Id"
+          },
+          "lesson_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lesson Title"
+          },
+          "number_label": {
+            "title": "Number Label",
+            "type": "string"
+          },
+          "source_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Id"
+          },
+          "source_page": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Page"
+          },
+          "source_title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Title"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "stem_preview": {
+            "title": "Stem Preview",
+            "type": "string"
+          },
+          "stimulus_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stimulus Id"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "subject_id",
+          "number_label",
+          "type",
+          "stem_preview",
+          "choices_count",
+          "difficulty",
+          "tags",
+          "status",
+          "chapter_id",
+          "chapter_title",
+          "lesson_id",
+          "lesson_title",
+          "source_id",
+          "source_title",
+          "source_page",
+          "stimulus_id",
+          "has_figure",
+          "issues_count"
+        ],
+        "title": "BankQuestionOut",
+        "type": "object"
+      },
+      "BankSearchOut": {
+        "properties": {
+          "facets": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/BankFacets"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/BankQuestionOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "match_mode": {
+            "enum": [
+              "fts",
+              "fuzzy"
+            ],
+            "title": "Match Mode",
+            "type": "string"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor",
+          "total",
+          "match_mode"
+        ],
+        "title": "BankSearchOut",
+        "type": "object"
+      },
+      "BankStatsOut": {
+        "properties": {
+          "approved_by_chapter": {
+            "items": {
+              "$ref": "#/components/schemas/ChapterFacet"
+            },
+            "title": "Approved By Chapter",
+            "type": "array"
+          },
+          "approved_by_lesson": {
+            "items": {
+              "$ref": "#/components/schemas/LessonFacet"
+            },
+            "title": "Approved By Lesson",
+            "type": "array"
+          },
+          "by_difficulty": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "By Difficulty",
+            "type": "object"
+          },
+          "by_status": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "By Status",
+            "type": "object"
+          },
+          "by_type": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "By Type",
+            "type": "object"
+          },
+          "total": {
+            "title": "Total",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "total",
+          "by_status",
+          "by_type",
+          "by_difficulty",
+          "approved_by_chapter",
+          "approved_by_lesson"
+        ],
+        "title": "BankStatsOut",
+        "type": "object"
+      },
       "Blueprint": {
         "properties": {
           "exclude_question_ids": {
@@ -707,6 +1055,44 @@
           "fields"
         ],
         "title": "ChangedItem",
+        "type": "object"
+      },
+      "ChapterFacet": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "count"
+        ],
+        "title": "ChapterFacet",
+        "type": "object"
+      },
+      "ChapterMerge": {
+        "properties": {
+          "into_chapter_id": {
+            "format": "uuid",
+            "title": "Into Chapter Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "into_chapter_id"
+        ],
+        "title": "ChapterMerge",
         "type": "object"
       },
       "ChapterOut": {
@@ -1824,6 +2210,22 @@
         "title": "IssueSummary",
         "type": "object"
       },
+      "IssuesCount": {
+        "properties": {
+          "error": {
+            "default": 0,
+            "title": "Error",
+            "type": "integer"
+          },
+          "warning": {
+            "default": 0,
+            "title": "Warning",
+            "type": "integer"
+          }
+        },
+        "title": "IssuesCount",
+        "type": "object"
+      },
       "ItemIn": {
         "properties": {
           "title": {
@@ -1995,6 +2397,50 @@
         ],
         "title": "Language",
         "type": "string"
+      },
+      "LessonFacet": {
+        "properties": {
+          "chapter_id": {
+            "format": "uuid",
+            "title": "Chapter Id",
+            "type": "string"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "chapter_id",
+          "title",
+          "count"
+        ],
+        "title": "LessonFacet",
+        "type": "object"
+      },
+      "LessonMerge": {
+        "properties": {
+          "into_lesson_id": {
+            "format": "uuid",
+            "title": "Into Lesson Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "into_lesson_id"
+        ],
+        "title": "LessonMerge",
+        "type": "object"
       },
       "LessonOut": {
         "properties": {
@@ -3385,6 +3831,43 @@
         "title": "QuestionPatch",
         "type": "object"
       },
+      "QuestionsMove": {
+        "properties": {
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Ids",
+            "type": "array"
+          },
+          "lesson_id": {
+            "format": "uuid",
+            "title": "Lesson Id",
+            "type": "string"
+          }
+        },
+        "required": [
+          "ids",
+          "lesson_id"
+        ],
+        "title": "QuestionsMove",
+        "type": "object"
+      },
+      "QuestionsMoveOut": {
+        "properties": {
+          "moved": {
+            "title": "Moved",
+            "type": "integer"
+          }
+        },
+        "required": [
+          "moved"
+        ],
+        "title": "QuestionsMoveOut",
+        "type": "object"
+      },
       "QueueItem": {
         "properties": {
           "confidence": {
@@ -3919,6 +4402,30 @@
           "page_counts"
         ],
         "title": "SourceDetail",
+        "type": "object"
+      },
+      "SourceFacet": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "count"
+        ],
+        "title": "SourceFacet",
         "type": "object"
       },
       "SourceOut": {
@@ -4506,6 +5013,24 @@
           }
         },
         "title": "SubjectUpdate",
+        "type": "object"
+      },
+      "TagCount": {
+        "properties": {
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "tag": {
+            "title": "Tag",
+            "type": "string"
+          }
+        },
+        "required": [
+          "tag",
+          "count"
+        ],
+        "title": "TagCount",
         "type": "object"
       },
       "TemplateIn": {
@@ -5263,6 +5788,475 @@
         "summary": "Me"
       }
     },
+    "/api/v1/bank/questions": {
+      "get": {
+        "operationId": "search_questions_api_v1_bank_questions_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "subject_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "chapter_ids",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Chapter Ids"
+            }
+          },
+          {
+            "in": "query",
+            "name": "lesson_ids",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Lesson Ids"
+            }
+          },
+          {
+            "in": "query",
+            "name": "types",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Types"
+            }
+          },
+          {
+            "in": "query",
+            "name": "difficulty_min",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 5,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Difficulty Min"
+            }
+          },
+          {
+            "in": "query",
+            "name": "difficulty_max",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "maximum": 5,
+                  "minimum": 1,
+                  "type": "integer"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Difficulty Max"
+            }
+          },
+          {
+            "in": "query",
+            "name": "statuses",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Statuses"
+            }
+          },
+          {
+            "in": "query",
+            "name": "source_ids",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "format": "uuid",
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Source Ids"
+            }
+          },
+          {
+            "in": "query",
+            "name": "tags",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "items": {
+                    "type": "string"
+                  },
+                  "type": "array"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Tags"
+            }
+          },
+          {
+            "in": "query",
+            "name": "has_figure",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Has Figure"
+            }
+          },
+          {
+            "in": "query",
+            "name": "has_answer",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "boolean"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Has Answer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "exam_title",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Exam Title"
+            }
+          },
+          {
+            "in": "query",
+            "name": "exclude_duplicates",
+            "required": false,
+            "schema": {
+              "default": true,
+              "title": "Exclude Duplicates",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "facets",
+            "required": false,
+            "schema": {
+              "default": false,
+              "title": "Facets",
+              "type": "boolean"
+            }
+          },
+          {
+            "in": "query",
+            "name": "sort",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "enum": [
+                    "relevance",
+                    "newest",
+                    "difficulty",
+                    "source_order"
+                  ],
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Sort"
+            }
+          },
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankSearchOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Search Questions",
+        "tags": [
+          "bank"
+        ]
+      }
+    },
+    "/api/v1/bank/stats": {
+      "get": {
+        "operationId": "bank_stats_api_v1_bank_stats_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "subject_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject Id"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BankStatsOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Bank Stats",
+        "tags": [
+          "bank"
+        ]
+      }
+    },
+    "/api/v1/bank/tags": {
+      "get": {
+        "operationId": "autocomplete_tags_api_v1_bank_tags_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "subject_id",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Subject Id"
+            }
+          },
+          {
+            "in": "query",
+            "name": "q",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Q"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/TagCount"
+                  },
+                  "title": "Response Autocomplete Tags Api V1 Bank Tags Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Autocomplete Tags",
+        "tags": [
+          "bank"
+        ]
+      }
+    },
     "/api/v1/chapters/{id}": {
       "delete": {
         "operationId": "delete_chapter_api_v1_chapters__id__delete",
@@ -5435,6 +6429,56 @@
           }
         },
         "summary": "Reorder Lessons"
+      }
+    },
+    "/api/v1/chapters/{id}/merge": {
+      "post": {
+        "operationId": "merge_chapter_api_v1_chapters__id__merge_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChapterMerge"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ChapterOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Merge Chapter"
       }
     },
     "/api/v1/exam-items/{id}": {
@@ -7220,6 +8264,56 @@
         "summary": "Edit Lesson"
       }
     },
+    "/api/v1/lessons/{id}/merge": {
+      "post": {
+        "operationId": "merge_lesson_api_v1_lessons__id__merge_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LessonMerge"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LessonOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Merge Lesson"
+      }
+    },
     "/api/v1/llm/models": {
       "get": {
         "description": "Models the server will accept (allowlist \u2229 price ceiling), for pickers such as re-extract.",
@@ -7509,6 +8603,47 @@
         "summary": "Merge",
         "tags": [
           "review"
+        ]
+      }
+    },
+    "/api/v1/questions/move": {
+      "post": {
+        "operationId": "move_questions_api_v1_questions_move_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/QuestionsMove"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionsMoveOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Move Questions",
+        "tags": [
+          "bank"
         ]
       }
     },

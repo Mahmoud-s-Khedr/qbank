@@ -6,9 +6,11 @@ from qbank.api.deps import DB, Current, Writer
 from qbank.models import Chapter, Lesson, Subject
 from qbank.schemas.common import Page
 from qbank.schemas.taxonomy import (
+    ChapterMerge,
     ChapterOut,
     ItemIn,
     ItemUpdate,
+    LessonMerge,
     LessonOut,
     LessonUpdate,
     Reorder,
@@ -92,3 +94,13 @@ def reorder_chapters(id: UUID, data: Reorder, db: DB, user: Writer) -> None:
 @router.post("/chapters/{id}/lessons/reorder", status_code=204)
 def reorder_lessons(id: UUID, data: Reorder, db: DB, user: Writer) -> None:
     service.reorder_lessons(id=id, data=data, db=db, org_id=user.org_id)
+
+
+@router.post("/chapters/{id}/merge", response_model=ChapterOut)
+def merge_chapter(id: UUID, data: ChapterMerge, db: DB, user: Writer) -> Chapter:
+    return service.merge_chapter(id=id, data=data, db=db, org_id=user.org_id)
+
+
+@router.post("/lessons/{id}/merge", response_model=LessonOut)
+def merge_lesson(id: UUID, data: LessonMerge, db: DB, user: Writer) -> Lesson:
+    return service.merge_lesson(id=id, data=data, db=db, org_id=user.org_id)
