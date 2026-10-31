@@ -105,13 +105,14 @@ def _choose(
     return []
 
 
-def sample(
+def sample(  # noqa: PLR0913 -- sampler options are independently useful
     pool: Sequence[Candidate],
     rows: Sequence[Row],
     *,
     seed: int,
     excluded: Collection[UUID] = (),
     fixed: Collection[UUID] = (),
+    oversample: int = 1,
 ) -> list[RowResult]:
     """Fill `rows` in order from `pool` (approved questions of one subject).
 
@@ -160,7 +161,7 @@ def sample(
         result.available = sum(len(u) for u in free)
         singles = [u for u in free if len(u) == 1]
         groups = [u for u in free if len(u) > 1]
-        for unit in _choose(singles, groups, row.count):
+        for unit in _choose(singles, groups, row.count * oversample):
             result.selected.extend(q.id for q in unit)
             for q in unit:
                 blocked.add(q.id)

@@ -315,6 +315,18 @@ class Exam(ModelBase):
     revision: Mapped[int] = mapped_column(Integer, server_default=text("1"))
 
 
+class ExamProposal(ModelBase):
+    __tablename__ = "exam_proposals"
+    exam_id: Mapped[UUID] = mapped_column(ForeignKey("exams.id", ondelete="CASCADE"), index=True)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), index=True)
+    prompt: Mapped[str] = mapped_column(Text)
+    plan: Mapped[dict[str, object]] = mapped_column(JSONB)
+    selection: Mapped[dict[str, object]] = mapped_column(JSONB)
+    rationale: Mapped[str] = mapped_column(Text)
+    cost_usd: Mapped[Decimal] = mapped_column(Numeric(12, 6))
+    status: Mapped[str] = mapped_column(String, server_default=text("'pending'"))
+
+
 class ExamSection(ModelBase):
     __tablename__ = "exam_sections"
     exam_id: Mapped[UUID] = mapped_column(ForeignKey("exams.id", ondelete="CASCADE"), index=True)

@@ -32,7 +32,7 @@
             "type": "array"
           },
           "proposal": {
-            "$ref": "#/components/schemas/ProposalOut"
+            "$ref": "#/components/schemas/qbank__schemas__review__ProposalOut"
           },
           "skipped": {
             "items": {
@@ -874,6 +874,98 @@
           "choice_index"
         ],
         "title": "ChoiceSplit",
+        "type": "object"
+      },
+      "ComposeIn": {
+        "properties": {
+          "language": {
+            "default": "ar",
+            "enum": [
+              "ar",
+              "en"
+            ],
+            "title": "Language",
+            "type": "string"
+          },
+          "prompt": {
+            "maxLength": 4000,
+            "minLength": 1,
+            "title": "Prompt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "prompt"
+        ],
+        "title": "ComposeIn",
+        "type": "object"
+      },
+      "ComposePlan": {
+        "properties": {
+          "duration_minutes": {
+            "anyOf": [
+              {
+                "maximum": 1000.0,
+                "minimum": 1.0,
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Minutes"
+          },
+          "notes": {
+            "default": "",
+            "title": "Notes",
+            "type": "string"
+          },
+          "sections": {
+            "items": {
+              "$ref": "#/components/schemas/ComposeSection"
+            },
+            "title": "Sections",
+            "type": "array"
+          },
+          "title": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Title"
+          }
+        },
+        "required": [
+          "sections"
+        ],
+        "title": "ComposePlan",
+        "type": "object"
+      },
+      "ComposeSection": {
+        "properties": {
+          "rows": {
+            "items": {
+              "$ref": "#/components/schemas/BlueprintRow"
+            },
+            "title": "Rows",
+            "type": "array"
+          },
+          "title": {
+            "maxLength": 200,
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "title",
+          "rows"
+        ],
+        "title": "ComposeSection",
         "type": "object"
       },
       "DraftQuestion": {
@@ -2337,13 +2429,22 @@
         "title": "Page[UserOut]",
         "type": "object"
       },
+      "ProposalApply": {
+        "properties": {
+          "edits": {
+            "$ref": "#/components/schemas/ProposalEdits"
+          }
+        },
+        "title": "ProposalApply",
+        "type": "object"
+      },
       "ProposalDetail": {
         "properties": {
           "diff": {
             "$ref": "#/components/schemas/ProposalDiff"
           },
           "proposal": {
-            "$ref": "#/components/schemas/ProposalOut"
+            "$ref": "#/components/schemas/qbank__schemas__review__ProposalOut"
           }
         },
         "required": [
@@ -2393,81 +2494,26 @@
         "title": "ProposalDiff",
         "type": "object"
       },
-      "ProposalOut": {
+      "ProposalEdits": {
         "properties": {
-          "cost_usd": {
-            "title": "Cost Usd",
-            "type": "number"
+          "add_question_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Add Question Ids",
+            "type": "array"
           },
-          "created_at": {
-            "format": "date-time",
-            "title": "Created At",
-            "type": "string"
-          },
-          "created_by": {
-            "anyOf": [
-              {
-                "format": "uuid",
-                "type": "string"
-              },
-              {
-                "type": "null"
-              }
-            ],
-            "title": "Created By"
-          },
-          "extraction": {
-            "additionalProperties": true,
-            "title": "Extraction",
-            "type": "object"
-          },
-          "id": {
-            "format": "uuid",
-            "title": "Id",
-            "type": "string"
-          },
-          "model": {
-            "title": "Model",
-            "type": "string"
-          },
-          "page_id": {
-            "format": "uuid",
-            "title": "Page Id",
-            "type": "string"
-          },
-          "page_number": {
-            "title": "Page Number",
-            "type": "integer"
-          },
-          "source_id": {
-            "format": "uuid",
-            "title": "Source Id",
-            "type": "string"
-          },
-          "status": {
-            "title": "Status",
-            "type": "string"
-          },
-          "updated_at": {
-            "format": "date-time",
-            "title": "Updated At",
-            "type": "string"
+          "remove_question_ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "title": "Remove Question Ids",
+            "type": "array"
           }
         },
-        "required": [
-          "id",
-          "created_at",
-          "updated_at",
-          "page_id",
-          "source_id",
-          "page_number",
-          "model",
-          "cost_usd",
-          "created_by",
-          "status",
-          "extraction"
-        ],
-        "title": "ProposalOut",
+        "title": "ProposalEdits",
         "type": "object"
       },
       "QuestionContent": {
@@ -4758,6 +4804,136 @@
         "title": "ItemUpdate",
         "type": "object"
       },
+      "qbank__schemas__exams__ProposalOut": {
+        "properties": {
+          "blueprint": {
+            "$ref": "#/components/schemas/ComposePlan"
+          },
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "proposal_id": {
+            "format": "uuid",
+            "title": "Proposal Id",
+            "type": "string"
+          },
+          "rationale": {
+            "title": "Rationale",
+            "type": "string"
+          },
+          "selection": {
+            "items": {
+              "items": {
+                "format": "uuid",
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "title": "Selection",
+            "type": "array"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "warnings": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Warnings",
+            "type": "array"
+          }
+        },
+        "required": [
+          "proposal_id",
+          "blueprint",
+          "selection",
+          "rationale",
+          "warnings",
+          "cost_usd",
+          "status"
+        ],
+        "title": "ProposalOut",
+        "type": "object"
+      },
+      "qbank__schemas__review__ProposalOut": {
+        "properties": {
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "number"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "created_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created By"
+          },
+          "extraction": {
+            "additionalProperties": true,
+            "title": "Extraction",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "model": {
+            "title": "Model",
+            "type": "string"
+          },
+          "page_id": {
+            "format": "uuid",
+            "title": "Page Id",
+            "type": "string"
+          },
+          "page_number": {
+            "title": "Page Number",
+            "type": "integer"
+          },
+          "source_id": {
+            "format": "uuid",
+            "title": "Source Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "page_id",
+          "source_id",
+          "page_number",
+          "model",
+          "cost_usd",
+          "created_by",
+          "status",
+          "extraction"
+        ],
+        "title": "ProposalOut",
+        "type": "object"
+      },
       "qbank__schemas__taxonomy__ItemUpdate": {
         "properties": {
           "position": {
@@ -5241,6 +5417,102 @@
           }
         },
         "summary": "Edit Item",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
+    "/api/v1/exam-proposals/{id}/apply": {
+      "post": {
+        "operationId": "apply_proposal_api_v1_exam_proposals__id__apply_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProposalApply"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExamDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Apply Proposal",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
+    "/api/v1/exam-proposals/{id}/discard": {
+      "post": {
+        "operationId": "discard_proposal_api_v1_exam_proposals__id__discard_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/qbank__schemas__exams__ProposalOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Discard Proposal",
         "tags": [
           "exams"
         ]
@@ -5966,6 +6238,59 @@
         ]
       }
     },
+    "/api/v1/exams/{id}/compose": {
+      "post": {
+        "operationId": "compose_exam_api_v1_exams__id__compose_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ComposeIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/qbank__schemas__exams__ProposalOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Compose Exam",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
     "/api/v1/exams/{id}/duplicate": {
       "post": {
         "operationId": "duplicate_exam_api_v1_exams__id__duplicate_post",
@@ -6208,6 +6533,53 @@
           }
         },
         "summary": "Reorder Items",
+        "tags": [
+          "exams"
+        ]
+      }
+    },
+    "/api/v1/exams/{id}/proposals": {
+      "get": {
+        "operationId": "list_proposals_api_v1_exams__id__proposals_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/qbank__schemas__exams__ProposalOut"
+                  },
+                  "title": "Response List Proposals Api V1 Exams  Id  Proposals Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Proposals",
         "tags": [
           "exams"
         ]
@@ -6852,7 +7224,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/ProposalOut"
+                  "$ref": "#/components/schemas/qbank__schemas__review__ProposalOut"
                 }
               }
             },
