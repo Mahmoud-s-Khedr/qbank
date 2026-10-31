@@ -9,9 +9,9 @@
 ![Python 3.12](https://img.shields.io/badge/python-3.12-3776AB?logo=python&logoColor=white)
 ![React 19](https://img.shields.io/badge/react-19-61DAFB?logo=react&logoColor=black)
 ![PostgreSQL 18](https://img.shields.io/badge/postgres-18-4169E1?logo=postgresql&logoColor=white)
-![Status: early development](https://img.shields.io/badge/status-early%20development-orange)
+![Status: beta](https://img.shields.io/badge/status-beta-blue)
 
-[Features](#features) · [How it works](#how-it-works) · [Quick start](#quick-start) · [Development](#development) · [Roadmap](#roadmap) · [Docs](#documentation)
+[Features](#features) · [How it works](#how-it-works) · [Quick start](#quick-start) · [Deployment](#deployment) · [Development](#development) · [Docs](#documentation)
 
 </div>
 
@@ -27,8 +27,8 @@ It is built **Arabic-first** (right-to-left text, tashkeel, Arabic-Indic digits)
 math notation (LaTeX) and chemistry formulas.
 
 > [!NOTE]
-> Qbank is in **early development**. The foundation (backend, frontend, auth, data model) is in place.
-> The extraction pipeline, review UI and exam export are being built now. See the [roadmap](#roadmap).
+> **Beta.** Every feature below is implemented and covered by unit, integration and end-to-end tests, but it hasn't
+> been used in production by a school yet. Bug reports and feedback are welcome.
 
 ## Features
 
@@ -60,9 +60,17 @@ flowchart LR
     I --> J[🖨️ PDF / DOCX<br/>+ answer keys]
 ```
 
-Every model call goes through [OpenRouter](https://openrouter.ai), so each pipeline stage (extraction, verification,
-classification, composition) can use whichever model scores best on our golden test set for cost and accuracy.
-See [`docs/MODELS.md`](docs/MODELS.md).
+Every model call goes through [OpenRouter](https://openrouter.ai), so each pipeline stage can use whichever model
+scores best on our golden test set. The defaults were chosen by benchmark (see [`docs/MODELS.md`](docs/MODELS.md)):
+
+| Stage | Default model | Why |
+|---|---|---|
+| Page extraction | `google/gemini-3.8-flash` | Best accuracy (score 0.944) and by far the best figure boxes. ≈ **$0.007 per page** |
+| Verification | `openai/gpt-6-luna` | A different model family with the best text accuracy. ≈ $0.0008 per page |
+| Structure / difficulty / AI exam assistant | `anthropic/claude-haiku-5.5` | Cheap, text-only |
+
+Spending is capped at three levels: a model allowlist with price ceilings, a global budget checked (and reserved) **before**
+every call, and an optional monthly cap per organization. Every call's cost is recorded and shown on the cost dashboard.
 
 ## Tech stack
 
@@ -91,14 +99,29 @@ make be-migrate                   # apply database migrations
 uv run --directory backend python -m qbank.cli seed-dev   # demo org, users and subjects
 ```
 
-Then start the two dev servers in separate terminals:
+Then start the dev processes in separate terminals:
 
 ```bash
-uv run --directory backend uvicorn qbank.api.main:app --reload   # API at http://localhost:8000 (docs at /docs)
-pnpm -C frontend dev                                             # Web app at http://localhost:5173
+make be-dev              # API at http://localhost:8000 (interactive docs at /docs)
+make be-worker           # background worker: page rendering, AI extraction, exports
+pnpm -C frontend dev     # web app at http://localhost:5173
 ```
 
 Sign in with `admin@demo.local`, `editor@demo.local` or `teacher@demo.local`. The password is `demo1234`.
+
+## Deployment
+
+Production runs with Docker Compose behind Caddy (automatic HTTPS):
+
+```bash
+cp .env.prod.example .env.prod   # set QBANK_DOMAIN, secrets, OpenRouter key, budgets
+make prod-up                     # builds, runs migrations, starts caddy/api/worker/postgres/redis
+make prod-admin ARGS="--org 'My School' --email admin@school.edu --password '…'"
+make prod-backup                 # pg_dump to ./backups/
+```
+
+The full guide (server sizing, DNS, upgrades, backups and restore, scaling workers, cost controls) is in
+[`docs/DEPLOY.md`](docs/DEPLOY.md), and the threat model and security controls are in [`docs/SECURITY.md`](docs/SECURITY.md).
 
 ## Development
 
@@ -106,7 +129,9 @@ Everything CI runs is available locally through `make`:
 
 | Command | What it does |
 |---|---|
-| `make check` | Every quality gate: lint, format, types, tests, build |
+| `make check` | Every quality gate: lint, format, types, tests, build, API-contract drift, workflow lint |
+| `make e2e` | Full-flow browser test (upload → review → bank → exam → PDF/DOCX), with a synthetic workbook and a scripted fake LLM, so it makes no paid calls |
+| `make eval MODELS=… MAX_COST=…` | Benchmark extraction models against the golden set (real API calls; it refuses to run past `MAX_COST`) |
 | `make be-lint` / `be-types` / `be-test` | ruff, mypy (strict), pytest (≥ 80% coverage, needs `make infra-up`) |
 | `make fe-lint` / `fe-types` / `fe-test` / `fe-build` | ESLint + RTL guard, `tsc`, Vitest, production build |
 | `make api-gen` | Regenerate `backend/openapi.json` and the typed frontend client |
@@ -131,19 +156,14 @@ fixtures/     Golden ground-truth annotations (sample PDFs are local-only)
 scripts/      Repository tooling
 ```
 
-## Roadmap
+## Status
 
-- [x] **Phase 0: Foundation.** Backend and frontend scaffolds, data model, cookie auth with CSRF, roles, multi-tenancy, taxonomy API
-- [ ] **Phase 0: CI.** GitHub Actions quality gates, pre-commit, Dependabot, secret scanning *(in progress)*
-- [ ] **Phase 1: Ingestion.** Storage, upload, page rendering *(in progress)*, LLM layer, extraction, structure detection, model benchmark
-- [ ] **Phase 2: Validation.** Rules engine, confidence scoring, verifier pass, Arabic normalization, deduplication
-- [ ] **Phase 3: Review.** Page canvas with boxes, question editor, split/merge, re-crop, re-extract with diff
-- [ ] **Phase 4: Bank.** Search with facets, bulk edit, taxonomy manager
-- [ ] **Phase 5: Exams.** Blueprint sampler, manual builder, AI-assisted composition, versions
-- [ ] **Phase 6: Export.** PDF and DOCX, answer keys, bubble sheets, header templates
-- [ ] **Phase 7: Hardening.** End-to-end tests, security review, production deployment
+All of the planned scope is built: ingestion, extraction, validation, review, bank, exams, export, admin and hardening.
+The task-by-task history is in [`docs/TASKS.md`](docs/TASKS.md). Possible next steps:
 
-The detailed, live task board is in [`docs/TASKS.md`](docs/TASKS.md).
+- Grow the golden set beyond 14 pages and re-benchmark the models per subject.
+- More question layouts (matching and ordering editors), and an OMR scan → grading flow.
+- Real-time collaboration in the review queue.
 
 ## Documentation
 
@@ -152,15 +172,18 @@ The detailed, live task board is in [`docs/TASKS.md`](docs/TASKS.md).
 | [`docs/SPEC.md`](docs/SPEC.md) | Product specification: roles, functional requirements, acceptance criteria |
 | [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) | System design, data model, pipeline, content format, CI |
 | [`docs/MODELS.md`](docs/MODELS.md) | OpenRouter model candidates per pipeline stage, and benchmark results |
-| [`docs/TASKS.md`](docs/TASKS.md) | Task board and dependencies |
+| [`docs/TASKS.md`](docs/TASKS.md) | Task board, owners and usage log |
+| [`docs/DEPLOY.md`](docs/DEPLOY.md) | Production deployment, backups, upgrades |
+| [`docs/SECURITY.md`](docs/SECURITY.md) | Threat model and security controls |
 | [`AGENTS.md`](AGENTS.md) | Rules for contributors (human or AI): commands, definition of done |
 
 ## How this project is built
 
 Qbank is developed by a small team of AI coding agents working from the specs in [`docs/`](docs/).
 [Claude Code](https://claude.com/claude-code) acts as architect and reviewer: it writes each task's spec, reviews every
-change and runs the full checks before merging. [Codex](https://github.com/openai/codex) builds most of the backend,
-and [Antigravity](https://antigravity.google) builds the frontend and the golden dataset. Each task runs in its own git
+change, runs the full checks and checks the UI in a real browser before merging.
+The 26 tasks were split between [Codex](https://github.com/openai/codex), [Antigravity](https://antigravity.google)
+(Gemini) and Claude Sonnet sub-agents, based on each agent's strengths and remaining quota. Each task runs in its own git
 worktree, and nothing reaches `main` without passing `make check`.
 
 ## License
