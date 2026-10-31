@@ -10,6 +10,7 @@ import { NotFoundPage } from "@/app/not-found-page";
 import { DevComponentsPage } from "@/dev/dev-components-page";
 import { LoginPage } from "@/features/auth/login-page";
 import { BankPage } from "@/features/bank/bank-page";
+import { ExamExportsPage } from "@/features/exports/exam-exports-panel";
 import { ExamsPage } from "@/features/exams/exams-page";
 import { ReviewPage } from "@/features/review/review-page";
 import { ReviewWorkspacePage } from "@/features/review/review-workspace-page";
@@ -60,6 +61,10 @@ export const routes: RouteObject[] = [
           {
             path: "exams",
             element: <ExamsPage />,
+          },
+          {
+            path: "exams/:id/exports",
+            element: <ExamExportsPage />,
           },
           {
             path: "settings",

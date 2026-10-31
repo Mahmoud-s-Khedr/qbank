@@ -158,6 +158,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/costs/summary": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Summary */
+    get: operations["summary_api_v1_costs_summary_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/exam-items/{id}": {
     parameters: {
       query?: never;
@@ -263,6 +280,23 @@ export interface paths {
     head?: never;
     /** Edit Template */
     patch: operations["edit_template_api_v1_exam_templates__id__patch"];
+    trace?: never;
+  };
+  "/api/v1/exam-templates/{id}/logo": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Upload Logo */
+    post: operations["upload_logo_api_v1_exam_templates__id__logo_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/v1/exams": {
@@ -1507,6 +1541,11 @@ export interface components {
       /** Title */
       title: string;
     };
+    /** Body_upload_logo_api_v1_exam_templates__id__logo_post */
+    Body_upload_logo_api_v1_exam_templates__id__logo_post: {
+      /** File */
+      file: string;
+    };
     /** BulkIn */
     BulkIn: {
       /**
@@ -1684,6 +1723,32 @@ export interface components {
       rows: components["schemas"]["BlueprintRow"][];
       /** Title */
       title: string;
+    };
+    /** CostGroup */
+    CostGroup: {
+      /** Cost Usd */
+      cost_usd: string;
+      /** Name */
+      name: string;
+    };
+    /** CostSummary */
+    CostSummary: {
+      /** Average Cost Per Page */
+      average_cost_per_page: string;
+      /** By Model */
+      by_model: components["schemas"]["CostGroup"][];
+      /** By Month */
+      by_month: components["schemas"]["CostGroup"][];
+      /** By Stage */
+      by_stage: components["schemas"]["CostGroup"][];
+      /** Cap Usd */
+      cap_usd: number | null;
+      /** This Month Usd */
+      this_month_usd: string;
+      /** Top Sources */
+      top_sources: components["schemas"]["SourceCost"][];
+      /** Total Usd */
+      total_usd: string;
     };
     /**
      * DraftQuestion
@@ -2817,6 +2882,22 @@ export interface components {
       /** Reason */
       reason: string;
     };
+    /** SourceCost */
+    SourceCost: {
+      /** Cost Per Page */
+      cost_per_page: string;
+      /** Cost Usd */
+      cost_usd: string;
+      /** Pages */
+      pages: number;
+      /**
+       * Source Id
+       * Format: uuid
+       */
+      source_id: string;
+      /** Title */
+      title: string;
+    };
     /** SourceDetail */
     SourceDetail: {
       /** Cost Usd */
@@ -3622,6 +3703,37 @@ export interface operations {
       };
     };
   };
+  summary_api_v1_costs_summary_get: {
+    parameters: {
+      query?: {
+        months?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["CostSummary"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   delete_item_api_v1_exam_items__id__delete: {
     parameters: {
       query?: {
@@ -3959,6 +4071,41 @@ export interface operations {
     requestBody: {
       content: {
         "application/json": components["schemas"]["TemplateUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TemplateOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  upload_logo_api_v1_exam_templates__id__logo_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_upload_logo_api_v1_exam_templates__id__logo_post"];
       };
     };
     responses: {

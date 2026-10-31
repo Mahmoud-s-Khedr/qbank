@@ -1,5 +1,6 @@
 from collections.abc import Callable, Iterator
 from datetime import UTC, datetime, timedelta
+from decimal import Decimal
 from http import HTTPStatus
 from pathlib import Path
 from typing import Any, cast
@@ -17,7 +18,17 @@ from qbank.auth import hasher
 from qbank.cli import seed_dev
 from qbank.config import Settings, get_settings
 from qbank.db import get_db, reset_engine
-from qbank.models import Organization, PageStatus, Role, SourceStatus, User
+from qbank.models import (
+    Language,
+    LLMCall,
+    Organization,
+    PageStatus,
+    Role,
+    Source,
+    SourceStatus,
+    Subject,
+    User,
+)
 from qbank.pipeline import orchestrator
 from qbank.services import auth
 from qbank.services.taxonomy import tree
@@ -770,3 +781,74 @@ def test_org_settings_permissions_and_validation(
     )
     login(client, "b@example.com")
     assert client.get("/api/v1/org/settings").json()["name"] == "B"
+
+
+@pytest.mark.integration
+def test_cost_summary_scoped(setup_core: dict[str, str], client: TestClient, database: str) -> None:
+    engine = create_engine(database)
+    with Session(engine) as db:
+        org_id = UUID(setup_core["org"])
+        subject = Subject(org_id=org_id, name="Math", language=Language.en)
+        db.add(subject)
+        db.flush()
+        source = Source(
+            org_id=org_id,
+            subject_id=subject.id,
+            title="Book",
+            file_key="file",
+            status=SourceStatus.ready,
+            page_count=5,
+        )
+        db.add(source)
+        db.flush()
+        db.add(
+            LLMCall(
+                source_id=source.id,
+                org_id=org_id,
+                stage="extract",
+                model="model",
+                request_hash="x",
+                input_tokens=1,
+                output_tokens=1,
+                reasoning_tokens=0,
+                cost_usd=Decimal("0.25"),
+                latency_ms=1,
+                status="ok",
+            )
+        )
+        db.add(
+            LLMCall(
+                org_id=org_id,
+                source_id=source.id,
+                stage="verify",
+                model="other",
+                request_hash="old",
+                input_tokens=1,
+                output_tokens=1,
+                reasoning_tokens=0,
+                cost_usd=Decimal("0.10"),
+                latency_ms=1,
+                status="ok",
+                created_at=datetime.now(UTC).replace(day=1) - timedelta(days=1),
+            )
+        )
+        db.commit()
+    engine.dispose()
+    login(client, "teacher@example.com")
+    assert client.get("/api/v1/costs/summary").status_code == HTTPStatus.FORBIDDEN
+    login(client, "a@example.com")
+    data = client.get("/api/v1/costs/summary?months=2").json()
+    assert Decimal(data["total_usd"]) == Decimal("0.35")
+    assert Decimal(data["this_month_usd"]) == Decimal("0.25")
+    assert Decimal(data["by_stage"][0]["cost_usd"]) == Decimal("0.25")
+    assert {row["name"]: Decimal(row["cost_usd"]) for row in data["by_model"]} == {
+        "model": Decimal("0.25"),
+        "other": Decimal("0.10"),
+    }
+    assert Decimal(data["by_month"][-1]["cost_usd"]) == Decimal("0.25")
+    assert Decimal(data["by_month"][0]["cost_usd"]) == Decimal("0.10")
+    assert data["top_sources"][0]["title"] == "Book"
+    assert Decimal(data["top_sources"][0]["cost_per_page"]) == Decimal("0.07")
+    assert Decimal(data["average_cost_per_page"]) == Decimal("0.07")
+    login(client, "b@example.com")
+    assert Decimal(client.get("/api/v1/costs/summary").json()["total_usd"]) == 0

@@ -615,3 +615,37 @@ def test_english_docx_is_left_to_right(
     for row in client.get(f"{URL}/exams/{exam_id}/exports").json():
         archive, _ = docx_parts(client.get(f"{URL}/exports/{row['id']}/download"))
         assert "<w:bidi" not in archive.read("word/document.xml").decode()
+
+
+def test_template_logo_upload(ids: dict[str, Any], client: TestClient) -> None:
+    login(client, "admin@a.com")
+    template = client.post(f"{URL}/exam-templates", json={"name": "Logo"}).json()
+    image = BytesIO()
+    Image.new("RGB", (1200, 300)).save(image, "JPEG")
+    path = f"{URL}/exam-templates/{template['id']}/logo"
+    response = client.post(path, files={"file": ("logo.jpg", image.getvalue(), "image/jpeg")})
+    assert response.status_code == HTTPStatus.OK
+    asset_id = response.json()["logo_asset_id"]
+    result = client.get(f"{URL}/assets/{asset_id}/image")
+    with Image.open(BytesIO(result.content)) as decoded:
+        assert decoded.format == "PNG"
+        assert decoded.size == (600, 150)
+    assert (
+        client.post(path, files={"file": ("x.png", b"invalid", "image/png")}).status_code
+        == HTTPStatus.UNPROCESSABLE_ENTITY
+    )
+    assert (
+        client.post(
+            path, files={"file": ("large.png", b"x" * (2 * 1024 * 1024 + 1), "image/png")}
+        ).status_code
+        == HTTPStatus.UNPROCESSABLE_ENTITY
+    )
+    assert (
+        client.post(path, files={"file": ("logo.gif", image.getvalue(), "image/gif")}).status_code
+        == HTTPStatus.UNPROCESSABLE_ENTITY
+    )
+    login(client, "t1@a.com")
+    assert (
+        client.post(path, files={"file": ("logo.jpg", image.getvalue(), "image/jpeg")}).status_code
+        == HTTPStatus.FORBIDDEN
+    )

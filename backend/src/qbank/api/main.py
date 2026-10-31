@@ -15,6 +15,7 @@ from starlette.responses import Response
 from qbank.api.middleware import csrf_middleware
 from qbank.api.routers import (
     auth,
+    costs,
     exams,
     exports,
     health,
@@ -68,6 +69,7 @@ def create_app() -> FastAPI:
 
     for router in (
         auth.router,
+        costs.router,
         exams.router,
         exports.router,
         health.router,
