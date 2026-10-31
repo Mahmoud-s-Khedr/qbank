@@ -204,6 +204,8 @@ def create(db: Session, user: User, data: QuestionCreate) -> Question:
         explanation=data.explanation,
         difficulty=data.difficulty,
         difficulty_source="human" if data.difficulty is not None else None,
+        taxonomy_source="human" if data.chapter_id or data.lesson_id else None,
+        answer_source="human",
         language=subject.language,
         tags=_tags(data.tags),
         regions=[{"page": str(r.page), "box": r.box} for r in data.regions],
@@ -252,7 +254,10 @@ def patch(db: Session, user: User, question_id: UUID, data: QuestionPatch) -> Qu
     ):
         if name in fields:
             setattr(question, name, getattr(data, name))
+    if fields & {"answer", "choices"}:
+        question.answer_source = "human"
     if fields & {"chapter_id", "lesson_id"}:
+        question.taxonomy_source = "human"
         _check_taxonomy(db, question, chapter_given="chapter_id" in fields)
     if "stimulus_id" in fields:
         _check_stimulus(db, question)
@@ -343,6 +348,7 @@ def set_metadata_one(db: Session, user: User, question: Question, data: BulkIn) 
     before = snapshot(question)
     fields = metadata.model_fields_set
     if fields & {"chapter_id", "lesson_id"}:
+        question.taxonomy_source = "human"
         if "chapter_id" in fields:
             question.chapter_id = metadata.chapter_id
         if "lesson_id" in fields:

@@ -1,0 +1,1 @@
+Build a reading-order chapter and lesson plan from these headings. Map meaning-matching titles to existing IDs. Never invent a node without a heading. Lessons follow their chapter. Return items with kind, title, start_page and existing_id.

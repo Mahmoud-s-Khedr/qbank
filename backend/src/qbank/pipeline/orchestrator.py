@@ -37,6 +37,18 @@ def start_materialize(source_id: str) -> object:
     return materialize_source.send(source_id)
 
 
+def start_structure(source_id: str) -> object:
+    from qbank.worker import structure_source  # noqa: PLC0415
+
+    return structure_source.send(source_id)
+
+
+def start_answer_keys(source_id: str) -> object:
+    from qbank.worker import answer_keys_source  # noqa: PLC0415
+
+    return answer_keys_source.send(source_id)
+
+
 def start_validate(source_id: str) -> object:
     from qbank.worker import validate_source  # noqa: PLC0415 -- avoids a worker import cycle.
 
@@ -59,6 +71,8 @@ STAGES: list[Stage] = [
     Stage("render", start_render, SourceStatus.rendering, PageStatus.pending),
     Stage("extract", start_extract, SourceStatus.extracting, PageStatus.rendered),
     Stage("materialize", start_materialize, SourceStatus.extracting, PageStatus.extracted),
+    Stage("structure", start_structure, SourceStatus.validating, PageStatus.extracted),
+    Stage("answer_keys", start_answer_keys, SourceStatus.validating, PageStatus.extracted),
     Stage("validate", start_validate, SourceStatus.validating, PageStatus.extracted),
     Stage("verify", start_verify, SourceStatus.validating, PageStatus.extracted),
     Stage("classify", start_classify, SourceStatus.validating, PageStatus.extracted),
