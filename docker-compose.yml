@@ -1,0 +1,47 @@
+name: qbank
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: qbank
+      POSTGRES_PASSWORD: qbank
+      POSTGRES_DB: qbank
+    ports: ["127.0.0.1:25432:5432"]
+    volumes: ["postgres_data:/var/lib/postgresql"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U qbank -d qbank"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  redis:
+    image: redis:8-alpine
+    ports: ["127.0.0.1:26379:6379"]
+    volumes: ["redis_data:/data"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  minio:
+    image: cgr.dev/chainguard/minio:latest  # upstream minio/minio images are no longer published
+    command: server /data --console-address :9001
+    environment:
+      MINIO_ROOT_USER: qbanklocal
+      MINIO_ROOT_PASSWORD: qbanklocalpassword
+    ports: ["127.0.0.1:29000:9000", "127.0.0.1:29001:9001"]
+    volumes: ["minio_data:/data"]
+    healthcheck:
+      test: ["CMD-SHELL", "mc ready local"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+  minio-init:
+    image: cgr.dev/chainguard/minio:latest
+    depends_on:
+      minio:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c", "mc alias set local http://minio:9000 qbanklocal qbanklocalpassword && mc mb --ignore-existing local/qbank"]
+volumes:
+  postgres_data:
+  redis_data:
+  minio_data:
