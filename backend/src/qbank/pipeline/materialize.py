@@ -17,6 +17,7 @@ from qbank.pipeline.schema import PageExtraction, to_region_box
 from qbank.pipeline.schema import Question as ExtractedQuestion
 from qbank.pipeline.schema import Stimulus as ExtractedStimulus
 from qbank.storage import get_store, keys
+from qbank.text.normalize import content_hash, question_normalized_text
 
 WHITE_THRESHOLD = 245
 PINNED = ("جميع ما سبق", "كل ما سبق", "لا شيء مما سبق", "all of the above", "none of the above")
@@ -166,15 +167,9 @@ def crop(db: Session, source: Source, page: SourcePage, box: tuple[int, int, int
     return f"![](asset:{asset_id})"
 
 
-def materialize(db: Session, source: Source) -> list[str]:  # noqa: PLR0912 -- preserves reviewed references while rebuilding drafts.
-    pages = list(
-        db.scalars(
-            select(SourcePage)
-            .where(SourcePage.source_id == source.id)
-            .order_by(SourcePage.page_number)
-        )
-    )
-    stimuli, questions = stitch(pages)
+def _purge_drafts(
+    db: Session, source: Source, pages: list[SourcePage]
+) -> tuple[list[str], dict[UUID, str | None]]:
     reviewed = list(
         db.scalars(
             select(Question).where(
@@ -203,7 +198,7 @@ def materialize(db: Session, source: Source) -> list[str]:  # noqa: PLR0912 -- p
             )
         )
     )
-    old_keys = []
+    old_keys: list[str] = []
     for asset in assets:
         if str(asset.id) not in protected_assets:
             old_keys.append(asset.image_key)
@@ -220,6 +215,23 @@ def materialize(db: Session, source: Source) -> list[str]:  # noqa: PLR0912 -- p
         stmt = stmt.where(Stimulus.id.not_in(protected))
     db.execute(stmt)
     db.flush()
+    intros: dict[UUID, str | None] = {
+        s.id: str(s.metadata_json.get("intro")) if s.metadata_json.get("intro") else None
+        for s in reviewed_stimuli
+    }
+    return old_keys, intros
+
+
+def materialize(db: Session, source: Source) -> list[str]:
+    pages = list(
+        db.scalars(
+            select(SourcePage)
+            .where(SourcePage.source_id == source.id)
+            .order_by(SourcePage.page_number)
+        )
+    )
+    stimuli, questions = stitch(pages)
+    old_keys, intros = _purge_drafts(db, source, pages)
     subject = db.get(Subject, source.subject_id)
     if subject is None:
         raise ValueError("Missing subject")
@@ -234,6 +246,7 @@ def materialize(db: Session, source: Source) -> list[str]:  # noqa: PLR0912 -- p
         sid = new_uuid()
         for ref in item.refs:
             refs[ref] = sid
+        intros[sid] = item.value.intro
         db.add(
             Stimulus(
                 id=sid,
@@ -294,7 +307,13 @@ def materialize(db: Session, source: Source) -> list[str]:  # noqa: PLR0912 -- p
                 regions=item.regions,
                 status="draft",
                 confidence=q.confidence,
-                metadata_json={"notes": item.notes},
+                normalized_text=(
+                    norm := question_normalized_text(
+                        stem, choices, intros.get(stimulus_id) if stimulus_id else None
+                    )
+                ),
+                content_hash=content_hash(norm),
+                metadata_json={"notes": item.notes, "model_confidence": q.confidence},
             )
         )
     return old_keys

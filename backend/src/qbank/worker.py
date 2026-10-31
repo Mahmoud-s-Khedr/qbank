@@ -12,7 +12,8 @@ from sqlalchemy.orm import Session
 
 from qbank.config import get_settings
 from qbank.db import get_engine
-from qbank.models import Job, PageStatus, Source, SourcePage, SourceStatus
+from qbank.models import Job, LLMCall, PageStatus, Source, SourcePage, SourceStatus
+from qbank.pipeline import orchestrator
 from qbank.pipeline.orchestrator import page_done
 from qbank.pipeline.pdf_cache import get_pdf_cache
 from qbank.storage import get_store, keys
@@ -336,6 +337,9 @@ def extract_pages(source_id: str, numbers: list[int]) -> None:
                         .where(Source.id == sid)
                         .values(cost_usd=Source.cost_usd + float(cost))
                     )
+                    _record_non_live_call(
+                        db, client, "extract", PROMPT_VERSION, result, org_id, sid
+                    )
                 db.commit()
         page_done(sid, "extract")
 
@@ -403,14 +407,391 @@ def materialize_source(source_id: str) -> None:
         ):
             return
         old_keys = materialize(db, source)
-        source.stage = None
-        source.status = SourceStatus.ready
-        db.execute(
-            update(Job).where(Job.ref_id == sid, Job.kind == "ingest").values(status="ready")
-        )
         db.commit()
     for key in old_keys:
         get_store().delete(key)
+    orchestrator.advance(sid, "materialize")
+
+
+def _fail_validating_stage(source_id: UUID, stage: str, error: str) -> None:
+    with Session(get_engine()) as db:
+        failed = db.scalar(
+            update(Source)
+            .where(
+                Source.id == source_id,
+                Source.stage == stage,
+                Source.status == SourceStatus.validating,
+            )
+            .values(status=SourceStatus.failed, error=error)
+            .returning(Source.id)
+        )
+        if failed:
+            db.execute(
+                update(Job)
+                .where(Job.ref_id == source_id, Job.kind == "ingest")
+                .values(status="failed", error=error)
+            )
+        db.commit()
+
+
+def _record_non_live_call(  # noqa: PLR0913, PLR0917 -- ledger attributes
+    db: Session,
+    client: object,
+    stage: str,
+    prompt_version: str,
+    result: object,
+    org_id: UUID | None,
+    source_id: UUID | None,
+) -> None:
+    if type(client).__name__ == "OpenRouterClient":
+        return
+    db.add(
+        LLMCall(
+            org_id=org_id,
+            source_id=source_id,
+            stage=stage,
+            model=str(getattr(result, "model", "")),
+            prompt_version=prompt_version,
+            input_tokens=int(getattr(result, "input_tokens", 0)),
+            output_tokens=int(getattr(result, "output_tokens", 0)),
+            reasoning_tokens=int(getattr(result, "reasoning_tokens", 0)),
+            cost_usd=getattr(result, "cost_usd", 0),
+            latency_ms=int(getattr(result, "latency_ms", 0)),
+            status="success",
+            request_hash=str(getattr(result, "request_hash", "")),
+        )
+    )
+
+
+def _pause_source_on_budget(
+    db: Session,
+    sid: UUID,
+    stage: str,
+    error_name: str,
+    extra_cost: float = 0.0,
+) -> None:
+    db.execute(
+        update(Source)
+        .where(Source.id == sid, Source.stage == stage)
+        .values(
+            status=SourceStatus.paused,
+            error=error_name,
+            cost_usd=Source.cost_usd + extra_cost,
+        )
+    )
+    db.execute(
+        update(Job)
+        .where(Job.ref_id == sid, Job.kind == "ingest")
+        .values(status="paused", error=error_name)
+    )
+    db.commit()
+
+
+@dramatiq.actor(max_retries=3)
+def validate_failed(message: dict[str, object], details: dict[str, object]) -> None:
+    args = message["args"]
+    if not isinstance(args, (list, tuple)):
+        raise ValueError("Invalid message arguments")
+    _fail_validating_stage(UUID(str(args[0])), "validate", "validate_error: retries exhausted")
+
+
+@dramatiq.actor(max_retries=3, on_retry_exhausted="validate_failed")
+def validate_source(source_id: str) -> None:
+    from qbank.pipeline.validate import validate_source as run_validate  # noqa: PLC0415
+
+    sid = UUID(source_id)
+    with Session(get_engine()) as db:
+        source = db.scalar(select(Source).where(Source.id == sid).with_for_update())
+        if source is None or source.stage != "validate" or source.status != SourceStatus.validating:
+            return
+        run_validate(db, source, run_dedup=True)
+        db.commit()
+    orchestrator.advance(sid, "validate")
+
+
+@dramatiq.actor(max_retries=3)
+def verify_failed(message: dict[str, object], details: dict[str, object]) -> None:
+    args = message["args"]
+    if not isinstance(args, (list, tuple)):
+        raise ValueError("Invalid message arguments")
+    _fail_validating_stage(UUID(str(args[0])), "verify", "verify_error: retries exhausted")
+
+
+@dramatiq.actor(max_retries=3, on_retry_exhausted="verify_failed")
+def verify_source(source_id: str) -> None:  # noqa: PLR0915 -- page loop + budget/invalid handling
+    from qbank.llm import BudgetExceeded, LLMOutputInvalid, OrgBudgetExceeded, get_llm_client  # noqa: PLC0415
+    from qbank.models import Question  # noqa: PLC0415
+    from qbank.pipeline.validate import validate_source as run_validate  # noqa: PLC0415
+    from qbank.pipeline.verify import (  # noqa: PLC0415
+        apply_discrepancies,
+        get_verify_policy,
+        is_page_verified,
+        questions_for_page,
+        select_pages_to_verify,
+        verify_page,
+    )
+
+    sid = UUID(source_id)
+    with Session(get_engine()) as db:
+        source = db.get(Source, sid)
+        if source is None or source.stage != "verify" or source.status != SourceStatus.validating:
+            return
+        policy = get_verify_policy(source)
+        if policy == "off":
+            orchestrator.advance(sid, "verify")
+            return
+        pages = list(
+            db.scalars(
+                select(SourcePage)
+                .where(SourcePage.source_id == sid)
+                .order_by(SourcePage.page_number.asc())
+            )
+        )
+        questions = list(
+            db.scalars(
+                select(Question)
+                .where(Question.source_id == sid)
+                .order_by(Question.position.asc(), Question.id.asc())
+            )
+        )
+        target_page_numbers = [
+            p.page_number
+            for p in select_pages_to_verify(
+                pages,
+                questions,
+                policy=policy,
+                review_threshold=get_settings().review_threshold,
+            )
+        ]
+
+    client = get_llm_client()
+    store = get_store()
+    for page_number in target_page_numbers:
+        with Session(get_engine()) as db:
+            source = db.get(Source, sid)
+            page = db.scalar(
+                select(SourcePage).where(
+                    SourcePage.source_id == sid, SourcePage.page_number == page_number
+                )
+            )
+            if (
+                source is None
+                or source.stage != "verify"
+                or source.status != SourceStatus.validating
+            ):
+                return
+            if page is None or page.status == PageStatus.failed:
+                continue
+            questions = list(
+                db.scalars(
+                    select(Question)
+                    .where(Question.source_id == sid)
+                    .order_by(Question.position.asc(), Question.id.asc())
+                )
+            )
+            page_qs = questions_for_page(page, questions)
+            if not page_qs or is_page_verified(page_qs):
+                continue
+            org_id = source.org_id
+            payload = [
+                {
+                    "number_label": q.number_label,
+                    "type": q.type,
+                    "stem": q.stem,
+                    "choices": [
+                        {
+                            "label": c.get("label"),
+                            "content": c.get("content"),
+                            "is_correct": c.get("is_correct"),
+                        }
+                        for c in q.choices
+                    ],
+                    "answer": q.answer,
+                }
+                for q in page_qs
+            ]
+        try:
+            hires_key = keys.page(org_id, sid, page_number, hires=True)
+            display_key = keys.page(org_id, sid, page_number, hires=False)
+            data = (
+                store.get_bytes(hires_key)
+                if store.exists(hires_key)
+                else store.get_bytes(display_key)
+            )
+            result, cost = verify_page(
+                client,
+                data,
+                payload,
+                org_id=org_id,
+                source_id=sid,
+                max_side=get_settings().extract_image_max_side,
+            )
+        except (BudgetExceeded, OrgBudgetExceeded) as exc:
+            with Session(get_engine()) as db:
+                db.execute(
+                    update(SourcePage)
+                    .where(SourcePage.source_id == sid, SourcePage.page_number == page_number)
+                    .values(cost_usd=SourcePage.cost_usd + float(exc.cost_usd))
+                )
+                _pause_source_on_budget(db, sid, "verify", type(exc).__name__, float(exc.cost_usd))
+            return
+        except LLMOutputInvalid as exc:
+            with Session(get_engine()) as db:
+                failed_cost = float(exc.cost_usd)
+                db.execute(
+                    update(SourcePage)
+                    .where(SourcePage.source_id == sid, SourcePage.page_number == page_number)
+                    .values(cost_usd=SourcePage.cost_usd + failed_cost)
+                )
+                if failed_cost:
+                    db.execute(
+                        update(Source)
+                        .where(Source.id == sid)
+                        .values(cost_usd=Source.cost_usd + failed_cost)
+                    )
+                db.commit()
+        else:
+            with Session(get_engine()) as db:
+                source = db.get(Source, sid)
+                page = db.scalar(
+                    select(SourcePage).where(
+                        SourcePage.source_id == sid, SourcePage.page_number == page_number
+                    )
+                )
+                if source is None or page is None:
+                    return
+                page.cost_usd = float(page.cost_usd or 0.0) + float(cost)
+                source.cost_usd = float(source.cost_usd or 0.0) + float(cost)
+                _record_non_live_call(db, client, "verify", "verify-v1", result, org_id, sid)
+                questions = list(
+                    db.scalars(
+                        select(Question)
+                        .where(Question.source_id == sid)
+                        .order_by(Question.position.asc(), Question.id.asc())
+                    )
+                )
+                page_qs = questions_for_page(page, questions)
+                apply_discrepancies(page_qs, result.parsed.discrepancies)
+                page_q_ids = {q.id for q in page_qs if q.id is not None}
+                run_validate(db, source, question_ids=page_q_ids, run_dedup=False)
+                db.commit()
+    orchestrator.advance(sid, "verify")
+
+
+@dramatiq.actor(max_retries=3)
+def classify_failed(message: dict[str, object], details: dict[str, object]) -> None:
+    args = message["args"]
+    if not isinstance(args, (list, tuple)):
+        raise ValueError("Invalid message arguments")
+    _fail_validating_stage(UUID(str(args[0])), "classify", "classify_error: retries exhausted")
+
+
+@dramatiq.actor(max_retries=3, on_retry_exhausted="classify_failed")
+def classify_source(source_id: str) -> None:
+    from qbank.llm import BudgetExceeded, LLMOutputInvalid, OrgBudgetExceeded, get_llm_client  # noqa: PLC0415
+    from qbank.models import Question, Subject  # noqa: PLC0415
+    from qbank.pipeline.classify import (  # noqa: PLC0415
+        BATCH_SIZE,
+        apply_classifications,
+        classify_batch,
+        pending_classification_questions,
+    )
+
+    sid = UUID(source_id)
+    client = get_llm_client()
+    while True:
+        with Session(get_engine()) as db:
+            source = db.get(Source, sid)
+            if (
+                source is None
+                or source.stage != "classify"
+                or source.status != SourceStatus.validating
+            ):
+                return
+            subject = db.get(Subject, source.subject_id)
+            subject_name = subject.name if subject else "اللغة العربية"
+            language = subject.language.value if subject else "ar"
+            org_id = source.org_id
+            all_questions = list(
+                db.scalars(
+                    select(Question)
+                    .where(Question.source_id == sid)
+                    .order_by(Question.position.asc(), Question.id.asc())
+                )
+            )
+            pending = pending_classification_questions(all_questions)
+            if not pending:
+                break
+            batch = pending[:BATCH_SIZE]
+            batch_ids = [q.id for q in batch]
+            payload: list[dict[str, object]] = [
+                {
+                    "id": str(q.id),
+                    "type": q.type,
+                    "language": q.language.value,
+                    "stem": q.stem,
+                    "choices": [
+                        {"label": c.get("label"), "content": c.get("content")} for c in q.choices
+                    ],
+                    "answer": q.answer,
+                }
+                for q in batch
+            ]
+        try:
+            result, cost = classify_batch(
+                client,
+                payload,
+                subject=subject_name,
+                language=language,
+                org_id=org_id,
+                source_id=sid,
+            )
+        except (BudgetExceeded, OrgBudgetExceeded) as exc:
+            with Session(get_engine()) as db:
+                _pause_source_on_budget(
+                    db, sid, "classify", type(exc).__name__, float(exc.cost_usd)
+                )
+            return
+        except LLMOutputInvalid as exc:
+            with Session(get_engine()) as db:
+                failed_cost = float(exc.cost_usd)
+                if failed_cost:
+                    db.execute(
+                        update(Source)
+                        .where(Source.id == sid)
+                        .values(cost_usd=Source.cost_usd + failed_cost)
+                    )
+                    db.commit()
+            break
+        else:
+            with Session(get_engine()) as db:
+                source = db.get(Source, sid)
+                if source is None:
+                    return
+                source.cost_usd = float(source.cost_usd or 0.0) + float(cost)
+                _record_non_live_call(db, client, "classify", "classify-v1", result, org_id, sid)
+                batch_qs = list(
+                    db.scalars(
+                        select(Question)
+                        .where(Question.id.in_(batch_ids))
+                        .order_by(Question.position.asc(), Question.id.asc())
+                    )
+                )
+                apply_classifications(batch_qs, result.parsed.items)
+                # Mark batch questions processed even if omitted in a partial response.
+                for q in batch_qs:
+                    if q.difficulty_source != "human" and q.difficulty_source is None:
+                        q.difficulty_source = "ai"
+                db.commit()
+
+    with Session(get_engine()) as db:
+        db.execute(
+            update(SourcePage)
+            .where(SourcePage.source_id == sid, SourcePage.status == PageStatus.extracted)
+            .values(status=PageStatus.validated)
+        )
+        db.commit()
+    orchestrator.advance(sid, "classify")
 
 
 if __name__ == "__main__":

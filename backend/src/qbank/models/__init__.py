@@ -9,6 +9,7 @@ from sqlalchemy import (
     Enum,
     Float,
     ForeignKey,
+    Index,
     Integer,
     Numeric,
     String,
@@ -17,7 +18,7 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.dialects.postgresql import ARRAY, JSONB
-from sqlalchemy.orm import Mapped, mapped_column, validates
+from sqlalchemy.orm import Mapped, mapped_column, relationship, validates
 
 from qbank.db import Base, Timestamps, UUIDPk
 
@@ -203,6 +204,14 @@ class Stimulus(ModelBase):
 
 class Question(ModelBase):
     __tablename__ = "questions"
+    __table_args__ = (
+        Index(
+            "ix_questions_normalized_text_trgm",
+            "normalized_text",
+            postgresql_using="gin",
+            postgresql_ops={"normalized_text": "gin_trgm_ops"},
+        ),
+    )
     org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id"), index=True)
     subject_id: Mapped[UUID] = mapped_column(ForeignKey("subjects.id"), index=True)
     source_id: Mapped[UUID] = mapped_column(
@@ -227,12 +236,42 @@ class Question(ModelBase):
     regions: Mapped[list[dict[str, object]]] = mapped_column(JSONB)
     status: Mapped[str] = mapped_column(String, server_default=text("'draft'"))
     confidence: Mapped[float] = mapped_column()
+    normalized_text: Mapped[str] = mapped_column(Text, default="", server_default=text("''"))
     content_hash: Mapped[str | None] = mapped_column(String)
     duplicate_of_id: Mapped[UUID | None] = mapped_column(ForeignKey("questions.id"))
     version: Mapped[int] = mapped_column(Integer, server_default=text("1"))
     metadata_json: Mapped[dict[str, object]] = mapped_column(
         "metadata", JSONB, server_default=text("'{}'::jsonb")
     )
+    issues: Mapped[list["ValidationIssue"]] = relationship(
+        "ValidationIssue",
+        lazy="selectin",
+        order_by="ValidationIssue.created_at, ValidationIssue.id",
+        cascade="all, delete-orphan",
+    )
+
+
+class ValidationIssue(ModelBase):
+    __tablename__ = "validation_issues"
+    question_id: Mapped[UUID] = mapped_column(
+        ForeignKey("questions.id", ondelete="CASCADE"), index=True
+    )
+    code: Mapped[str] = mapped_column(String)
+    severity: Mapped[str] = mapped_column(String)
+    message: Mapped[str] = mapped_column(String)
+    details: Mapped[dict[str, object]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
+    resolved_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    resolved_by: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"))
+
+
+class QuestionEvent(ModelBase):
+    __tablename__ = "question_events"
+    question_id: Mapped[UUID] = mapped_column(
+        ForeignKey("questions.id", ondelete="CASCADE"), index=True
+    )
+    user_id: Mapped[UUID | None] = mapped_column(ForeignKey("users.id"))
+    action: Mapped[str] = mapped_column(String)
+    diff: Mapped[dict[str, object]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
 
 
 class Asset(ModelBase):

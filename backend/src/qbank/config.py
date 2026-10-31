@@ -49,6 +49,7 @@ class Settings(BaseSettings):
     render_batch_size: int = 8
     extract_image_max_side: int = 1600
     extract_fallback_threshold: float = 0.5
+    review_threshold: float = 0.75
     render_dpi_display: int = 150
     render_dpi_hires: int = 300
     sse_interval: float = 1.0

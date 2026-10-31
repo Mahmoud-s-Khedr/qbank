@@ -1,8 +1,8 @@
 """Validated vision output and conversion to the persisted region convention."""
 
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 Box = tuple[int, int, int, int]
 Confidence = Annotated[float, Field(ge=0, le=1)]
@@ -98,3 +98,70 @@ class PageExtraction(ExtractionModel):
     answer_key_entries: list[AnswerKeyEntry]
     page_confidence: Confidence
     notes: str
+
+
+VerifierField = Literal[
+    "stem",
+    "choices",
+    "answer",
+    "type",
+    "figure",
+    "missing_question",
+]
+VerifierSeverity = Literal["error", "warning"]
+
+
+class Discrepancy(ExtractionModel):
+    number_label: str
+    field: VerifierField
+    problem: str
+    suggested_fix: str | None = None
+    severity: VerifierSeverity
+
+
+class Verification(ExtractionModel):
+    discrepancies: list[Discrepancy] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_list(cls, data: Any) -> Any:
+        if isinstance(data, list):
+            return {"discrepancies": data}
+        return data
+
+
+MAX_REASON_WORDS = 15
+MAX_CLASSIFY_TAGS = 3
+
+
+class QuestionClassification(ExtractionModel):
+    id: str
+    difficulty: Annotated[int, Field(ge=1, le=5)]
+    difficulty_reason: str
+    tags: list[str] = Field(default_factory=list)
+
+    @field_validator("difficulty_reason")
+    @classmethod
+    def _cap_reason_words(cls, value: str) -> str:
+        words = value.split()
+        if len(words) > MAX_REASON_WORDS:
+            return " ".join(words[:MAX_REASON_WORDS])
+        return value.strip()
+
+    @field_validator("tags")
+    @classmethod
+    def _cap_tags(cls, value: list[str]) -> list[str]:
+        return [tag.strip() for tag in value if tag.strip()][:MAX_CLASSIFY_TAGS]
+
+
+class Classification(ExtractionModel):
+    items: list[QuestionClassification] = Field(default_factory=list)
+
+    @model_validator(mode="before")
+    @classmethod
+    def _coerce_list(cls, data: Any) -> Any:
+        if isinstance(data, list):
+            return {"items": data}
+        if isinstance(data, dict) and "questions" in data and "items" not in data:
+            return {"items": data["questions"]}
+        return data

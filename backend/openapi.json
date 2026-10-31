@@ -786,6 +786,29 @@
         "title": "HealthOut",
         "type": "object"
       },
+      "IssueSummary": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "count": {
+            "title": "Count",
+            "type": "integer"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "severity",
+          "count"
+        ],
+        "title": "IssueSummary",
+        "type": "object"
+      },
       "ItemIn": {
         "properties": {
           "title": {
@@ -1521,10 +1544,51 @@
             "title": "Created At",
             "type": "string"
           },
+          "difficulty": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty"
+          },
+          "difficulty_reason": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Difficulty Reason"
+          },
+          "duplicate_of_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duplicate Of Id"
+          },
           "id": {
             "format": "uuid",
             "title": "Id",
             "type": "string"
+          },
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationIssueOut"
+            },
+            "title": "Issues",
+            "type": "array"
           },
           "language": {
             "$ref": "#/components/schemas/Language"
@@ -1586,6 +1650,13 @@
             "title": "Subject Id",
             "type": "string"
           },
+          "tags": {
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "type": "array"
+          },
           "type": {
             "title": "Type",
             "type": "string"
@@ -1613,7 +1684,12 @@
           "language",
           "regions",
           "status",
-          "confidence"
+          "confidence",
+          "duplicate_of_id",
+          "difficulty",
+          "difficulty_reason",
+          "tags",
+          "issues"
         ],
         "title": "QuestionOut",
         "type": "object"
@@ -1990,6 +2066,54 @@
         ],
         "title": "SourceStatus",
         "type": "string"
+      },
+      "SourceSummary": {
+        "properties": {
+          "issues": {
+            "items": {
+              "$ref": "#/components/schemas/IssueSummary"
+            },
+            "title": "Issues",
+            "type": "array"
+          },
+          "issues_by_code": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Issues By Code",
+            "type": "object"
+          },
+          "issues_by_severity": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Issues By Severity",
+            "type": "object"
+          },
+          "question_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "title": "Question Counts",
+            "type": "object"
+          },
+          "spend_by_stage": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "title": "Spend By Stage",
+            "type": "object"
+          }
+        },
+        "required": [
+          "question_counts",
+          "issues_by_code",
+          "issues_by_severity",
+          "issues",
+          "spend_by_stage"
+        ],
+        "title": "SourceSummary",
+        "type": "object"
       },
       "StimulusContent": {
         "properties": {
@@ -2434,6 +2558,79 @@
           "type"
         ],
         "title": "ValidationError",
+        "type": "object"
+      },
+      "ValidationIssueOut": {
+        "properties": {
+          "code": {
+            "title": "Code",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "details": {
+            "additionalProperties": true,
+            "title": "Details",
+            "type": "object"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "message": {
+            "title": "Message",
+            "type": "string"
+          },
+          "resolved_at": {
+            "anyOf": [
+              {
+                "format": "date-time",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved At"
+          },
+          "resolved_by": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Resolved By"
+          },
+          "severity": {
+            "title": "Severity",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "code",
+          "severity",
+          "message",
+          "details",
+          "resolved_at",
+          "resolved_by"
+        ],
+        "title": "ValidationIssueOut",
         "type": "object"
       },
       "VersionOut": {
@@ -4563,6 +4760,46 @@
           }
         },
         "summary": "Stimuli"
+      }
+    },
+    "/api/v1/sources/{id}/summary": {
+      "get": {
+        "operationId": "summary_api_v1_sources__id__summary_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Summary"
       }
     },
     "/api/v1/subjects": {

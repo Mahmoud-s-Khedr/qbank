@@ -1,15 +1,24 @@
 from typing import BinaryIO, cast
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import func, select, update
 from sqlalchemy.orm import Session
 
 from qbank.api.pagination import paginate
 from qbank.config import get_settings
 from qbank.db import new_uuid
-from qbank.models import Job, Source, SourcePage, SourceStatus, Subject
+from qbank.models import (
+    Job,
+    LLMCall,
+    Question,
+    Source,
+    SourcePage,
+    SourceStatus,
+    Subject,
+    ValidationIssue,
+)
 from qbank.pipeline import orchestrator
-from qbank.schemas.sources import SourceDetail, SourceOut
+from qbank.schemas.sources import IssueSummary, SourceDetail, SourceOut, SourceSummary
 from qbank.services.errors import Conflict, DomainError, Invalid
 from qbank.services.scoping import get
 from qbank.services.unit_of_work import found, save
@@ -98,9 +107,51 @@ def detail(db: Session, org_id: UUID, source_id: UUID) -> SourceDetail:
     )
 
 
+def summary(db: Session, org_id: UUID, source_id: UUID) -> SourceSummary:
+    source(db, org_id, source_id)
+    q_rows = db.execute(
+        select(Question.status, func.count())
+        .where(Question.source_id == source_id, Question.org_id == org_id)
+        .group_by(Question.status)
+    )
+    question_counts = {str(status): int(count) for status, count in q_rows}
+
+    issue_rows = db.execute(
+        select(ValidationIssue.code, ValidationIssue.severity, func.count())
+        .join(Question, ValidationIssue.question_id == Question.id)
+        .where(Question.source_id == source_id, Question.org_id == org_id)
+        .group_by(ValidationIssue.code, ValidationIssue.severity)
+        .order_by(ValidationIssue.code.asc(), ValidationIssue.severity.asc())
+    )
+    issues: list[IssueSummary] = []
+    issues_by_code: dict[str, int] = {}
+    issues_by_severity: dict[str, int] = {}
+    for code, severity, count in issue_rows:
+        cnt = int(count)
+        issues.append(IssueSummary(code=str(code), severity=str(severity), count=cnt))
+        issues_by_code[str(code)] = issues_by_code.get(str(code), 0) + cnt
+        issues_by_severity[str(severity)] = issues_by_severity.get(str(severity), 0) + cnt
+
+    spend_rows = db.execute(
+        select(LLMCall.stage, func.coalesce(func.sum(LLMCall.cost_usd), 0))
+        .where(LLMCall.source_id == source_id)
+        .group_by(LLMCall.stage)
+    )
+    spend_by_stage = {str(stage): float(cost) for stage, cost in spend_rows}
+
+    return SourceSummary(
+        question_counts=question_counts,
+        issues_by_code=issues_by_code,
+        issues_by_severity=issues_by_severity,
+        issues=issues,
+        spend_by_stage=spend_by_stage,
+    )
+
+
 def delete(db: Session, org_id: UUID, source_id: UUID) -> None:
     item = source(db, org_id, source_id)
     get_store().delete_prefix(keys.prefix(org_id, source_id))
+    db.execute(update(LLMCall).where(LLMCall.source_id == source_id).values(source_id=None))
     db.delete(item)
     save(db)
 
