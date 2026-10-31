@@ -5,6 +5,57 @@ const UNSAFE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 export const CSRF_COOKIE_NAME = "qbank_csrf";
 export const CSRF_HEADER_NAME = "X-CSRF-Token";
 
+export interface ProblemDetails {
+  type?: string | undefined;
+  title?: string | undefined;
+  status?: number | undefined;
+  detail?: string | undefined;
+  code?: string | undefined;
+}
+
+export class ApiError extends Error {
+  readonly status: number;
+  readonly code?: string | undefined;
+  readonly detail?: string | undefined;
+
+  constructor(status: number, message: string, code?: string, detail?: string) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = code;
+    this.detail = detail;
+  }
+}
+
+export function extractApiError(status: number, errorBody: unknown): ApiError {
+  if (typeof errorBody === "object" && errorBody !== null) {
+    const record = errorBody as Record<string, unknown>;
+    const code = typeof record.code === "string" ? record.code : undefined;
+    const detail =
+      typeof record.detail === "string" ? record.detail : undefined;
+    const title = typeof record.title === "string" ? record.title : undefined;
+    const message = detail ?? title ?? `Request failed (${String(status)})`;
+    return new ApiError(status, message, code, detail);
+  }
+  return new ApiError(status, `Request failed (${String(status)})`);
+}
+
+type UnauthorizedListener = (path?: string) => void;
+const unauthorizedListeners = new Set<UnauthorizedListener>();
+
+export function onUnauthorized(listener: UnauthorizedListener): () => void {
+  unauthorizedListeners.add(listener);
+  return () => {
+    unauthorizedListeners.delete(listener);
+  };
+}
+
+export function notifyUnauthorized(path?: string): void {
+  for (const listener of unauthorizedListeners) {
+    listener(path);
+  }
+}
+
 export function readCookie(name: string): string | null {
   if (typeof document === "undefined" || !document.cookie) {
     return null;
@@ -33,6 +84,12 @@ export const csrfMiddleware: Middleware = {
       }
     }
     return request;
+  },
+  onResponse({ response, schemaPath }) {
+    if (response.status === 401 && schemaPath !== "/api/v1/auth/login") {
+      notifyUnauthorized(schemaPath);
+    }
+    return response;
   },
 };
 

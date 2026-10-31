@@ -3,17 +3,29 @@ import {
   ClipboardCheck,
   FileText,
   Library,
+  LogOut,
   type LucideIcon,
   Menu,
   Settings,
+  User,
 } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { NavLink, Outlet } from "react-router";
+import { NavLink, Outlet, useNavigate } from "react-router";
+import { type Role, useLogout, useMe } from "@/api/hooks/auth";
 import { HealthStatusDot } from "@/app/health-status-dot";
 import { LanguageSwitch } from "@/app/language-switch";
 import { ThemeToggle } from "@/app/theme-toggle";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Separator } from "@/components/ui/separator";
 import {
   Sheet,
@@ -30,20 +42,66 @@ interface NavItemConfig {
   labelKey:
     "nav.sources" | "nav.review" | "nav.bank" | "nav.exams" | "nav.settings";
   icon: LucideIcon;
+  roles: readonly Role[];
 }
 
 const NAV_ITEMS: readonly NavItemConfig[] = [
-  { to: "/sources", labelKey: "nav.sources", icon: BookOpen },
-  { to: "/review", labelKey: "nav.review", icon: ClipboardCheck },
-  { to: "/bank", labelKey: "nav.bank", icon: Library },
-  { to: "/exams", labelKey: "nav.exams", icon: FileText },
-  { to: "/settings", labelKey: "nav.settings", icon: Settings },
+  {
+    to: "/sources",
+    labelKey: "nav.sources",
+    icon: BookOpen,
+    roles: ["admin", "editor"],
+  },
+  {
+    to: "/review",
+    labelKey: "nav.review",
+    icon: ClipboardCheck,
+    roles: ["admin", "editor"],
+  },
+  {
+    to: "/bank",
+    labelKey: "nav.bank",
+    icon: Library,
+    roles: ["admin", "editor", "teacher"],
+  },
+  {
+    to: "/exams",
+    labelKey: "nav.exams",
+    icon: FileText,
+    roles: ["admin", "editor", "teacher"],
+  },
+  {
+    to: "/settings",
+    labelKey: "nav.settings",
+    icon: Settings,
+    roles: ["admin"],
+  },
 ];
+
+function isValidRole(value: unknown): value is Role {
+  return value === "admin" || value === "editor" || value === "teacher";
+}
 
 export function AppShell() {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const { data: user } = useMe();
+  const logoutMutation = useLogout();
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+
+  const userRole = isValidRole(user?.role) ? user.role : undefined;
+  const visibleNavItems = userRole
+    ? NAV_ITEMS.filter((item) => item.roles.includes(userRole))
+    : NAV_ITEMS;
+
+  const handleLogout = async () => {
+    try {
+      await logoutMutation.mutateAsync();
+    } finally {
+      await navigate("/login", { replace: true });
+    }
+  };
 
   return (
     <div className="bg-background text-foreground flex min-h-screen flex-col">
@@ -79,7 +137,7 @@ export function AppShell() {
                 aria-label={t("app.sidebar.label")}
                 className="flex flex-col gap-1 p-3"
               >
-                {NAV_ITEMS.map((item) => {
+                {visibleNavItems.map((item) => {
                   const Icon = item.icon;
                   const label = t(item.labelKey);
                   return (
@@ -135,6 +193,52 @@ export function AppShell() {
           <Separator orientation="vertical" className="h-5" />
           <LanguageSwitch />
           <ThemeToggle />
+          {user?.name && userRole ? (
+            <>
+              <Separator orientation="vertical" className="h-5" />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    data-testid="user-menu-trigger"
+                    aria-label={t("auth.userMenu")}
+                    className="flex items-center gap-2"
+                  >
+                    <User className="size-4 shrink-0" aria-hidden="true" />
+                    <span className="max-w-36 truncate font-medium">
+                      {user.name}
+                    </span>
+                    <Badge variant="secondary" className="text-xs">
+                      {t(`roles.${userRole}`)}
+                    </Badge>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel className="flex flex-col gap-0.5">
+                    <span className="font-semibold">{user.name}</span>
+                    <span
+                      dir="ltr"
+                      className="text-muted-foreground truncate text-xs font-normal"
+                    >
+                      {user.email}
+                    </span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    data-testid="logout-button"
+                    onClick={() => {
+                      void handleLogout();
+                    }}
+                  >
+                    <LogOut className="size-4" aria-hidden="true" />
+                    <span>{t("auth.logout")}</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </>
+          ) : null}
         </div>
       </header>
 
@@ -151,7 +255,7 @@ export function AppShell() {
             aria-label={t("app.sidebar.label")}
             className="flex flex-col gap-1 p-3"
           >
-            {NAV_ITEMS.map((item) => {
+            {visibleNavItems.map((item) => {
               const Icon = item.icon;
               const label = t(item.labelKey);
               return (
