@@ -57,3 +57,11 @@ class SubjectTree(SubjectOut):
 
 class Reorder(BaseModel):
     ids: list[UUID]
+
+
+class ChapterMerge(BaseModel):
+    into_chapter_id: UUID
+
+
+class LessonMerge(BaseModel):
+    into_lesson_id: UUID

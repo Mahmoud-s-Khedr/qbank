@@ -72,6 +72,57 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/bank/questions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Search Questions */
+    get: operations["search_questions_api_v1_bank_questions_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/bank/stats": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Bank Stats */
+    get: operations["bank_stats_api_v1_bank_stats_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/bank/tags": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Autocomplete Tags */
+    get: operations["autocomplete_tags_api_v1_bank_tags_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/chapters/{id}": {
     parameters: {
       query?: never;
@@ -118,6 +169,23 @@ export interface paths {
     put?: never;
     /** Reorder Lessons */
     post: operations["reorder_lessons_api_v1_chapters__id__lessons_reorder_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/chapters/{id}/merge": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Merge Chapter */
+    post: operations["merge_chapter_api_v1_chapters__id__merge_post"];
     delete?: never;
     options?: never;
     head?: never;
@@ -508,6 +576,40 @@ export interface paths {
     patch: operations["edit_lesson_api_v1_lessons__id__patch"];
     trace?: never;
   };
+  "/api/v1/lessons/{id}/merge": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Merge Lesson */
+    post: operations["merge_lesson_api_v1_lessons__id__merge_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/questions/move": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Move Questions */
+    post: operations["move_questions_api_v1_questions_move_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/questions/{id}": {
     parameters: {
       query?: never;
@@ -851,6 +953,113 @@ export interface components {
       /** Type */
       type: string;
     };
+    /** BankFacets */
+    BankFacets: {
+      /** Chapters */
+      chapters: components["schemas"]["ChapterFacet"][];
+      /** Difficulties */
+      difficulties: {
+        [key: string]: number;
+      };
+      /** Lessons */
+      lessons: components["schemas"]["LessonFacet"][];
+      /** Sources */
+      sources: components["schemas"]["SourceFacet"][];
+      /** Statuses */
+      statuses: {
+        [key: string]: number;
+      };
+      /** Tags */
+      tags: components["schemas"]["TagCount"][];
+      /** Total */
+      total: number;
+      /** Types */
+      types: {
+        [key: string]: number;
+      };
+    };
+    /** BankQuestionOut */
+    BankQuestionOut: {
+      /** Chapter Id */
+      chapter_id: string | null;
+      /** Chapter Title */
+      chapter_title: string | null;
+      /** Choices Count */
+      choices_count: number;
+      /** Difficulty */
+      difficulty: number | null;
+      /** Has Figure */
+      has_figure: boolean;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      issues_count: components["schemas"]["IssuesCount"];
+      /** Lesson Id */
+      lesson_id: string | null;
+      /** Lesson Title */
+      lesson_title: string | null;
+      /** Number Label */
+      number_label: string;
+      /** Source Id */
+      source_id: string | null;
+      /** Source Page */
+      source_page: number | null;
+      /** Source Title */
+      source_title: string | null;
+      /** Status */
+      status: string;
+      /** Stem Preview */
+      stem_preview: string;
+      /** Stimulus Id */
+      stimulus_id: string | null;
+      /**
+       * Subject Id
+       * Format: uuid
+       */
+      subject_id: string;
+      /** Tags */
+      tags: string[];
+      /** Type */
+      type: string;
+    };
+    /** BankSearchOut */
+    BankSearchOut: {
+      facets?: components["schemas"]["BankFacets"] | null;
+      /** Items */
+      items: components["schemas"]["BankQuestionOut"][];
+      /**
+       * Match Mode
+       * @enum {string}
+       */
+      match_mode: "fts" | "fuzzy";
+      /** Next Cursor */
+      next_cursor: string | null;
+      /** Total */
+      total: number;
+    };
+    /** BankStatsOut */
+    BankStatsOut: {
+      /** Approved By Chapter */
+      approved_by_chapter: components["schemas"]["ChapterFacet"][];
+      /** Approved By Lesson */
+      approved_by_lesson: components["schemas"]["LessonFacet"][];
+      /** By Difficulty */
+      by_difficulty: {
+        [key: string]: number;
+      };
+      /** By Status */
+      by_status: {
+        [key: string]: number;
+      };
+      /** By Type */
+      by_type: {
+        [key: string]: number;
+      };
+      /** Total */
+      total: number;
+    };
     /** Blueprint */
     Blueprint: {
       /** Exclude Question Ids */
@@ -920,6 +1129,26 @@ export interface components {
       subject_id: string;
       /** Title */
       title: string;
+    };
+    /** ChapterFacet */
+    ChapterFacet: {
+      /** Count */
+      count: number;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Title */
+      title: string;
+    };
+    /** ChapterMerge */
+    ChapterMerge: {
+      /**
+       * Into Chapter Id
+       * Format: uuid
+       */
+      into_chapter_id: string;
     };
     /** ChapterOut */
     ChapterOut: {
@@ -1267,6 +1496,19 @@ export interface components {
       /** Severity */
       severity: string;
     };
+    /** IssuesCount */
+    IssuesCount: {
+      /**
+       * Error
+       * @default 0
+       */
+      error: number;
+      /**
+       * Warning
+       * @default 0
+       */
+      warning: number;
+    };
     /** ItemIn */
     ItemIn: {
       /** Title */
@@ -1348,6 +1590,31 @@ export interface components {
      * @enum {string}
      */
     Language: "ar" | "en";
+    /** LessonFacet */
+    LessonFacet: {
+      /**
+       * Chapter Id
+       * Format: uuid
+       */
+      chapter_id: string;
+      /** Count */
+      count: number;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Title */
+      title: string;
+    };
+    /** LessonMerge */
+    LessonMerge: {
+      /**
+       * Into Lesson Id
+       * Format: uuid
+       */
+      into_lesson_id: string;
+    };
     /** LessonOut */
     LessonOut: {
       /**
@@ -1601,6 +1868,21 @@ export interface components {
        */
       updated_at: string;
     };
+    /** QuestionsMove */
+    QuestionsMove: {
+      /** Ids */
+      ids: string[];
+      /**
+       * Lesson Id
+       * Format: uuid
+       */
+      lesson_id: string;
+    };
+    /** QuestionsMoveOut */
+    QuestionsMoveOut: {
+      /** Moved */
+      moved: number;
+    };
     /** Reorder */
     Reorder: {
       /** Ids */
@@ -1695,6 +1977,18 @@ export interface components {
        * Format: date-time
        */
       updated_at: string;
+    };
+    /** SourceFacet */
+    SourceFacet: {
+      /** Count */
+      count: number;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Title */
+      title: string;
     };
     /** SourceOut */
     SourceOut: {
@@ -1883,6 +2177,13 @@ export interface components {
       language?: components["schemas"]["Language"] | null;
       /** Name */
       name?: string | null;
+    };
+    /** TagCount */
+    TagCount: {
+      /** Count */
+      count: number;
+      /** Tag */
+      tag: string;
     };
     /** TemplateIn */
     TemplateIn: {
@@ -2199,6 +2500,118 @@ export interface operations {
       };
     };
   };
+  search_questions_api_v1_bank_questions_get: {
+    parameters: {
+      query?: {
+        q?: string | null;
+        subject_id?: string | null;
+        chapter_ids?: string[] | null;
+        lesson_ids?: string[] | null;
+        types?: string[] | null;
+        difficulty_min?: number | null;
+        difficulty_max?: number | null;
+        statuses?: string[] | null;
+        source_ids?: string[] | null;
+        tags?: string[] | null;
+        has_figure?: boolean | null;
+        has_answer?: boolean | null;
+        exam_title?: string | null;
+        exclude_duplicates?: boolean;
+        facets?: boolean;
+        sort?: ("relevance" | "newest" | "difficulty" | "source_order") | null;
+        cursor?: string | null;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BankSearchOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  bank_stats_api_v1_bank_stats_get: {
+    parameters: {
+      query?: {
+        subject_id?: string | null;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["BankStatsOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  autocomplete_tags_api_v1_bank_tags_get: {
+    parameters: {
+      query?: {
+        subject_id?: string | null;
+        q?: string | null;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TagCount"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   delete_chapter_api_v1_chapters__id__delete: {
     parameters: {
       query?: never;
@@ -2319,6 +2732,41 @@ export interface operations {
           [name: string]: unknown;
         };
         content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  merge_chapter_api_v1_chapters__id__merge_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ChapterMerge"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ChapterOut"];
+        };
       };
       /** @description Validation Error */
       422: {
@@ -3354,6 +3802,74 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["LessonOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  merge_lesson_api_v1_lessons__id__merge_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["LessonMerge"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["LessonOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  move_questions_api_v1_questions_move_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["QuestionsMove"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuestionsMoveOut"];
         };
       };
       /** @description Validation Error */

@@ -1,14 +1,17 @@
 from uuid import UUID
 
 from sqlalchemy import func, select
+from sqlalchemy import update as sql_update
 from sqlalchemy.orm import Session
 
 from qbank.api.pagination import paginate
-from qbank.models import Chapter, Lesson, Source, Subject
+from qbank.models import Chapter, Lesson, Question, Source, Subject
 from qbank.schemas.taxonomy import (
+    ChapterMerge,
     ChapterOut,
     ItemIn,
     ItemUpdate,
+    LessonMerge,
     LessonUpdate,
     Reorder,
     SubjectIn,
@@ -35,6 +38,12 @@ def ensure_deletable_subject(db: Session, org_id: UUID, subject_id: UUID) -> boo
             .where(Source.org_id == org_id, Source.subject_id == subject_id)
         )
         == 0
+        and db.scalar(
+            select(func.count())
+            .select_from(Question)
+            .where(Question.org_id == org_id, Question.subject_id == subject_id)
+        )
+        == 0
     )
 
 
@@ -46,6 +55,23 @@ def ensure_deletable_chapter(db: Session, org_id: UUID, chapter_id: UUID) -> boo
             .join(Chapter)
             .join(Subject)
             .where(Subject.org_id == org_id, Lesson.chapter_id == chapter_id)
+        )
+        == 0
+        and db.scalar(
+            select(func.count())
+            .select_from(Question)
+            .where(Question.org_id == org_id, Question.chapter_id == chapter_id)
+        )
+        == 0
+    )
+
+
+def ensure_deletable_lesson(db: Session, org_id: UUID, lesson_id: UUID) -> bool:
+    return (
+        db.scalar(
+            select(func.count())
+            .select_from(Question)
+            .where(Question.org_id == org_id, Question.lesson_id == lesson_id)
         )
         == 0
     )
@@ -178,8 +204,70 @@ def edit_lesson(id: UUID, data: LessonUpdate, db: Session, org_id: UUID) -> Less
 
 def delete_lesson(id: UUID, db: Session, org_id: UUID) -> None:
     item = found(get(db, Lesson, org_id, id))
+    if not ensure_deletable_lesson(db, org_id, id):
+        raise Conflict("not_empty")
     db.delete(item)
     save(db)
+
+
+def merge_chapter(id: UUID, data: ChapterMerge, db: Session, org_id: UUID) -> Chapter:
+    source = found(get(db, Chapter, org_id, id))
+    target = found(get(db, Chapter, org_id, data.into_chapter_id))
+    if source.id == target.id or source.subject_id != target.subject_id:
+        raise Invalid("invalid_merge")
+    base_pos = (
+        db.scalar(
+            select(func.max(Lesson.position))
+            .join(Chapter)
+            .join(Subject)
+            .where(Subject.org_id == org_id, Lesson.chapter_id == target.id)
+        )
+        or 0
+    )
+    source_lessons = list(
+        db.scalars(
+            scoped(select(Lesson), Lesson, org_id)
+            .where(Lesson.chapter_id == source.id)
+            .order_by(Lesson.position, Lesson.id)
+        )
+    )
+    source_lesson_ids = [lesson.id for lesson in source_lessons]
+    for offset, lesson in enumerate(source_lessons, 1):
+        lesson.chapter_id = target.id
+        lesson.position = base_pos + offset
+    db.execute(
+        sql_update(Question)
+        .where(Question.org_id == org_id, Question.chapter_id == source.id)
+        .values(chapter_id=target.id)
+    )
+    if source_lesson_ids:
+        db.execute(
+            sql_update(Question)
+            .where(Question.org_id == org_id, Question.lesson_id.in_(source_lesson_ids))
+            .values(chapter_id=target.id)
+        )
+    db.flush()
+    db.delete(source)
+    save(db)
+    return target
+
+
+def merge_lesson(id: UUID, data: LessonMerge, db: Session, org_id: UUID) -> Lesson:
+    source = found(get(db, Lesson, org_id, id))
+    target = found(get(db, Lesson, org_id, data.into_lesson_id))
+    source_chapter = found(get(db, Chapter, org_id, source.chapter_id))
+    target_chapter = found(get(db, Chapter, org_id, target.chapter_id))
+    if source.id == target.id or source_chapter.subject_id != target_chapter.subject_id:
+        raise Invalid("invalid_merge")
+    db.execute(
+        sql_update(Question)
+        .where(Question.org_id == org_id, Question.lesson_id == source.id)
+        .values(lesson_id=target.id, chapter_id=target.chapter_id)
+    )
+    db.flush()
+    db.delete(source)
+    save(db)
+    return target
 
 
 def reorder_chapters(id: UUID, data: Reorder, db: Session, org_id: UUID) -> None:
