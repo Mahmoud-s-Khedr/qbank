@@ -1,6 +1,6 @@
 # T11 — Validation, confidence, verifier pass, Arabic normalization, dedup, classification
 
-**Owner:** Codex (medium) · **Branch:** `task/T11` · **Refs:** SPEC F2.9, F3 · ARCHITECTURE §3 (search normalization), §5, §6 · `docs/MODELS.md` · AGENTS.md
+**Owner:** agy (Gemini 4 Argon) · **Branch:** `task/T11` · **Refs:** SPEC F2.9, F3 · ARCHITECTURE §3 (search normalization), §5, §6 · `docs/MODELS.md` · AGENTS.md
 
 ## Goal
 Every extracted question is checked automatically and gets issues, a confidence score and a status. Near-duplicates are linked.
