@@ -65,3 +65,17 @@ cc: T00, T03 review, every merge, T10 decision, integration fixes, final accepta
 | 2026-10-31 | T20 | cc-sonnet 5.5 sub-agent | ~189k subagent tokens |
 | 2026-10-31 | T25 (+1 continue round) | codex medium | weekly 59→67% |
 | 2026-10-31 | T24 | cc-sonnet 5.5 sub-agent | ~259k subagent tokens |
+
+## Acceptance (SPEC §4), 2026-10-31
+
+| # | Criterion | Result |
+|---|---|---|
+| 1 | Damaged workbook processes; broken pages reported | ✅ `test-exams.pdf`: pages 1–60 render, 61+ marked failed, source reaches ready (integration test). Live run on 11 real pages: all 7 stages done, page kinds correct (cover, 4 blank, 6 question pages), 27 questions, **$0.074** |
+| 2 | Golden metrics: ≥ 95% question count, ≥ 90% choice text, box IoU ≥ 0.7 | ✅ gemini-3.8-flash: 100% count, choice CER 5.9% (94% match), question box IoU 0.887, figure recall 100% (`docs/MODELS.md`) |
+| 3 | Poem in `test1.pdf` (= p. 28) is one stimulus linked to its questions | ✅ The live run linked one poem stimulus to questions 1–5 |
+| 4 | `test1.pdf` uploaded after the workbook is flagged as duplicates | ✅ 5/5 questions flagged `duplicate_of` (live) |
+| 5 | Reviewer fixes a figure crop, approves, sees it in the bank | ✅ e2e (`frontend/e2e/full-flow.spec.ts`) + T12/T15 tests |
+| 6 | Teacher builds by blueprint and AI, exports 2 versions PDF + DOCX + keys; Arabic renders; DOCX has editable equations | ✅ e2e (scripted AI) + live AI compose with claude-haiku-5.5; PDF checked visually; DOCX has native OMML (`m:oMath`) |
+| 7 | CI green on `main` | ✅ all jobs including e2e |
+
+Fixes found by the live run and merged: rhetorical «الصورة البيانية» false figure errors; AI compose returning nothing when questions had no lesson; missing tracebacks in error logs; tests leaking rate-limit counters into dev Redis.

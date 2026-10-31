@@ -177,15 +177,15 @@ def compose(db: Session, user: User, exam_id: UUID, data: ComposeIn) -> ExamProp
             # subject-wide row (keeping the first planned row's types) instead of nothing.
             wanted = sum(r.count for r in original_rows) or 10
             types = original_rows[0].types if original_rows else []
-            fallback = BlueprintRow(types=types, count=1)
-            available = sum(matches(q, _row(fallback)) for q in pool)
+            wide_row = BlueprintRow(types=types, count=1)
+            available = sum(matches(q, _row(wide_row)) for q in pool)
             if available:
-                fallback.count = min(wanted, available)
+                wide_row.count = min(wanted, available)
                 warnings.append("fallback_subject_wide")
                 if not plan.sections:
                     plan.sections = [ComposeSection(title=plan.title or "1", rows=[])]
-                plan.sections[0].rows = [fallback]
-                rows.append(fallback)
+                plan.sections[0].rows = [wide_row]
+                rows.append(wide_row)
         fixed = [i.question_id for i, _ in exams.rows_of(db, exam.id)]
         sampled = [sample(pool, [_row(row)], seed=0, fixed=fixed, oversample=3)[0] for row in rows]
         by_id = {q.id: q for q in questions}
