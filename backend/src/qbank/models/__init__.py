@@ -1,8 +1,19 @@
 from datetime import datetime
+from decimal import Decimal
 from enum import StrEnum
 from uuid import UUID
 
-from sqlalchemy import Boolean, DateTime, Enum, ForeignKey, Integer, String, UniqueConstraint, text
+from sqlalchemy import (
+    Boolean,
+    DateTime,
+    Enum,
+    ForeignKey,
+    Integer,
+    Numeric,
+    String,
+    UniqueConstraint,
+    text,
+)
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column, validates
 
@@ -152,3 +163,22 @@ class Job(ModelBase):
     progress: Mapped[dict[str, object]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
     error: Mapped[str | None] = mapped_column(String)
     ref_id: Mapped[UUID] = mapped_column(ForeignKey("sources.id", ondelete="CASCADE"), index=True)
+
+
+class LLMCall(ModelBase):
+    __tablename__ = "llm_calls"
+    org_id: Mapped[UUID | None] = mapped_column(ForeignKey("organizations.id"))
+    source_id: Mapped[UUID | None] = mapped_column(ForeignKey("sources.id"))
+    stage: Mapped[str] = mapped_column(String)
+    model: Mapped[str] = mapped_column(String)
+    prompt_version: Mapped[str | None] = mapped_column(String)
+    input_tokens: Mapped[int] = mapped_column(Integer)
+    output_tokens: Mapped[int] = mapped_column(Integer)
+    reasoning_tokens: Mapped[int] = mapped_column(Integer)
+    cost_usd: Mapped[Decimal] = mapped_column(Numeric(18, 9))
+    reserved_usd: Mapped[Decimal] = mapped_column(Numeric(18, 9), server_default=text("0"))
+    attempts: Mapped[int] = mapped_column(Integer, server_default=text("0"))
+    latency_ms: Mapped[int] = mapped_column(Integer)
+    status: Mapped[str] = mapped_column(String)
+    error_code: Mapped[str | None] = mapped_column(String)
+    request_hash: Mapped[str] = mapped_column(String)

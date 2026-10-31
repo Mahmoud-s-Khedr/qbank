@@ -13,6 +13,7 @@ from sqlalchemy.engine import make_url
 
 # Must run before any qbank import: importing qbank.api.main builds the app and caches Settings.
 os.environ["QBANK_ENV"] = "test"
+os.environ["QBANK_LLM_MODE"] = "fake"
 os.environ["QBANK_JWT_SECRET"] = "test-only-secret-at-least-32-bytes-long"  # noqa: S105 -- test-only value
 
 from qbank.api.main import create_app

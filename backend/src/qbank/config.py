@@ -1,11 +1,30 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import SecretStr, model_validator
+from pydantic import BaseModel, Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 MIN_SECRET_LENGTH = 32
 DEV_JWT_SECRET = "local-development-only-not-for-production"  # noqa: S105 -- public development default
+
+
+class LLMStageConfig(BaseModel):
+    model: str
+    max_tokens: int = 4096
+    reasoning: Literal["off", "low", "medium"] = "off"
+    temperature: float = 0.0
+
+
+def default_stage_models() -> dict[str, LLMStageConfig]:
+    return {
+        "extract": LLMStageConfig(model="google/gemini-3.8-flash"),
+        "extract_strong": LLMStageConfig(model="google/gemini-3.8-flash", reasoning="low"),
+        "verify": LLMStageConfig(model="openai/gpt-6-luna"),
+        **{
+            stage: LLMStageConfig(model="anthropic/claude-haiku-5.5")
+            for stage in ("structure", "classify", "compose")
+        },
+    }
 
 
 class Settings(BaseSettings):
@@ -31,6 +50,23 @@ class Settings(BaseSettings):
     render_dpi_hires: int = 300
     sse_interval: float = 1.0
     openrouter_api_key: SecretStr | None = None
+    openrouter_base_url: str = "https://openrouter.ai/api/v1"
+    llm_mode: Literal["live", "fake", "recorded"] = "live"
+    llm_timeout_s: float = 120
+    llm_max_retries: int = 3
+    llm_stage_models: dict[str, LLMStageConfig] = Field(default_factory=default_stage_models)
+    llm_allowed_models: list[str] = Field(
+        default_factory=lambda: [
+            "google/gemini-3.8-flash",
+            "qwen/qwen3.8-flash",
+            "openai/gpt-6-luna",
+            "anthropic/claude-haiku-5.5",
+            "nvidia/nemotron-3.5-super-vl:free",
+        ]
+    )
+    llm_max_price_in_per_m: float = 1.0
+    llm_max_price_out_per_m: float = 5.0
+    llm_budget_usd: float = 0.50
     jwt_secret: SecretStr = SecretStr(DEV_JWT_SECRET)
     cookie_secure: bool = False
     session_ttl_minutes: int = 720
