@@ -24,7 +24,8 @@ d = json.loads("{" + sys.stdin.read().strip() + "}")
 for k, name in (("primary", "5h"), ("secondary", "weekly")):
     v = d[k]
     reset = datetime.datetime.fromtimestamp(v["resets_at"]).strftime("%a %d %b %H:%M")
-    print(f"  {name:6s} used {v[\"used_percent\"]:5.1f}%  resets {reset}")'
+    pct = v["used_percent"]
+    print(f"  {name:6s} used {pct:5.1f}%  resets {reset}")'
   fi
   echo "== agy"
   (cd "$ROOT" && timeout 90 agy -p "/usage" 2>/dev/null | sed 's/^/  /') || echo "  (unavailable)"
