@@ -2,6 +2,7 @@ import logging
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from importlib.metadata import version
+from secrets import compare_digest
 from typing import Annotated, Literal
 from uuid import uuid4
 
@@ -17,6 +18,7 @@ from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException
 from starlette.responses import Response
 
+from qbank.api.routes import router
 from qbank.config import get_settings
 from qbank.db import get_db
 
@@ -61,18 +63,31 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
+    app.include_router(router)
+
     @app.middleware("http")
     async def request_id(
         request: Request, call_next: Callable[[Request], Awaitable[Response]]
     ) -> Response:
         # IDs are generated locally so untrusted headers cannot inject log content.
         request.state.request_id = str(uuid4())
+        if (
+            request.method in {"POST", "PUT", "PATCH", "DELETE"}
+            and request.url.path != "/api/v1/auth/login"
+            and "qbank_session" in request.cookies
+        ):
+            csrf = request.cookies.get("qbank_csrf", "")
+            header = request.headers.get("X-CSRF-Token", "")
+            if not csrf or not header or not compare_digest(csrf.encode(), header.encode()):
+                return problem(403, "CSRF validation failed", "csrf_failed")
         response = await call_next(request)
         response.headers["X-Request-ID"] = request.state.request_id
         return response
 
     @app.exception_handler(HTTPException)
     async def http_error(request: Request, exc: HTTPException) -> JSONResponse:
+        if isinstance(exc.detail, dict):
+            return problem(exc.status_code, str(exc.detail["message"]), str(exc.detail["code"]))
         return problem(exc.status_code, str(exc.detail), "http_error")
 
     @app.exception_handler(RequestValidationError)

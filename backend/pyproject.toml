@@ -2,7 +2,19 @@
 name = "qbank"
 version = "0.1.0"
 requires-python = ">=3.12,<3.13"
-dependencies = ["fastapi", "uvicorn[standard]", "pydantic", "pydantic-settings", "sqlalchemy>=2", "psycopg[binary]>=3", "alembic", "structlog", "uuid-utils"]
+dependencies = [
+    "fastapi",
+    "uvicorn[standard]",
+    "pydantic",
+    "pydantic-settings",
+    "sqlalchemy>=2",
+    "psycopg[binary]>=3",
+    "alembic",
+    "structlog",
+    "uuid-utils",
+    "argon2-cffi>=25.1.0",
+    "pyjwt>=2.15.1",
+]
 
 [dependency-groups]
 dev = ["ruff", "mypy", "pytest", "pytest-cov", "httpx"]

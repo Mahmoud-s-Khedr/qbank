@@ -1,8 +1,11 @@
 from functools import lru_cache
 from typing import Literal
 
-from pydantic import SecretStr
+from pydantic import SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
+
+MIN_SECRET_LENGTH = 32
+DEV_JWT_SECRET = "local-development-only"  # noqa: S105 -- public development default
 
 
 class Settings(BaseSettings):
@@ -18,8 +21,21 @@ class Settings(BaseSettings):
     s3_access_key: str = "qbanklocal"
     s3_secret_key: SecretStr = SecretStr("qbanklocalpassword")
     openrouter_api_key: SecretStr | None = None
-    jwt_secret: SecretStr = SecretStr("local-development-only")
+    jwt_secret: SecretStr = SecretStr(DEV_JWT_SECRET)
+    cookie_secure: bool = False
+    session_ttl_minutes: int = 720
     cors_origins: list[str] = ["http://localhost:5173"]
+
+    @model_validator(mode="after")
+    def validate_production(self) -> "Settings":
+        secret = self.jwt_secret.get_secret_value()
+        if self.session_ttl_minutes <= 0:
+            raise ValueError("session_ttl_minutes must be positive")
+        if self.env == "prod" and (
+            secret == DEV_JWT_SECRET or len(secret) < MIN_SECRET_LENGTH or not self.cookie_secure
+        ):
+            raise ValueError("Production requires a strong JWT secret and secure cookies")
+        return self
 
 
 @lru_cache
