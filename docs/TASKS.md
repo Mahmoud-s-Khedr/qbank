@@ -24,7 +24,7 @@ Detailed task files (`docs/tasks/Txx-*.md`) are written just before dispatch, so
 | T14 | 3 | Sources UI: upload, list, detail w/ live progress, page grid, costs | ag | flash or argon (complex UI only) | T05,T13 | done |
 | T15 | 3 | Review workspace UI (split view, issues, editor, shortcuts, split/merge, re-crop, re-extract diff) | cc-sonnet | sonnet 5.5 | T12,T13 | done |
 | T16 | 4 | Bank search API (FTS + trigram + facets), bulk metadata edit, manual question create | ag | argon-high | T11 | done |
-| T17 | 4 | Bank UI + taxonomy manager UI | ag | flash or argon (complex UI only) | T16,T13 | in progress |
+| T17 | 4 | Bank UI + taxonomy manager UI | ag | flash or argon (complex UI only) | T16,T13 | done |
 | T18 | 5 | Exams: model/API, sections, blueprint sampler, stimulus grouping, versions/shuffling (hypothesis tests) | cc-sonnet | sonnet 5.5 | T16 | done |
 | T19 | 5 | AI-assisted composition (compose stage) | cx | terra / medium | T18,T06 | done |
 | T20 | 5 | Exam builder UI (blueprint, manual cart, AI assistant, sections, versions) | cc-sonnet | sonnet 5.5 | T18,T19 | done |
