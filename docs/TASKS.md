@@ -19,7 +19,7 @@ Detailed task files (`docs/tasks/Txx-*.md`) are written just before dispatch, so
 | T09 | 1 | Structure detection (chapter/lesson tree) + answer-key matching | cx | terra / medium | T08 | todo |
 | T10 | 1 | `qbank-eval` CLI + run on candidate models → MODELS.md results, choose defaults | ag + cc | terra / medium | T07,T08 | done |
 | T11 | 2 | Validation rules, confidence, verifier pass, Arabic normalization, dedup, classification | ag | argon-high | T08 | done |
-| T12 | 3 | Review APIs: question/stimulus CRUD, audit log, split/merge, re-crop, re-extract with diff, bulk approve | cc-sonnet | sonnet 5.5 | T11 | in progress |
+| T12 | 3 | Review APIs: question/stimulus CRUD, audit log, split/merge, re-crop, re-extract with diff, bulk approve | cc-sonnet | sonnet 5.5 | T11 | done |
 | T13 | 3 | Shared UI: QmdRenderer, QmdEditor, PageCanvas (zoom/pan/boxes/draw) | ag | flash or argon (complex UI only) | T02 | done |
 | T14 | 3 | Sources UI: upload, list, detail w/ live progress, page grid, costs | ag | flash or argon (complex UI only) | T05,T13 | done |
 | T15 | 3 | Review workspace UI (split view, issues, editor, shortcuts, split/merge, re-crop, re-extract diff) | ag | flash or argon (complex UI only) | T12,T13 | todo |
@@ -57,3 +57,4 @@ cc: T00, T03 review, every merge, T10 decision, integration fixes, final accepta
 | 2026-10-31 | T21 | cc-sonnet 5.5 sub-agent | ~195k subagent tokens, 20 min |
 | 2026-10-31 | T11 | agy argon-high | — |
 | 2026-10-31 | T22 | cc-sonnet 5.5 sub-agent | ~156k subagent tokens, 19 min |
+| 2026-10-31 | T12 | cc-sonnet 5.5 sub-agent | ~205k subagent tokens (paused once at the Claude 5h limit) |
