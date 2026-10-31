@@ -31,3 +31,7 @@ eval-reports/
 .idea/
 .vscode/
 .DS_Store
+
+# copyrighted sample workbooks: kept local only, never committed (see fixtures/README.md)
+fixtures/pdfs/
+fixtures/golden/pages/
