@@ -48,3 +48,7 @@ def database(monkeypatch: pytest.MonkeyPatch) -> Iterator[str]:
         with admin.connect() as connection:
             connection.execute(text(f'DROP DATABASE "{name}" WITH (FORCE)'))
         admin.dispose()
+
+
+def pytest_configure(config: pytest.Config) -> None:
+    config.addinivalue_line("markers", "slow: resource-intensive integration test")

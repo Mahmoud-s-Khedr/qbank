@@ -4,7 +4,7 @@ from sqlalchemy import func, select
 from sqlalchemy.orm import Session
 
 from qbank.api.pagination import paginate
-from qbank.models import Chapter, Lesson, Subject
+from qbank.models import Chapter, Lesson, Source, Subject
 from qbank.schemas.taxonomy import (
     ChapterOut,
     ItemIn,
@@ -27,6 +27,12 @@ def ensure_deletable_subject(db: Session, org_id: UUID, subject_id: UUID) -> boo
             .select_from(Chapter)
             .join(Subject)
             .where(Subject.org_id == org_id, Chapter.subject_id == subject_id)
+        )
+        == 0
+        and db.scalar(
+            select(func.count())
+            .select_from(Source)
+            .where(Source.org_id == org_id, Source.subject_id == subject_id)
         )
         == 0
     )

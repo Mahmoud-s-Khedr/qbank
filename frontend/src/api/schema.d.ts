@@ -124,6 +124,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/jobs/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Job */
+    get: operations["job_api_v1_jobs__id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/lessons/{id}": {
     parameters: {
       query?: never;
@@ -140,6 +157,93 @@ export interface paths {
     head?: never;
     /** Edit Lesson */
     patch: operations["edit_lesson_api_v1_lessons__id__patch"];
+    trace?: never;
+  };
+  "/api/v1/sources": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Listing */
+    get: operations["listing_api_v1_sources_get"];
+    put?: never;
+    /** Upload */
+    post: operations["upload_api_v1_sources_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/sources/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Detail */
+    get: operations["detail_api_v1_sources__id__get"];
+    put?: never;
+    post?: never;
+    /** Delete */
+    delete: operations["delete_api_v1_sources__id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/sources/{id}/events": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Events */
+    get: operations["events_api_v1_sources__id__events_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/sources/{id}/pages": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Pages */
+    get: operations["pages_api_v1_sources__id__pages_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/sources/{id}/pages/{number}/image": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Image */
+    get: operations["image_api_v1_sources__id__pages__number__image_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
     trace?: never;
   };
   "/api/v1/subjects": {
@@ -269,6 +373,20 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
   schemas: {
+    /** Body_upload_api_v1_sources_post */
+    Body_upload_api_v1_sources_post: {
+      /** File */
+      file: string;
+      /** Grade */
+      grade?: string | null;
+      /**
+       * Subject Id
+       * Format: uuid
+       */
+      subject_id: string;
+      /** Title */
+      title: string;
+    };
     /** ChapterOut */
     ChapterOut: {
       /**
@@ -358,6 +476,39 @@ export interface components {
       /** Title */
       title?: string | null;
     };
+    /** JobOut */
+    JobOut: {
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Error */
+      error: string | null;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Kind */
+      kind: string;
+      /** Progress */
+      progress: {
+        [key: string]: unknown;
+      };
+      /**
+       * Ref Id
+       * Format: uuid
+       */
+      ref_id: string;
+      /** Status */
+      status: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
     /**
      * Language
      * @enum {string}
@@ -406,6 +557,61 @@ export interface components {
       /** Password */
       password: string;
     };
+    /**
+     * PageKind
+     * @enum {string}
+     */
+    PageKind:
+      | "cover"
+      | "blank"
+      | "toc"
+      | "section_divider"
+      | "questions"
+      | "answer_key"
+      | "answer_sheet"
+      | "other";
+    /** PageOut */
+    PageOut: {
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Dpi */
+      dpi: number | null;
+      /** Error */
+      error: string | null;
+      /** Height Px */
+      height_px: number | null;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      page_kind: components["schemas"]["PageKind"] | null;
+      /** Page Number */
+      page_number: number;
+      status: components["schemas"]["PageStatus"];
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /** Width Px */
+      width_px: number | null;
+    };
+    /**
+     * PageStatus
+     * @enum {string}
+     */
+    PageStatus: "pending" | "rendered" | "extracted" | "validated" | "failed";
+    /** Page[SourceOut] */
+    Page_SourceOut_: {
+      /** Items */
+      items: components["schemas"]["SourceOut"][];
+      /** Next Cursor */
+      next_cursor: string | null;
+    };
     /** Page[SubjectOut] */
     Page_SubjectOut_: {
       /** Items */
@@ -430,6 +636,94 @@ export interface components {
      * @enum {string}
      */
     Role: "admin" | "editor" | "teacher";
+    /** SourceDetail */
+    SourceDetail: {
+      /** Cost Usd */
+      cost_usd: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Error */
+      error: string | null;
+      /** Grade */
+      grade: string | null;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Page Count */
+      page_count: number | null;
+      /** Page Counts */
+      page_counts: {
+        [key: string]: number;
+      };
+      /** Stage */
+      stage: string | null;
+      status: components["schemas"]["SourceStatus"];
+      /**
+       * Subject Id
+       * Format: uuid
+       */
+      subject_id: string;
+      /** Title */
+      title: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /** SourceOut */
+    SourceOut: {
+      /** Cost Usd */
+      cost_usd: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Error */
+      error: string | null;
+      /** Grade */
+      grade: string | null;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Page Count */
+      page_count: number | null;
+      /** Stage */
+      stage: string | null;
+      status: components["schemas"]["SourceStatus"];
+      /**
+       * Subject Id
+       * Format: uuid
+       */
+      subject_id: string;
+      /** Title */
+      title: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /**
+     * SourceStatus
+     * @enum {string}
+     */
+    SourceStatus:
+      | "uploaded"
+      | "rendering"
+      | "extracting"
+      | "validating"
+      | "ready"
+      | "failed"
+      | "paused";
     /** SubjectIn */
     SubjectIn: {
       /** Grade */
@@ -503,6 +797,15 @@ export interface components {
       language?: components["schemas"]["Language"] | null;
       /** Name */
       name?: string | null;
+    };
+    /** UploadResult */
+    UploadResult: {
+      /**
+       * Job Id
+       * Format: uuid
+       */
+      job_id: string;
+      source: components["schemas"]["SourceOut"];
     };
     /** UserCreate */
     UserCreate: {
@@ -799,6 +1102,37 @@ export interface operations {
       };
     };
   };
+  job_api_v1_jobs__id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["JobOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   delete_lesson_api_v1_lessons__id__delete: {
     parameters: {
       query?: never;
@@ -850,6 +1184,231 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["LessonOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  listing_api_v1_sources_get: {
+    parameters: {
+      query?: {
+        subject_id?: string | null;
+        status?: components["schemas"]["SourceStatus"] | null;
+        cursor?: string | null;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Page_SourceOut_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  upload_api_v1_sources_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "multipart/form-data": components["schemas"]["Body_upload_api_v1_sources_post"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["UploadResult"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  detail_api_v1_sources__id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SourceDetail"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_api_v1_sources__id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  events_api_v1_sources__id__events_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  pages_api_v1_sources__id__pages_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PageOut"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  image_api_v1_sources__id__pages__number__image_get: {
+    parameters: {
+      query?: {
+        variant?: "display" | "hires";
+      };
+      header?: {
+        "if-none-match"?: string | null;
+      };
+      path: {
+        id: string;
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
         };
       };
       /** @description Validation Error */

@@ -1,4 +1,4 @@
-.PHONY: infra-up infra-down be-install be-lint be-fmt be-types be-test be-test-unit be-migrate be-openapi fe-install fe-lint fe-types fe-test fe-build api-gen contract-check lint-actions pre-commit-install check
+.PHONY: infra-up infra-down be-install be-lint be-fmt be-types be-test be-test-unit be-migrate be-openapi fe-install fe-lint fe-types fe-test fe-build api-gen contract-check lint-actions pre-commit-install check be-dev be-worker
 infra-up:
 	docker compose up -d --wait postgres redis minio
 	docker compose run --rm minio-init
@@ -43,3 +43,7 @@ pre-commit-install:
 	pre-commit install --hook-type pre-push
 check: be-lint be-types be-test contract-check lint-actions
 	@if [ -f frontend/package.json ]; then $(MAKE) fe-lint fe-types fe-test fe-build && pnpm -C frontend format:check; fi
+be-dev:
+	uv run --directory backend uvicorn qbank.api.main:app --reload
+be-worker:
+	uv run --directory backend dramatiq qbank.worker --processes $(WORKER_PROCESSES) --threads $(WORKER_THREADS)

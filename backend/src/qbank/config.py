@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     s3_bucket: str = "qbank"
     s3_access_key: str = "qbanklocal"
     s3_secret_key: SecretStr = SecretStr("qbanklocalpassword")
+    storage_backend: Literal["s3", "local"] = "s3"
+    storage_local_root: str = "./storage"
+    max_pages: int = 1000
+    max_upload_mb: int = 300
+    render_dpi_display: int = 150
+    render_dpi_hires: int = 300
+    sse_interval: float = 1.0
     openrouter_api_key: SecretStr | None = None
     jwt_secret: SecretStr = SecretStr(DEV_JWT_SECRET)
     cookie_secure: bool = False

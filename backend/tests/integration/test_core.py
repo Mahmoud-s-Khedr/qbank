@@ -1,6 +1,7 @@
 from collections.abc import Iterator
 from datetime import UTC, datetime, timedelta
 from http import HTTPStatus
+from pathlib import Path
 from typing import cast
 from uuid import UUID, uuid4
 
@@ -15,10 +16,13 @@ from sqlalchemy.orm import Session
 from qbank.auth import hasher
 from qbank.cli import seed_dev
 from qbank.config import Settings, get_settings
-from qbank.db import get_db
-from qbank.models import Organization, Role, User
+from qbank.db import get_db, get_engine
+from qbank.models import Organization, Role, SourceStatus, User
+from qbank.pipeline import orchestrator
 from qbank.services import auth
 from qbank.services.taxonomy import tree
+from qbank.storage import get_store
+from qbank.worker import render_page, render_source
 
 
 @pytest.fixture
@@ -354,3 +358,228 @@ def test_tree_query_count_is_constant(
     event.remove(engine, "before_cursor_execute", count_queries)
     engine.dispose()
     assert len(statements) == len(("subject", "chapters", "lessons"))
+
+
+@pytest.mark.integration
+def test_upload_render_and_images(
+    setup_core: dict[str, str],
+    database: str,
+    client: TestClient,
+    monkeypatch: pytest.MonkeyPatch,
+    tmp_path: object,
+) -> None:
+    monkeypatch.setenv("QBANK_STORAGE_BACKEND", "local")
+    monkeypatch.setenv("QBANK_STORAGE_LOCAL_ROOT", str(tmp_path))
+    monkeypatch.setenv("QBANK_RENDER_DPI_DISPLAY", "24")
+    monkeypatch.setenv("QBANK_RENDER_DPI_HIRES", "36")
+    get_settings.cache_clear()
+    get_store.cache_clear()
+    get_engine.cache_clear()
+    queued: list[str] = []
+    monkeypatch.setattr(
+        orchestrator,
+        "STAGES",
+        [orchestrator.Stage("render", queued.append, SourceStatus.rendering)],
+    )
+    pages: list[int] = []
+    monkeypatch.setattr(render_page, "send", lambda sid, number: pages.append(number))
+    login(client, "a@example.com")
+    subject = client.post("/api/v1/subjects", json={"name": "Render", "language": "ar"}).json()[
+        "id"
+    ]
+    pdf = Path("../fixtures/pdfs/test-2027.pdf").read_bytes()
+    response = client.post(
+        "/api/v1/sources",
+        data={"subject_id": subject, "title": "Book"},
+        files={"file": ("book.pdf", pdf, "application/pdf")},
+    )
+    assert response.status_code == HTTPStatus.ACCEPTED, response.text
+    job_id = response.json()["job_id"]
+    sid = response.json()["source"]["id"]
+    assert queued == [sid]
+    assert client.delete(f"/api/v1/subjects/{subject}").status_code == HTTPStatus.CONFLICT
+    render_source.fn(sid)
+    assert pages == [1, 2]
+    for number in pages:
+        render_page.fn(sid, number)
+    response = client.get(f"/api/v1/sources/{sid}")
+    assert response.json()["status"] == "ready"
+    assert response.json()["page_counts"] == {"rendered": 2}
+    render_page.fn(sid, 1)
+    render_source.fn(sid)
+    assert len(client.get(f"/api/v1/sources/{sid}/pages").json()) == len(pages)
+    assert (
+        len(
+            client.get("/api/v1/sources", params={"subject_id": subject, "status": "ready"}).json()[
+                "items"
+            ]
+        )
+        == 1
+    )
+    assert (
+        client.get(f"/api/v1/sources/{sid}/pages/1/image?variant=hires").headers["content-type"]
+        == "image/png"
+    )
+    image = client.get(f"/api/v1/sources/{sid}/pages/1/image")
+    assert image.headers["content-type"] == "image/webp"
+    assert (
+        client.get(
+            f"/api/v1/sources/{sid}/pages/1/image", headers={"If-None-Match": image.headers["etag"]}
+        ).status_code
+        == HTTPStatus.NOT_MODIFIED
+    )
+    assert "event: progress" in client.get(f"/api/v1/sources/{sid}/events").text
+    assert client.get(f"/api/v1/jobs/{job_id}").json()["status"] == "ready"
+    login(client, "b@example.com")
+    assert client.get(f"/api/v1/sources/{sid}").status_code == HTTPStatus.NOT_FOUND
+    assert client.get(f"/api/v1/sources/{sid}/pages/1/image").status_code == HTTPStatus.NOT_FOUND
+    login(client, "a@example.com")
+    assert client.delete(f"/api/v1/sources/{sid}").status_code == HTTPStatus.NO_CONTENT
+    assert client.get(f"/api/v1/sources/{sid}").status_code == HTTPStatus.NOT_FOUND
+    assert not list(Path(str(tmp_path)).rglob("*.pdf"))
+    get_engine.cache_clear()
+    get_store.cache_clear()
+    get_settings.cache_clear()
+
+
+@pytest.mark.integration
+def test_upload_validation_and_roles(
+    setup_core: dict[str, str], client: TestClient, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("QBANK_STORAGE_BACKEND", "local")
+    monkeypatch.setenv("QBANK_STORAGE_LOCAL_ROOT", str(tmp_path))
+    monkeypatch.setenv("QBANK_MAX_UPLOAD_MB", "0")
+    get_settings.cache_clear()
+    get_store.cache_clear()
+    login(client, "a@example.com")
+    subject = client.post("/api/v1/subjects", json={"name": "Input", "language": "ar"}).json()["id"]
+    data = {"subject_id": subject, "title": "Book"}
+    bad = client.post("/api/v1/sources", data=data, files={"file": ("bad.pdf", b"bad")})
+    assert bad.status_code == HTTPStatus.UNPROCESSABLE_ENTITY
+    assert bad.json()["code"] == "invalid_pdf"
+    large = client.post("/api/v1/sources", data=data, files={"file": ("large.pdf", b"%PDF-1")})
+    assert large.status_code == HTTPStatus.REQUEST_ENTITY_TOO_LARGE
+    assert large.json()["code"] == "file_too_large"
+    login(client, "teacher@example.com")
+    assert (
+        client.post("/api/v1/sources", data=data, files={"file": ("x.pdf", b"%PDF-1")}).status_code
+        == HTTPStatus.FORBIDDEN
+    )
+    login(client, "b@example.com")
+    assert (
+        client.post("/api/v1/sources", data=data, files={"file": ("x.pdf", b"%PDF-1")}).status_code
+        == HTTPStatus.NOT_FOUND
+    )
+    get_store.cache_clear()
+    get_settings.cache_clear()
+
+
+@pytest.mark.integration
+@pytest.mark.slow
+def test_damaged_pdf_render(
+    setup_core: dict[str, str], client: TestClient, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("QBANK_STORAGE_BACKEND", "local")
+    monkeypatch.setenv("QBANK_STORAGE_LOCAL_ROOT", str(tmp_path))
+    monkeypatch.setenv("QBANK_RENDER_DPI_DISPLAY", "12")
+    monkeypatch.setenv("QBANK_RENDER_DPI_HIRES", "12")
+    get_settings.cache_clear()
+    get_store.cache_clear()
+    get_engine.cache_clear()
+    monkeypatch.setattr(
+        orchestrator,
+        "STAGES",
+        [orchestrator.Stage("render", lambda sid: None, SourceStatus.rendering)],
+    )
+    pages: list[int] = []
+    monkeypatch.setattr(render_page, "send", lambda sid, number: pages.append(number))
+    login(client, "a@example.com")
+    subject = client.post("/api/v1/subjects", json={"name": "Damaged", "language": "ar"}).json()[
+        "id"
+    ]
+    pdf = Path("../fixtures/pdfs/test-exams.pdf").read_bytes()
+    response = client.post(
+        "/api/v1/sources",
+        data={"subject_id": subject, "title": "Damaged"},
+        files={"file": ("damaged.pdf", pdf)},
+    )
+    assert response.status_code == HTTPStatus.ACCEPTED
+    sid = response.json()["source"]["id"]
+    render_source.fn(sid)
+    for number in pages:
+        render_page.fn(sid, number)
+    result = client.get(f"/api/v1/sources/{sid}/pages").json()
+    assert all(page["status"] == "rendered" for page in result[:60])
+    assert all(page["status"] == "failed" and page["error"] for page in result[60:])
+    assert client.get(f"/api/v1/sources/{sid}").json()["status"] == "ready"
+    get_engine.cache_clear()
+    get_store.cache_clear()
+    get_settings.cache_clear()
+
+
+@pytest.mark.integration
+def test_stage_transition_compare_and_set(
+    setup_core: dict[str, str], client: TestClient, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    from concurrent.futures import ThreadPoolExecutor  # noqa: PLC0415 -- test-only concurrency helper
+
+    monkeypatch.setenv("QBANK_STORAGE_BACKEND", "local")
+    monkeypatch.setenv("QBANK_STORAGE_LOCAL_ROOT", str(tmp_path))
+    get_settings.cache_clear()
+    get_store.cache_clear()
+    get_engine.cache_clear()
+    monkeypatch.setattr(
+        orchestrator,
+        "STAGES",
+        [orchestrator.Stage("render", lambda sid: None, SourceStatus.rendering)],
+    )
+    login(client, "a@example.com")
+    subject = client.post("/api/v1/subjects", json={"name": "CAS", "language": "ar"}).json()["id"]
+    response = client.post(
+        "/api/v1/sources",
+        data={"subject_id": subject, "title": "CAS"},
+        files={"file": ("x.pdf", b"%PDF-1")},
+    )
+    sid = UUID(response.json()["source"]["id"])
+    with ThreadPoolExecutor(max_workers=2) as pool:
+        results = list(pool.map(lambda _: orchestrator.advance(sid, "render"), range(2)))
+    assert sorted(results) == [False, True]
+    get_engine.cache_clear()
+    get_store.cache_clear()
+    get_settings.cache_clear()
+
+
+@pytest.mark.integration
+def test_source_exceeding_page_limit_fails(
+    setup_core: dict[str, str], client: TestClient, monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
+    monkeypatch.setenv("QBANK_STORAGE_BACKEND", "local")
+    monkeypatch.setenv("QBANK_STORAGE_LOCAL_ROOT", str(tmp_path))
+    monkeypatch.setenv("QBANK_MAX_PAGES", "1")
+    get_settings.cache_clear()
+    get_store.cache_clear()
+    get_engine.cache_clear()
+    monkeypatch.setattr(
+        orchestrator,
+        "STAGES",
+        [orchestrator.Stage("render", lambda sid: None, SourceStatus.rendering)],
+    )
+    login(client, "a@example.com")
+    subject = client.post("/api/v1/subjects", json={"name": "Limit", "language": "ar"}).json()["id"]
+    pdf = Path("../fixtures/pdfs/test-2027.pdf").read_bytes()
+    response = client.post(
+        "/api/v1/sources",
+        data={"subject_id": subject, "title": "Limit"},
+        files={"file": ("book.pdf", pdf)},
+    )
+    assert response.status_code == HTTPStatus.ACCEPTED
+    sid = response.json()["source"]["id"]
+    job_id = response.json()["job_id"]
+    render_source.fn(sid)
+    source = client.get(f"/api/v1/sources/{sid}").json()
+    assert source["status"] == "failed"
+    assert source["error"] == "too_many_pages"
+    assert client.get(f"/api/v1/jobs/{job_id}").json()["status"] == "failed"
+    get_engine.cache_clear()
+    get_store.cache_clear()
+    get_settings.cache_clear()
