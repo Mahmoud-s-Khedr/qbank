@@ -1,0 +1,58 @@
+<!doctype html>
+<html dir="{{ dir }}" lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<title>{{ view.header.exam_title }}</title>
+<style>{{ katex_css|safe }}</style>
+<style>{{ font_css|safe }}</style>
+<style>
+:root { --ink: #111; --rule: #444; --soft: #777; }
+* { box-sizing: border-box; }
+html { font-size: {{ layout.font_size_pt }}pt; }
+body {
+  margin: 0; color: var(--ink); line-height: 1.7;
+  font-family: 'Noto Naskh Arabic', 'Noto Sans', 'DejaVu Sans', serif;
+  -webkit-print-color-adjust: exact; print-color-adjust: exact;
+}
+p { margin: 0.25em 0; }
+h1, h2, h3 { margin: 0; line-height: 1.4; }
+img { display: block; max-width: 60%; height: auto; margin-block: 0.4em; break-inside: avoid; }
+p:has(img), figure, table, pre { break-inside: avoid; }
+table.grid { border-collapse: collapse; }
+table.grid th, table.grid td, .qmd table th, .qmd table td { border: 1px solid var(--rule); padding: 0.15em 0.6em; text-align: start; }
+.qmd table { border-collapse: collapse; margin-block: 0.4em; }
+pre { direction: ltr; text-align: left; font-family: monospace; white-space: pre-wrap; }
+blockquote { margin-inline: 0; padding-inline-start: 1em; border-inline-start: 3px solid var(--soft); }
+.blank { display: inline-block; min-width: 4.5em; border-bottom: 1.5px solid var(--ink); vertical-align: baseline; margin-inline: 0.2em; }
+.missing-asset { border: 1px dashed var(--soft); padding: 0 0.5em; color: var(--soft); }
+.math.inline, .math.display-inline { direction: ltr; unicode-bidi: isolate; }
+.math.display { direction: ltr; text-align: center; margin-block: 0.4em; overflow: hidden; }
+.katex { font-size: 1.05em; }
+.katex-display { margin: 0.3em 0; }
+</style>
+{% block style %}{% endblock %}
+</head>
+<body>
+{% block body %}{% endblock %}
+<script src="{{ vendor.katex }}"></script>
+<script src="{{ vendor.mhchem }}"></script>
+<script src="{{ vendor.auto_render }}"></script>
+<script>
+(function () {
+  window.__qbankReady = false;
+  function finish() { window.__qbankReady = true; }
+  try {
+    renderMathInElement(document.body, {
+      delimiters: [
+        { left: "\\[", right: "\\]", display: true },
+        { left: "\\(", right: "\\)", display: false }
+      ],
+      throwOnError: false, errorColor: "#dc2626", strict: "ignore"
+    });
+  } catch (e) { /* unrenderable math stays as text */ }
+  var fonts = document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve();
+  fonts.then(finish, finish);
+})();
+</script>
+</body>
+</html>

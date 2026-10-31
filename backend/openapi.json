@@ -634,6 +634,18 @@
           },
           "layout": {
             "$ref": "#/components/schemas/ExamLayout"
+          },
+          "template_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Template Id"
           }
         },
         "title": "ExamSettings",
@@ -743,6 +755,155 @@
           }
         },
         "title": "ExamUpdate",
+        "type": "object"
+      },
+      "ExportBatch": {
+        "description": "Accepted export requests; poll ``GET /exams/{id}/exports`` until each is ready or failed.",
+        "properties": {
+          "exports": {
+            "items": {
+              "$ref": "#/components/schemas/ExportOut"
+            },
+            "title": "Exports",
+            "type": "array"
+          }
+        },
+        "required": [
+          "exports"
+        ],
+        "title": "ExportBatch",
+        "type": "object"
+      },
+      "ExportOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "exam_id": {
+            "format": "uuid",
+            "title": "Exam Id",
+            "type": "string"
+          },
+          "exam_revision": {
+            "title": "Exam Revision",
+            "type": "integer"
+          },
+          "exam_version_id": {
+            "format": "uuid",
+            "title": "Exam Version Id",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "enum": [
+              "pdf",
+              "answer_key_pdf",
+              "bubble_sheet_pdf"
+            ],
+            "title": "Kind",
+            "type": "string"
+          },
+          "size_bytes": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Size Bytes"
+          },
+          "stale": {
+            "title": "Stale",
+            "type": "boolean"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "ready",
+              "failed"
+            ],
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "version_label": {
+            "title": "Version Label",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "exam_id",
+          "exam_version_id",
+          "version_label",
+          "kind",
+          "status",
+          "error",
+          "exam_revision",
+          "size_bytes",
+          "stale"
+        ],
+        "title": "ExportOut",
+        "type": "object"
+      },
+      "ExportsIn": {
+        "properties": {
+          "kinds": {
+            "items": {
+              "enum": [
+                "pdf",
+                "answer_key_pdf",
+                "bubble_sheet_pdf"
+              ],
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Kinds",
+            "type": "array"
+          },
+          "versions": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "const": "all",
+                "type": "string"
+              }
+            ],
+            "default": "all",
+            "title": "Versions"
+          }
+        },
+        "title": "ExportsIn",
         "type": "object"
       },
       "HTTPValidationError": {
@@ -1366,6 +1527,34 @@
           "next_cursor"
         ],
         "title": "Page[SubjectOut]",
+        "type": "object"
+      },
+      "Page_TemplateOut_": {
+        "properties": {
+          "items": {
+            "items": {
+              "$ref": "#/components/schemas/TemplateOut"
+            },
+            "title": "Items",
+            "type": "array"
+          },
+          "next_cursor": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Next Cursor"
+          }
+        },
+        "required": [
+          "items",
+          "next_cursor"
+        ],
+        "title": "Page[TemplateOut]",
         "type": "object"
       },
       "Page_UserOut_": {
@@ -2249,6 +2438,123 @@
         "title": "SubjectUpdate",
         "type": "object"
       },
+      "TemplateIn": {
+        "properties": {
+          "header": {
+            "$ref": "#/components/schemas/ExamHeader"
+          },
+          "logo_asset_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Asset Id"
+          },
+          "name": {
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "title": "TemplateIn",
+        "type": "object"
+      },
+      "TemplateOut": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "header": {
+            "$ref": "#/components/schemas/ExamHeader"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "logo_asset_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Asset Id"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "name",
+          "header",
+          "logo_asset_id"
+        ],
+        "title": "TemplateOut",
+        "type": "object"
+      },
+      "TemplateUpdate": {
+        "properties": {
+          "header": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/ExamHeader"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "logo_asset_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Logo Asset Id"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          }
+        },
+        "title": "TemplateUpdate",
+        "type": "object"
+      },
       "UploadResult": {
         "properties": {
           "job_id": {
@@ -3090,6 +3396,234 @@
         ]
       }
     },
+    "/api/v1/exam-templates": {
+      "get": {
+        "operationId": "list_templates_api_v1_exam_templates_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "cursor",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Cursor"
+            }
+          },
+          {
+            "in": "query",
+            "name": "limit",
+            "required": false,
+            "schema": {
+              "default": 50,
+              "maximum": 100,
+              "minimum": 1,
+              "title": "Limit",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Page_TemplateOut_"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Templates",
+        "tags": [
+          "exports"
+        ]
+      },
+      "post": {
+        "operationId": "create_template_api_v1_exam_templates_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create Template",
+        "tags": [
+          "exports"
+        ]
+      }
+    },
+    "/api/v1/exam-templates/{id}": {
+      "delete": {
+        "operationId": "delete_template_api_v1_exam_templates__id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Template",
+        "tags": [
+          "exports"
+        ]
+      },
+      "get": {
+        "operationId": "get_template_api_v1_exam_templates__id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get Template",
+        "tags": [
+          "exports"
+        ]
+      },
+      "patch": {
+        "operationId": "edit_template_api_v1_exam_templates__id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TemplateUpdate"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Edit Template",
+        "tags": [
+          "exports"
+        ]
+      }
+    },
     "/api/v1/exams": {
       "get": {
         "operationId": "list_exams_api_v1_exams_get",
@@ -3531,6 +4065,104 @@
         ]
       }
     },
+    "/api/v1/exams/{id}/exports": {
+      "get": {
+        "operationId": "list_exports_api_v1_exams__id__exports_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/ExportOut"
+                  },
+                  "title": "Response List Exports Api V1 Exams  Id  Exports Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Exports",
+        "tags": [
+          "exports"
+        ]
+      },
+      "post": {
+        "operationId": "request_exports_api_v1_exams__id__exports_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportsIn"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportBatch"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Request Exports",
+        "tags": [
+          "exports"
+        ]
+      }
+    },
     "/api/v1/exams/{id}/items": {
       "post": {
         "operationId": "add_items_api_v1_exams__id__items_post",
@@ -3849,6 +4481,81 @@
         "summary": "Answer Key",
         "tags": [
           "exams"
+        ]
+      }
+    },
+    "/api/v1/exports/{id}": {
+      "delete": {
+        "operationId": "delete_export_api_v1_exports__id__delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Delete Export",
+        "tags": [
+          "exports"
+        ]
+      }
+    },
+    "/api/v1/exports/{id}/download": {
+      "get": {
+        "operationId": "download_export_api_v1_exports__id__download_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/pdf": {}
+            },
+            "description": "The PDF file"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Download Export",
+        "tags": [
+          "exports"
         ]
       }
     },

@@ -39,6 +39,12 @@ jobs:
         with:
           enable-cache: true
       - run: make be-install
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('backend/uv.lock') }}
+      - name: Install Chromium for PDF export tests
+        run: uv run --directory backend playwright install --with-deps chromium
       - run: make be-lint
       - run: make be-types
       - run: make be-test

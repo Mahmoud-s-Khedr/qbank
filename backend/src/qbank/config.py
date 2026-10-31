@@ -52,6 +52,9 @@ class Settings(BaseSettings):
     render_dpi_display: int = 150
     render_dpi_hires: int = 300
     sse_interval: float = 1.0
+    export_chromium_path: str | None = None
+    export_timeout_s: float = 60
+    export_chromium_sandbox: bool = True
     openrouter_api_key: SecretStr | None = None
     openrouter_base_url: str = "https://openrouter.ai/api/v1"
     llm_mode: Literal["live", "fake", "recorded"] = "live"

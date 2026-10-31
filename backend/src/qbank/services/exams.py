@@ -37,6 +37,7 @@ from qbank.schemas.exams import (
     VersionOut,
 )
 from qbank.services.errors import Conflict, Invalid, NotFound
+from qbank.services.exam_templates import check_exam_template
 from qbank.services.scoping import get
 from qbank.services.unit_of_work import found, save, update
 
@@ -201,6 +202,7 @@ def detail(db: Session, exam: Exam) -> ExamDetail:
 def create(db: Session, user: User, data: ExamIn) -> ExamDetail:
     subject = found(get(db, Subject, user.org_id, data.subject_id))
     settings = data.settings or ExamSettings(language=subject.language.value)
+    check_exam_template(db, user.org_id, settings.template_id)
     exam = Exam(
         org_id=user.org_id,
         owner_id=user.id,
@@ -241,6 +243,8 @@ def listing(
 
 def edit(db: Session, user: User, exam_id: UUID, data: ExamUpdate) -> ExamDetail:
     exam = exam_for(db, user, exam_id)
+    if data.settings is not None:
+        check_exam_template(db, user.org_id, data.settings.template_id)
     if data.title is not None or data.settings is not None:
         touch(exam)
     if data.title is not None:

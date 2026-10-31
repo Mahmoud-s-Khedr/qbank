@@ -1,0 +1,101 @@
+{% extends "base.html.j2" %}
+{% block style %}
+<style>
+.exam-header { display: grid; grid-template-columns: 22mm 1fr 22mm; align-items: center; gap: 4mm; border-bottom: 2px solid var(--ink); padding-bottom: 2mm; }
+.exam-header .logo img { max-width: 100%; max-height: 22mm; margin: 0; }
+.exam-header .titles { text-align: center; }
+.exam-header .school { font-size: 1.15em; font-weight: 700; }
+.exam-header .title { font-size: 1.3em; font-weight: 700; }
+.meta { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 1mm 6mm; padding-block: 1.5mm; border-bottom: 1px solid var(--rule); font-size: 0.95em; }
+.meta b { font-weight: 700; }
+.student { display: flex; gap: 6mm; padding-block: 2.5mm; border-bottom: 1px solid var(--rule); }
+.student .field { flex: 1; display: flex; align-items: flex-end; gap: 2mm; white-space: nowrap; }
+.student .field i { flex: 1; border-bottom: 1px solid var(--ink); min-width: 12mm; height: 1.2em; }
+.instructions { margin-block: 2.5mm; padding: 1.5mm 3mm; border: 1px solid var(--rule); border-radius: 2mm; font-size: 0.95em; }
+.instructions h3 { font-size: 1em; }
+.content.cols-2 { column-count: 2; column-gap: 9mm; column-rule: 1px solid #bbb; }
+section.sec { margin-top: 3mm; }
+section.sec > h2 { font-size: 1.12em; background: #e8e8e8; padding: 0.1em 0.6em; margin-bottom: 1.5mm; break-after: avoid; }
+.sec-instructions { font-size: 0.95em; margin-bottom: 1.5mm; }
+.stimulus { border: 1px solid var(--rule); border-radius: 2mm; padding: 1.5mm 3mm; margin-block: 1.5mm 2mm; }
+.stimulus .intro { font-weight: 700; font-size: 0.95em; }
+.group { margin-bottom: 1.5mm; }
+.question { display: grid; grid-template-columns: 2.2em 1fr auto; column-gap: 1.5mm; break-inside: avoid; margin-bottom: 2.5mm; }
+.question .num { font-weight: 700; }
+.question .pts { font-size: 0.75em; color: var(--soft); white-space: nowrap; padding-inline-start: 2mm; }
+.choices { display: grid; gap: 0.1em 3mm; margin-block-start: 0.2em; }
+.choice { display: flex; gap: 0.4em; }
+.choice .lbl { font-weight: 700; }
+.lines { margin-block-start: 1mm; }
+.lines div { height: 1.9em; border-bottom: 1px dotted var(--soft); }
+.tf { display: flex; gap: 8mm; margin-block-start: 0.2em; }
+.tf span::before { content: ""; display: inline-block; width: 0.8em; height: 0.8em; border: 1.2px solid var(--ink); margin-inline-end: 0.3em; vertical-align: -0.05em; }
+.q-stem > p:first-child { margin-top: 0; }
+</style>
+{% endblock %}
+{% block body %}
+{% set h = view.header %}
+<header class="exam-header">
+  <div class="logo">{% if h.logo_uri %}<img src="{{ h.logo_uri }}" alt="">{% endif %}</div>
+  <div class="titles">
+    {% if h.school_name %}<div class="school">{{ h.school_name }}</div>{% endif %}
+    <div class="title">{{ h.exam_title }}</div>
+  </div>
+  <div class="version">{{ t.version }}: <b>{{ view.version_label }}</b></div>
+</header>
+<div class="meta">
+  {% if h.subject %}<span>{{ t.subject }}: <b>{{ h.subject }}</b></span>{% endif %}
+  {% if h.grade %}<span>{{ t.grade }}: <b>{{ d(h.grade) }}</b></span>{% endif %}
+  {% if h.date %}<span>{{ t.date }}: <b><bdi>{{ d(h.date) }}</bdi></b></span>{% endif %}
+  {% if h.duration_minutes %}<span>{{ t.duration }}: <b>{{ d(h.duration_minutes) }} {{ t.minutes }}</b></span>{% endif %}
+  <span>{{ t.total }}: <b>{{ d(view.total_points) }}</b></span>
+</div>
+<div class="student">
+  <div class="field"><span>{{ t.student_name }}:</span><i></i></div>
+  <div class="field"><span>{{ t.student_number }}:</span><i></i></div>
+  <div class="field"><span>{{ t.class }}:</span><i></i></div>
+</div>
+{% if h.instructions %}
+<div class="instructions"><h3>{{ t.instructions }}</h3><div class="qmd">{{ qmd(h.instructions) }}</div></div>
+{% endif %}
+<main class="content cols-{{ layout.columns }}">
+{% for section in view.sections %}
+  <section class="sec">
+    <h2 dir="auto">{{ section.title }}</h2>
+    {% if section.instructions %}<div class="sec-instructions qmd">{{ qmd(section.instructions) }}</div>{% endif %}
+    {% for group in section.groups %}
+    <div class="group">
+      {% if group.stimulus %}
+      <div class="stimulus">
+        <div class="intro">{{ group.stimulus.intro or t.intro }}</div>
+        <div class="qmd">{{ qmd(group.stimulus.content) }}</div>
+      </div>
+      {% endif %}
+      {% for q in group.questions %}
+      <div class="question q-{{ q.type }}">
+        <div class="num">{{ d(q.number) }}-</div>
+        <div class="q-body">
+          <div class="q-stem qmd">{{ qmd(q.stem) }}</div>
+          {% if q.choices %}
+          {% set per_row = choices_per_row(layout.choices_per_row, q.choices|map(attribute="content")|list) %}
+          <div class="choices per-row-{{ per_row }}" style="grid-template-columns: repeat({{ per_row }}, minmax(0, 1fr));">
+            {% for c in q.choices %}
+            <div class="choice"><span class="lbl">{{ c.label }}</span><span class="qmd" dir="auto">{{ qmd_inline(c.content) }}</span></div>
+            {% endfor %}
+          </div>
+          {% elif q.type == "true_false" %}
+          <div class="tf"><span>{{ t.true }}</span><span>{{ t.false }}</span></div>
+          {% endif %}
+          {% if q.has_lines and layout.answer_space_lines %}
+          <div class="lines">{% for _ in range(layout.answer_space_lines) %}<div></div>{% endfor %}</div>
+          {% endif %}
+        </div>
+        <div class="pts">({{ d(q.points) }} {{ t.mark if q.points == 1 else t.marks }})</div>
+      </div>
+      {% endfor %}
+    </div>
+    {% endfor %}
+  </section>
+{% endfor %}
+</main>
+{% endblock %}

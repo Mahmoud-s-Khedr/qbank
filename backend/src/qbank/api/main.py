@@ -13,7 +13,7 @@ from starlette.exceptions import HTTPException
 from starlette.responses import Response
 
 from qbank.api.middleware import csrf_middleware
-from qbank.api.routers import auth, exams, health, sources, taxonomy, users
+from qbank.api.routers import auth, exams, exports, health, sources, taxonomy, users
 from qbank.config import get_settings
 from qbank.services.errors import DomainError
 
@@ -55,6 +55,7 @@ def create_app() -> FastAPI:
     for router in (
         auth.router,
         exams.router,
+        exports.router,
         health.router,
         sources.router,
         taxonomy.router,
