@@ -348,3 +348,25 @@ def test_reasoning_off_maps_to_minimal_effort_for_models_that_require_it() -> No
     assert reasoning_payload("google/gemini-3.8-flash", "off") == {"effort": "minimal"}
     assert reasoning_payload("openai/gpt-6-luna", "off") == {"enabled": False}
     assert reasoning_payload("openai/gpt-6-luna", "low") == {"effort": "low"}
+
+
+def test_strict_schema_turns_tuples_into_plain_arrays() -> None:
+    from pydantic import BaseModel  # noqa: PLC0415 -- local to keep the test self-contained
+
+    from qbank.llm.client import strict_schema  # noqa: PLC0415
+
+    class Boxed(BaseModel):
+        box_2d: tuple[int, int, int, int]
+        mixed: tuple[int, str]
+
+    schema = strict_schema(Boxed.model_json_schema())
+    box = schema["properties"]["box_2d"]
+    assert "prefixItems" not in box
+    assert box["items"] == {"type": "integer"}
+    assert "minItems" not in box
+    assert "maxItems" not in box
+    assert schema["properties"]["mixed"]["items"] == {
+        "anyOf": [{"type": "integer"}, {"type": "string"}]
+    }
+    # The model still enforces the exact tuple length on validation.
+    assert Boxed.model_validate({"box_2d": [1, 2, 3, 4], "mixed": [1, "a"]}).box_2d == (1, 2, 3, 4)

@@ -144,6 +144,17 @@ def strict_schema(schema: dict[str, Any]) -> dict[str, Any]:
         if schema.get("type") == "object":
             schema["additionalProperties"] = False
             schema["required"] = list(schema.get("properties", {}))
+        if "prefixItems" in schema:
+            # Tuples (e.g. box_2d) become `prefixItems`, which OpenAI and Anthropic structured
+            # outputs reject (verified live, 2026-10-31). Send a plain array; the Pydantic model
+            # still enforces the exact length when the response is validated.
+            variants: list[dict[str, Any]] = []
+            for item in schema.pop("prefixItems"):
+                if item not in variants:
+                    variants.append(item)
+            schema["items"] = variants[0] if len(variants) == 1 else {"anyOf": variants}
+        for keyword in ("minItems", "maxItems"):
+            schema.pop(keyword, None)
         schema.pop("default", None)
     return schema
 
