@@ -1,6 +1,6 @@
 # Task board
 
-Owner key: **cx** = Codex (`codex-personal`, gpt-6.1-terra) · **ag** = agy (Gemini 4 Argon / 3.8 Flash) · **cc** = Claude Code (orchestrator).
+Owner key: **cc-sonnet** = Claude Code sub-agent on Sonnet 5.5 · **cx** = Codex (`codex-personal`, gpt-6.1-terra) · **ag** = agy (Gemini 4 Argon / 3.8 Flash) · **cc** = Claude Code (orchestrator).
 Cost policy: Codex runs at medium effort by default. agy uses Gemini 3.8 Flash unless the UI work is complex. OpenRouter calls use only the cheap models in MODELS.md.
 Each task runs in its own git worktree on branch `task/Txx`. Claude Code reviews it, runs `make check`, and merges into `main`.
 Detailed task files (`docs/tasks/Txx-*.md`) are written just before dispatch, so they reflect the merged state of `main`.
@@ -25,7 +25,7 @@ Detailed task files (`docs/tasks/Txx-*.md`) are written just before dispatch, so
 | T15 | 3 | Review workspace UI (split view, issues, editor, shortcuts, split/merge, re-crop, re-extract diff) | ag | flash or argon (complex UI only) | T12,T13 | todo |
 | T16 | 4 | Bank search API (FTS + trigram + facets), bulk metadata edit, manual question create | cx | terra / medium | T11 | todo |
 | T17 | 4 | Bank UI + taxonomy manager UI | ag | flash or argon (complex UI only) | T16,T13 | todo |
-| T18 | 5 | Exams: model/API, sections, blueprint sampler, stimulus grouping, versions/shuffling (hypothesis tests) | cx | terra / medium | T16 | todo |
+| T18 | 5 | Exams: model/API, sections, blueprint sampler, stimulus grouping, versions/shuffling (hypothesis tests) | cc-sonnet | sonnet 5.5 | T16 | in progress |
 | T19 | 5 | AI-assisted composition (compose stage) | cx | terra / medium | T18,T06 | todo |
 | T20 | 5 | Exam builder UI (blueprint, manual cart, AI assistant, sections, versions) | ag | flash or argon (complex UI only) | T18,T19 | todo |
 | T21 | 6 | PDF export: HTML templates, fonts, KaTeX, layout options, answer key, bubble sheet | cx | terra / medium | T18 | todo |
