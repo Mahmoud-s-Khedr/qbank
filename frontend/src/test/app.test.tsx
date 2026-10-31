@@ -15,7 +15,51 @@ import { createAppRouter } from "@/app/router";
 function mockHealthFetch(
   response: { status: number; body: unknown } | { networkError: true },
 ) {
-  return vi.spyOn(globalThis, "fetch").mockImplementation(() => {
+  return vi.spyOn(globalThis, "fetch").mockImplementation((request) => {
+    const url = request instanceof Request ? request.url : String(request);
+    if (url.includes("/api/v1/auth/me")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            id: "u",
+            name: "Admin",
+            role: "admin",
+            email: "a@example.com",
+            is_active: true,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+    }
+    if (url.includes("/api/v1/org/settings")) {
+      return Promise.resolve(
+        new Response(
+          JSON.stringify({
+            name: "School",
+            extract_model: "model",
+            verify_policy: "all",
+            default_digits: "arabic",
+            default_template_id: null,
+            llm_monthly_cap_usd: null,
+          }),
+          { status: 200, headers: { "Content-Type": "application/json" } },
+        ),
+      );
+    }
+    if (url.includes("/api/v1/llm/models"))
+      return Promise.resolve(
+        new Response("[]", {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
+    if (url.includes("/api/v1/exam-templates"))
+      return Promise.resolve(
+        new Response('{"items":[],"next_cursor":null}', {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        }),
+      );
     if ("networkError" in response) {
       return Promise.reject(new Error("Network error"));
     }
@@ -144,7 +188,7 @@ describe("App shell, i18n/RTL, routing, and health indicator", () => {
       await screen.findByRole("heading", { level: 1, name: "Settings" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("Organization and model settings"),
+      screen.getByRole("button", { name: "Organization" }),
     ).toBeInTheDocument();
   });
 

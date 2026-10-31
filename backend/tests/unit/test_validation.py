@@ -7,7 +7,16 @@ from PIL import Image
 
 from qbank.config import Settings
 from qbank.llm import FakeLLMClient
-from qbank.models import Language, PageKind, PageStatus, Question, Source, SourcePage, Stimulus
+from qbank.models import (
+    Language,
+    Organization,
+    PageKind,
+    PageStatus,
+    Question,
+    Source,
+    SourcePage,
+    Stimulus,
+)
 from qbank.pipeline.classify import (
     BATCH_SIZE,
     apply_classifications,
@@ -497,3 +506,9 @@ def test_classification_batching_and_human_difficulty_preserved() -> None:
     res, _ = classify_batch(fake, [q_ai])
     assert len(res.parsed.items) == 1
     assert res.parsed.items[0].difficulty == AI_DIFFICULTY_EASY
+
+
+def test_verify_policy_organization_default_and_source_override() -> None:
+    org = Organization(name="Test", settings={"verify_policy": "all"})
+    assert get_verify_policy(Source(pipeline_config={}), org) == "all"
+    assert get_verify_policy(Source(pipeline_config={"verify": "off"}), org) == "off"

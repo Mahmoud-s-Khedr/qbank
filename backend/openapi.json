@@ -838,6 +838,20 @@
         "title": "Body_upload_api_v1_sources_post",
         "type": "object"
       },
+      "Body_upload_logo_api_v1_exam_templates__id__logo_post": {
+        "properties": {
+          "file": {
+            "contentMediaType": "application/octet-stream",
+            "title": "File",
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ],
+        "title": "Body_upload_logo_api_v1_exam_templates__id__logo_post",
+        "type": "object"
+      },
       "BulkIn": {
         "additionalProperties": false,
         "properties": {
@@ -1352,6 +1366,91 @@
           "rows"
         ],
         "title": "ComposeSection",
+        "type": "object"
+      },
+      "CostGroup": {
+        "properties": {
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "string"
+          },
+          "name": {
+            "title": "Name",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "cost_usd"
+        ],
+        "title": "CostGroup",
+        "type": "object"
+      },
+      "CostSummary": {
+        "properties": {
+          "average_cost_per_page": {
+            "title": "Average Cost Per Page",
+            "type": "string"
+          },
+          "by_model": {
+            "items": {
+              "$ref": "#/components/schemas/CostGroup"
+            },
+            "title": "By Model",
+            "type": "array"
+          },
+          "by_month": {
+            "items": {
+              "$ref": "#/components/schemas/CostGroup"
+            },
+            "title": "By Month",
+            "type": "array"
+          },
+          "by_stage": {
+            "items": {
+              "$ref": "#/components/schemas/CostGroup"
+            },
+            "title": "By Stage",
+            "type": "array"
+          },
+          "cap_usd": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Cap Usd"
+          },
+          "this_month_usd": {
+            "title": "This Month Usd",
+            "type": "string"
+          },
+          "top_sources": {
+            "items": {
+              "$ref": "#/components/schemas/SourceCost"
+            },
+            "title": "Top Sources",
+            "type": "array"
+          },
+          "total_usd": {
+            "title": "Total Usd",
+            "type": "string"
+          }
+        },
+        "required": [
+          "total_usd",
+          "this_month_usd",
+          "cap_usd",
+          "average_cost_per_page",
+          "by_month",
+          "by_stage",
+          "by_model",
+          "top_sources"
+        ],
+        "title": "CostSummary",
         "type": "object"
       },
       "DraftQuestion": {
@@ -2591,6 +2690,156 @@
           "default_for_stages"
         ],
         "title": "ModelOut",
+        "type": "object"
+      },
+      "OrgSettings": {
+        "additionalProperties": false,
+        "properties": {
+          "default_digits": {
+            "default": "arabic",
+            "enum": [
+              "arabic",
+              "western"
+            ],
+            "title": "Default Digits",
+            "type": "string"
+          },
+          "default_template_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Template Id"
+          },
+          "extract_model": {
+            "title": "Extract Model",
+            "type": "string"
+          },
+          "llm_monthly_cap_usd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Monthly Cap Usd"
+          },
+          "name": {
+            "maxLength": 255,
+            "minLength": 1,
+            "title": "Name",
+            "type": "string"
+          },
+          "verify_policy": {
+            "default": "low_confidence",
+            "enum": [
+              "off",
+              "low_confidence",
+              "all"
+            ],
+            "title": "Verify Policy",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "extract_model"
+        ],
+        "title": "OrgSettings",
+        "type": "object"
+      },
+      "OrgSettingsPatch": {
+        "additionalProperties": false,
+        "properties": {
+          "default_digits": {
+            "anyOf": [
+              {
+                "enum": [
+                  "arabic",
+                  "western"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Digits"
+          },
+          "default_template_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Default Template Id"
+          },
+          "extract_model": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extract Model"
+          },
+          "llm_monthly_cap_usd": {
+            "anyOf": [
+              {
+                "minimum": 0.0,
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Llm Monthly Cap Usd"
+          },
+          "name": {
+            "anyOf": [
+              {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "verify_policy": {
+            "anyOf": [
+              {
+                "enum": [
+                  "off",
+                  "low_confidence",
+                  "all"
+                ],
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Verify Policy"
+          }
+        },
+        "title": "OrgSettingsPatch",
         "type": "object"
       },
       "PageDetail": {
@@ -4300,6 +4549,40 @@
           "reason"
         ],
         "title": "SkippedItem",
+        "type": "object"
+      },
+      "SourceCost": {
+        "properties": {
+          "cost_per_page": {
+            "title": "Cost Per Page",
+            "type": "string"
+          },
+          "cost_usd": {
+            "title": "Cost Usd",
+            "type": "string"
+          },
+          "pages": {
+            "title": "Pages",
+            "type": "integer"
+          },
+          "source_id": {
+            "format": "uuid",
+            "title": "Source Id",
+            "type": "string"
+          },
+          "title": {
+            "title": "Title",
+            "type": "string"
+          }
+        },
+        "required": [
+          "source_id",
+          "title",
+          "cost_usd",
+          "pages",
+          "cost_per_page"
+        ],
+        "title": "SourceCost",
         "type": "object"
       },
       "SourceDetail": {
@@ -6481,6 +6764,51 @@
         "summary": "Merge Chapter"
       }
     },
+    "/api/v1/costs/summary": {
+      "get": {
+        "operationId": "summary_api_v1_costs_summary_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "months",
+            "required": false,
+            "schema": {
+              "default": 6,
+              "maximum": 60,
+              "minimum": 1,
+              "title": "Months",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CostSummary"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Summary",
+        "tags": [
+          "costs"
+        ]
+      }
+    },
     "/api/v1/exam-items/{id}": {
       "delete": {
         "operationId": "delete_item_api_v1_exam_items__id__delete",
@@ -6998,6 +7326,59 @@
           }
         },
         "summary": "Edit Template",
+        "tags": [
+          "exports"
+        ]
+      }
+    },
+    "/api/v1/exam-templates/{id}/logo": {
+      "post": {
+        "operationId": "upload_logo_api_v1_exam_templates__id__logo_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_upload_logo_api_v1_exam_templates__id__logo_post"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TemplateOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Upload Logo",
         "tags": [
           "exports"
         ]
@@ -8335,6 +8716,66 @@
           }
         },
         "summary": "Models"
+      }
+    },
+    "/api/v1/org/settings": {
+      "get": {
+        "operationId": "get_org_settings_api_v1_org_settings_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgSettings"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Get Org Settings",
+        "tags": [
+          "organization"
+        ]
+      },
+      "patch": {
+        "operationId": "update_org_settings_api_v1_org_settings_patch",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/OrgSettingsPatch"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OrgSettings"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update Org Settings",
+        "tags": [
+          "organization"
+        ]
       }
     },
     "/api/v1/page-proposals/{id}": {

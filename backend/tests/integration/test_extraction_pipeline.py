@@ -79,7 +79,7 @@ def test_synthetic_pipeline(  # noqa: PLR0915 -- exercises the full ingestion se
     fake = FakeLLMClient()
     monkeypatch.setattr(llm, "get_llm_client", lambda: fake)
     with Session(get_engine()) as db:
-        org = Organization(name="test")
+        org = Organization(name="test", settings={"extract_model": "openai/gpt-6-luna"})
         db.add(org)
         db.flush()
         subject = Subject(org_id=org.id, name="Arabic", language=Language.ar, grade="3")
@@ -137,7 +137,18 @@ def test_synthetic_pipeline(  # noqa: PLR0915 -- exercises the full ingestion se
     ]
     for value in (p1, p2, page_data("blank")):
         fake.queue("extract", value)
-    extract_pages(str(sid), [1, 2, 3])
+    extract_pages(str(sid), [1, 2])
+    with Session(get_engine()) as db:
+        override_source = db.get(Source, sid)
+        assert override_source is not None
+        override_source.pipeline_config = {"extract_model": "qwen/qwen3.8-flash"}
+        db.commit()
+    extract_pages(str(sid), [3])
+    assert [call["model"] for call in fake.calls] == [
+        "openai/gpt-6-luna",
+        "openai/gpt-6-luna",
+        "qwen/qwen3.8-flash",
+    ]
     with Session(get_engine()) as db:
         loaded = db.get(Source, sid)
         assert loaded is not None

@@ -13,7 +13,7 @@ from sqlalchemy.orm import Session
 
 from qbank.config import get_settings
 from qbank.llm import LLMClient, LLMResult, get_llm_client, image_part
-from qbank.models import PageStatus, Question, Source, SourcePage
+from qbank.models import Organization, PageStatus, Question, Source, SourcePage
 from qbank.pipeline.schema import Discrepancy, Verification
 from qbank.pipeline.validate import validate_source
 from qbank.storage import ObjectStore, get_store, keys
@@ -24,14 +24,14 @@ PROMPT_PATH = Path(__file__).parent / "prompts" / "verify_v1.md"
 VerifyPolicy = Literal["off", "low_confidence", "all"]
 
 
-def get_verify_policy(source: Source) -> VerifyPolicy:
-    """Read verifier routing policy from source.pipeline_config.verify."""
-    if isinstance(source.pipeline_config, dict):
-        raw = source.pipeline_config.get("verify", "low_confidence")
-        if raw == "off":
-            return "off"
-        if raw == "all":
-            return "all"
+def get_verify_policy(source: Source, org: Organization | None = None) -> VerifyPolicy:
+    """Use the source override before the organization default."""
+    config = source.pipeline_config or {}
+    raw = config.get("verify", (org.settings or {}).get("verify_policy") if org else None)
+    if raw == "off":
+        return "off"
+    if raw == "all":
+        return "all"
     return "low_confidence"
 
 
@@ -193,7 +193,7 @@ def verify_source(
     store: ObjectStore | None = None,
 ) -> set[UUID]:
     """Run verifier pass on qualifying pages of a source and re-validate affected questions."""
-    policy = get_verify_policy(source)
+    policy = get_verify_policy(source, db.get(Organization, source.org_id))
     if policy == "off":
         return set()
 
