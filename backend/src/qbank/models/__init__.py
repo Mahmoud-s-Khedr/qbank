@@ -290,3 +290,26 @@ class ExamVersion(ModelBase):
     seed: Mapped[int] = mapped_column(Integer)
     layout: Mapped[dict[str, object]] = mapped_column(JSONB)
     exam_revision: Mapped[int] = mapped_column(Integer)
+
+
+class ExamTemplate(ModelBase):
+    __tablename__ = "exam_templates"
+    org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id"), index=True)
+    name: Mapped[str] = mapped_column(String)
+    header: Mapped[dict[str, object]] = mapped_column(JSONB, server_default=text("'{}'::jsonb"))
+    logo_asset_id: Mapped[UUID | None] = mapped_column(ForeignKey("assets.id", ondelete="SET NULL"))
+
+
+class Export(ModelBase):
+    """A rendered file of one exam version. Staleness is computed: exam_revision < exam.revision."""
+
+    __tablename__ = "exports"
+    exam_version_id: Mapped[UUID] = mapped_column(
+        ForeignKey("exam_versions.id", ondelete="CASCADE"), index=True
+    )
+    kind: Mapped[str] = mapped_column(String)
+    status: Mapped[str] = mapped_column(String, server_default=text("'pending'"))
+    file_key: Mapped[str | None] = mapped_column(String)
+    error: Mapped[str | None] = mapped_column(String)
+    exam_revision: Mapped[int] = mapped_column(Integer)
+    size_bytes: Mapped[int | None] = mapped_column(Integer)

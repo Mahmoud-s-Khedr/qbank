@@ -29,6 +29,7 @@ class ExamSettings(BaseModel):
     header: ExamHeader = Field(default_factory=ExamHeader)
     layout: ExamLayout = Field(default_factory=ExamLayout)
     language: Literal["ar", "en"] = "ar"
+    template_id: UUID | None = None  # exam header template; the exam's own header values win
 
 
 class ExamIn(BaseModel):

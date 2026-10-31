@@ -19,6 +19,7 @@ os.environ["QBANK_JWT_SECRET"] = "test-only-secret-at-least-32-bytes-long"  # no
 from qbank.api.main import create_app
 from qbank.config import get_settings
 from qbank.db import reset_engine
+from qbank.export import pdf as pdf_export
 
 
 @pytest.fixture
@@ -69,3 +70,10 @@ def fixture_pdf() -> Callable[[str], Path]:
         return path
 
     return resolve
+
+
+@pytest.fixture(scope="session", autouse=True)
+def _close_pdf_browser() -> Iterator[None]:
+    """Stop the shared Chromium (if a test started it) so the run ends without stray processes."""
+    yield
+    pdf_export.shutdown()

@@ -12,3 +12,7 @@ def original(org: UUID, source: UUID) -> str:
 def page(org: UUID, source: UUID, number: int, *, hires: bool = False) -> str:
     suffix = "hires.png" if hires else "webp"
     return prefix(org, source) + f"pages/{number:04d}.{suffix}"
+
+
+def export(org: UUID, export_id: UUID) -> str:
+    return f"orgs/{org}/exports/{export_id}.pdf"

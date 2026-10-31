@@ -1,0 +1,29 @@
+{% extends "base.html.j2" %}
+{% block style %}
+<style>
+h1 { font-size: 1.4em; text-align: center; }
+.sub { text-align: center; margin-bottom: 4mm; }
+table.key { width: 100%; border-collapse: collapse; }
+table.key th, table.key td { border: 1px solid var(--rule); padding: 0.2em 0.7em; text-align: center; }
+table.key thead th { background: #e8e8e8; }
+table.key tr { break-inside: avoid; }
+table.key tfoot td { font-weight: 700; background: #f2f2f2; }
+</style>
+{% endblock %}
+{% block body %}
+<h1>{{ t.key_title }}</h1>
+<div class="sub">{{ view.header.exam_title }} — {{ t.version }}: <b>{{ view.version_label }}</b></div>
+<table class="key">
+  <thead><tr><th>{{ t.number }}</th><th>{{ t.answer }}</th><th>{{ t.points }}</th></tr></thead>
+  <tbody>
+  {% for e in view.key.items %}
+    <tr>
+      <td>{{ d(e.number) }}</td>
+      <td dir="auto">{% if e.correct %}{{ e.correct|join("، " if lang == "ar" else ", ") }}{% elif e.answer_text %}<span class="qmd">{{ qmd_inline(e.answer_text) }}</span>{% else %}—{% endif %}</td>
+      <td>{{ d(e.points) }}</td>
+    </tr>
+  {% endfor %}
+  </tbody>
+  <tfoot><tr><td colspan="2">{{ t.total }}</td><td>{{ d(view.key.items|sum(attribute="points")) }}</td></tr></tfoot>
+</table>
+{% endblock %}

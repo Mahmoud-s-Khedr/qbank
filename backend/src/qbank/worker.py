@@ -15,6 +15,7 @@ from qbank.db import get_engine
 from qbank.models import Job, PageStatus, Source, SourcePage, SourceStatus
 from qbank.pipeline.orchestrator import page_done
 from qbank.pipeline.pdf_cache import get_pdf_cache
+from qbank.services import exports as exports_service
 from qbank.storage import get_store, keys
 
 dramatiq.set_broker(RedisBroker(url=get_settings().redis_url))  # type: ignore[no-untyped-call]  # Dramatiq lacks constructor types.
@@ -420,3 +421,11 @@ if __name__ == "__main__":
 
     sys.argv = ["dramatiq", "qbank.worker"]
     main()  # type: ignore[no-untyped-call]  # Dramatiq CLI is untyped.
+
+
+@dramatiq.actor(max_retries=0, time_limit=15 * 60 * 1000)
+def render_exports(export_ids: list[str]) -> None:
+    """Render pending exports one by one; each outcome is recorded on its own row."""
+    for export_id in export_ids:
+        with Session(get_engine()) as db:
+            exports_service.render_one(db, UUID(export_id))

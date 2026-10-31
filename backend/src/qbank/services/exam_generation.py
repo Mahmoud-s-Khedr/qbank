@@ -207,6 +207,11 @@ def answer_key(db: Session, user: User, exam_id: UUID, label: str) -> AnswerKey:
     )
     if version is None:
         raise NotFound()
+    return key_for(db, exam, version)
+
+
+def key_for(db: Session, exam: Exam, version: ExamVersion) -> AnswerKey:
+    """The answer key of one version (shared by the API and the answer-key PDF)."""
     language = _language(exam)
     layout_items: list[dict[str, object]] = [
         item

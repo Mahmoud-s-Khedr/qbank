@@ -160,6 +160,43 @@ export interface paths {
     patch: operations["edit_section_api_v1_exam_sections__id__patch"];
     trace?: never;
   };
+  "/api/v1/exam-templates": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Templates */
+    get: operations["list_templates_api_v1_exam_templates_get"];
+    put?: never;
+    /** Create Template */
+    post: operations["create_template_api_v1_exam_templates_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/exam-templates/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get Template */
+    get: operations["get_template_api_v1_exam_templates__id__get"];
+    put?: never;
+    post?: never;
+    /** Delete Template */
+    delete: operations["delete_template_api_v1_exam_templates__id__delete"];
+    options?: never;
+    head?: never;
+    /** Edit Template */
+    patch: operations["edit_template_api_v1_exam_templates__id__patch"];
+    trace?: never;
+  };
   "/api/v1/exams": {
     parameters: {
       query?: never;
@@ -265,6 +302,24 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/exams/{id}/exports": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List Exports */
+    get: operations["list_exports_api_v1_exams__id__exports_get"];
+    put?: never;
+    /** Request Exports */
+    post: operations["request_exports_api_v1_exams__id__exports_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/exams/{id}/items": {
     parameters: {
       query?: never;
@@ -359,6 +414,40 @@ export interface paths {
     };
     /** Answer Key */
     get: operations["answer_key_api_v1_exams__id__versions__label__answer_key_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/exports/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete Export */
+    delete: operations["delete_export_api_v1_exports__id__delete"];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/exports/{id}/download": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Download Export */
+    get: operations["download_export_api_v1_exports__id__download_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -1005,6 +1094,8 @@ export interface components {
        */
       language: "ar" | "en";
       layout?: components["schemas"]["ExamLayout"];
+      /** Template Id */
+      template_id?: string | null;
     };
     /** ExamSummary */
     ExamSummary: {
@@ -1051,6 +1142,72 @@ export interface components {
       status?: ("draft" | "final") | null;
       /** Title */
       title?: string | null;
+    };
+    /**
+     * ExportBatch
+     * @description Accepted export requests; poll ``GET /exams/{id}/exports`` until each is ready or failed.
+     */
+    ExportBatch: {
+      /** Exports */
+      exports: components["schemas"]["ExportOut"][];
+    };
+    /** ExportOut */
+    ExportOut: {
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Error */
+      error: string | null;
+      /**
+       * Exam Id
+       * Format: uuid
+       */
+      exam_id: string;
+      /** Exam Revision */
+      exam_revision: number;
+      /**
+       * Exam Version Id
+       * Format: uuid
+       */
+      exam_version_id: string;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /**
+       * Kind
+       * @enum {string}
+       */
+      kind: "pdf" | "answer_key_pdf" | "bubble_sheet_pdf";
+      /** Size Bytes */
+      size_bytes: number | null;
+      /** Stale */
+      stale: boolean;
+      /**
+       * Status
+       * @enum {string}
+       */
+      status: "pending" | "ready" | "failed";
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /** Version Label */
+      version_label: string;
+    };
+    /** ExportsIn */
+    ExportsIn: {
+      /** Kinds */
+      kinds?: ("pdf" | "answer_key_pdf" | "bubble_sheet_pdf")[];
+      /**
+       * Versions
+       * @default all
+       */
+      versions: string[] | "all";
     };
     /** HTTPValidationError */
     HTTPValidationError: {
@@ -1297,6 +1454,13 @@ export interface components {
     Page_SubjectOut_: {
       /** Items */
       items: components["schemas"]["SubjectOut"][];
+      /** Next Cursor */
+      next_cursor: string | null;
+    };
+    /** Page[TemplateOut] */
+    Page_TemplateOut_: {
+      /** Items */
+      items: components["schemas"]["TemplateOut"][];
       /** Next Cursor */
       next_cursor: string | null;
     };
@@ -1649,6 +1813,45 @@ export interface components {
       /** Grade */
       grade?: string | null;
       language?: components["schemas"]["Language"] | null;
+      /** Name */
+      name?: string | null;
+    };
+    /** TemplateIn */
+    TemplateIn: {
+      header?: components["schemas"]["ExamHeader"];
+      /** Logo Asset Id */
+      logo_asset_id?: string | null;
+      /** Name */
+      name: string;
+    };
+    /** TemplateOut */
+    TemplateOut: {
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      header: components["schemas"]["ExamHeader"];
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Logo Asset Id */
+      logo_asset_id: string | null;
+      /** Name */
+      name: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
+    /** TemplateUpdate */
+    TemplateUpdate: {
+      header?: components["schemas"]["ExamHeader"] | null;
+      /** Logo Asset Id */
+      logo_asset_id?: string | null;
       /** Name */
       name?: string | null;
     };
@@ -2162,6 +2365,166 @@ export interface operations {
       };
     };
   };
+  list_templates_api_v1_exam_templates_get: {
+    parameters: {
+      query?: {
+        cursor?: string | null;
+        limit?: number;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["Page_TemplateOut_"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  create_template_api_v1_exam_templates_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TemplateIn"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TemplateOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  get_template_api_v1_exam_templates__id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TemplateOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_template_api_v1_exam_templates__id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  edit_template_api_v1_exam_templates__id__patch: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["TemplateUpdate"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["TemplateOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   list_exams_api_v1_exams_get: {
     parameters: {
       query?: {
@@ -2455,6 +2818,72 @@ export interface operations {
       };
     };
   };
+  list_exports_api_v1_exams__id__exports_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExportOut"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  request_exports_api_v1_exams__id__exports_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        "application/json": components["schemas"]["ExportsIn"];
+      };
+    };
+    responses: {
+      /** @description Successful Response */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["ExportBatch"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   add_items_api_v1_exams__id__items_post: {
     parameters: {
       query?: never;
@@ -2649,6 +3078,66 @@ export interface operations {
         };
         content: {
           "application/json": components["schemas"]["AnswerKey"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  delete_export_api_v1_exports__id__delete: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  download_export_api_v1_exports__id__download_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The PDF file */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/pdf": unknown;
         };
       };
       /** @description Validation Error */
