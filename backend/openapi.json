@@ -815,7 +815,9 @@
             "enum": [
               "pdf",
               "answer_key_pdf",
-              "bubble_sheet_pdf"
+              "bubble_sheet_pdf",
+              "docx",
+              "answer_key_docx"
             ],
             "title": "Kind",
             "type": "string"
@@ -878,7 +880,9 @@
               "enum": [
                 "pdf",
                 "answer_key_pdf",
-                "bubble_sheet_pdf"
+                "bubble_sheet_pdf",
+                "docx",
+                "answer_key_docx"
               ],
               "type": "string"
             },
@@ -4735,9 +4739,10 @@
         "responses": {
           "200": {
             "content": {
-              "application/pdf": {}
+              "application/pdf": {},
+              "application/vnd.openxmlformats-officedocument.wordprocessingml.document": {}
             },
-            "description": "The PDF file"
+            "description": "The exported PDF or DOCX file"
           },
           "422": {
             "content": {

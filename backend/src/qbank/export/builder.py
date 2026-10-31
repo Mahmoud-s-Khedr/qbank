@@ -20,6 +20,7 @@ from qbank.export.view import (
     SectionView,
     StimulusView,
 )
+from qbank.export.word import render_answer_key_docx, render_docx
 from qbank.models import (
     Asset,
     Exam,
@@ -191,9 +192,14 @@ def _group(
 def render_export(
     db: Session, exam: Exam, version: ExamVersion, kind: str, store: ObjectStore
 ) -> bytes:
-    """PDF bytes of one export ``kind`` for one exam version."""
+    """File bytes (PDF or DOCX) of one export ``kind`` for one exam version."""
     assets = StoreAssets(db, exam.org_id, store)
     view = build_view(db, exam, version, assets)
+    if kind == "docx":
+        return render_docx(view, assets)
+    if kind == "answer_key_docx":
+        key = exam_generation.key_for(db, exam, version)
+        return render_answer_key_docx(view.with_key(key), assets)
     if kind == "pdf":
         html = render_exam(view, assets)
     elif kind == "answer_key_pdf":

@@ -1,6 +1,6 @@
 """Plain data handed to the templates, plus the small formatting rules they rely on."""
 
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass, field, replace
 
 from qbank.exams.versions import CHOICE_TYPES
@@ -39,6 +39,17 @@ def auto_choices_per_row(contents: Sequence[str]) -> int:
 
 def choices_per_row(setting: str | int, contents: Sequence[str]) -> int:
     return auto_choices_per_row(contents) if setting == "auto" else int(setting)
+
+
+def digits_formatter(language: str, digits: str) -> Callable[[object], str]:
+    """Formats numbers for display: Arabic-Indic only for Arabic exams that ask for them."""
+    use_arabic = digits == "arabic" and language == "ar"
+
+    def fmt(value: object) -> str:
+        text = format_number(value) if isinstance(value, float) else str(value)
+        return arabic_digits(text) if use_arabic else text
+
+    return fmt
 
 
 @dataclass(frozen=True)

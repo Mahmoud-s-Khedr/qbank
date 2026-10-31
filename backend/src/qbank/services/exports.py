@@ -23,6 +23,17 @@ logger = structlog.get_logger()
 CHUNK = 64 * 1024
 MAX_ERROR = 500
 UNSAFE = re.compile(r'[\x00-\x1f\x7f/\\:*?"<>|]+')
+PDF_TYPE = "application/pdf"
+DOCX_TYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+DOCX_KINDS = frozenset({"docx", "answer_key_docx"})
+
+
+def media_type(kind: str) -> str:
+    return DOCX_TYPE if kind in DOCX_KINDS else PDF_TYPE
+
+
+def extension(kind: str) -> str:
+    return "docx" if kind in DOCX_KINDS else "pdf"
 
 
 def enqueue(export_ids: list[UUID]) -> None:
@@ -109,13 +120,13 @@ def _owned(db: Session, user: User, export_id: UUID) -> tuple[Export, ExamVersio
 
 def download_name(exam: Exam, version: ExamVersion, kind: str) -> str:
     title = UNSAFE.sub(" ", exam.title).strip() or "exam"
-    return f"{title}-{version.label}-{kind}.pdf"
+    return f"{title}-{version.label}-{kind}.{extension(kind)}"
 
 
 def content_disposition(filename: str) -> str:
     """RFC 6266 header with an ASCII fallback and the RFC 5987 UTF-8 name."""
     fallback = re.sub(r"[^A-Za-z0-9._-]+", "_", filename.encode("ascii", "ignore").decode())
-    fallback = fallback.strip("_") or "export.pdf"
+    fallback = fallback.strip("_") or f"export.{filename.rpartition('.')[2] or 'pdf'}"
     return f"attachment; filename=\"{fallback}\"; filename*=UTF-8''{quote(filename, safe='')}"
 
 
@@ -127,7 +138,10 @@ def _chunks(stream: BinaryIO) -> Iterator[bytes]:
         stream.close()
 
 
-def download(db: Session, user: User, export_id: UUID) -> tuple[Iterator[bytes], str, int | None]:
+def download(
+    db: Session, user: User, export_id: UUID
+) -> tuple[Iterator[bytes], str, int | None, str]:
+    """The file stream, its Content-Disposition, its size and its media type."""
     export, version, exam = _owned(db, user, export_id)
     if export.status != "ready" or export.file_key is None:
         raise Conflict("export_not_ready")
@@ -136,6 +150,7 @@ def download(db: Session, user: User, export_id: UUID) -> tuple[Iterator[bytes],
         _chunks(stream),
         content_disposition(download_name(exam, version, export.kind)),
         export.size_bytes,
+        media_type(export.kind),
     )
 
 
@@ -166,8 +181,8 @@ def render_one(db: Session, export_id: UUID, store: ObjectStore | None = None) -
     revision = exam.revision
     try:
         data = render_export(db, exam, version, export.kind, store)
-        key = keys.export(exam.org_id, export.id)
-        store.put_bytes(key, data, "application/pdf")
+        key = keys.export(exam.org_id, export.id, extension(export.kind))
+        store.put_bytes(key, data, media_type(export.kind))
     except Exception as exc:  # any failure must be recorded on the export row
         logger.warning("export_failed", export_id=str(export_id), error=str(exc))
         db.rollback()

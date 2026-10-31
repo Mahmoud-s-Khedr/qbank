@@ -6,7 +6,7 @@ from pydantic import BaseModel, Field
 from qbank.schemas.common import Output
 from qbank.schemas.exams import ExamHeader
 
-ExportKind = Literal["pdf", "answer_key_pdf", "bubble_sheet_pdf"]
+ExportKind = Literal["pdf", "answer_key_pdf", "bubble_sheet_pdf", "docx", "answer_key_docx"]
 ExportStatus = Literal["pending", "ready", "failed"]
 
 

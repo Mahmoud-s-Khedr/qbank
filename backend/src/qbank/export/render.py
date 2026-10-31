@@ -9,9 +9,8 @@ from markupsafe import Markup
 from qbank.export.qmd import AssetResolver, render_qmd
 from qbank.export.view import (
     ExamView,
-    arabic_digits,
     choices_per_row,
-    format_number,
+    digits_formatter,
 )
 
 ROOT = Path(__file__).parent
@@ -112,11 +111,7 @@ def _environment() -> Environment:
 
 
 def _context(view: ExamView, assets: AssetResolver | None) -> dict[str, object]:
-    use_arabic = view.layout.digits == "arabic" and view.language == "ar"
-
-    def digits(value: object) -> str:
-        text = format_number(value) if isinstance(value, float) else str(value)
-        return arabic_digits(text) if use_arabic else text
+    digits = digits_formatter(view.language, view.layout.digits)
 
     def qmd(source: str) -> Markup:
         return Markup(render_qmd(source, assets))  # noqa: S704 -- QMD output is escaped HTML
