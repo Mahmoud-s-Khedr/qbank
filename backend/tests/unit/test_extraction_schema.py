@@ -1,3 +1,4 @@
+from decimal import Decimal
 from io import BytesIO
 from typing import TypedDict
 from uuid import UUID, uuid4
@@ -6,7 +7,7 @@ import pytest
 from PIL import Image
 from pydantic import ValidationError
 
-from qbank.llm import FakeLLMClient, LLMOutputInvalid
+from qbank.llm import BudgetExceeded, FakeLLMClient, LLMOutputInvalid
 from qbank.pipeline.extract import extract_page
 from qbank.pipeline.schema import PageExtraction, to_region_box
 
@@ -70,11 +71,31 @@ def test_extract_fallback() -> None:
     }
     result, _ = extract_page(client, image.getvalue(), **args)
     assert result.parsed.page_confidence == pytest.approx(0.8)
-    client.queue("extract", LLMOutputInvalid("invalid"))
+    client.queue("extract", LLMOutputInvalid("invalid", cost_usd=Decimal("0.01")))
+    client.queue("extract_strong", page)
+    result, cost = extract_page(client, image.getvalue(), **args)
+    assert cost == Decimal("0.01")
+    assert result.parsed.page_confidence == pytest.approx(0.2)
+    client.queue("extract", {**page, "page_confidence": 0.4})
     client.queue("extract_strong", page)
     result, _ = extract_page(client, image.getvalue(), **args)
+    assert result.parsed.page_confidence == pytest.approx(0.4)
+    client.queue("extract", page)
+    client.queue("extract_strong", LLMOutputInvalid("invalid strong"))
+    result, _ = extract_page(client, image.getvalue(), **args)
     assert result.parsed.page_confidence == pytest.approx(0.2)
+    client.queue("extract", LLMOutputInvalid("invalid", cost_usd=Decimal("0.01")))
+    client.queue("extract_strong", BudgetExceeded())
+    with pytest.raises(BudgetExceeded) as budget:
+        extract_page(client, image.getvalue(), **args)
+    assert budget.value.cost_usd == Decimal("0.01")
     assert [call["stage"] for call in client.calls] == [
+        "extract",
+        "extract_strong",
+        "extract",
+        "extract_strong",
+        "extract",
+        "extract_strong",
         "extract",
         "extract_strong",
         "extract",

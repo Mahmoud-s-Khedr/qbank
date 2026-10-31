@@ -1,5 +1,7 @@
 """Public exceptions raised by the LLM layer."""
 
+from decimal import Decimal
+
 
 class LLMError(Exception):
     """Base class for LLM failures."""
@@ -18,12 +20,14 @@ class ModelTooExpensive(LLMError):
 
 
 class BudgetExceeded(LLMError):
-    pass
+    cost_usd: Decimal = Decimal(0)
 
 
 class OrgBudgetExceeded(LLMError):
-    pass
+    cost_usd: Decimal = Decimal(0)
 
 
 class LLMOutputInvalid(LLMError):
-    pass
+    def __init__(self, message: str, *, cost_usd: Decimal = Decimal(0)) -> None:
+        super().__init__(message)
+        self.cost_usd = cost_usd

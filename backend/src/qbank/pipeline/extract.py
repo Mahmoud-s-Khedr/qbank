@@ -6,7 +6,14 @@ from uuid import UUID
 
 from jinja2 import StrictUndefined, Template
 
-from qbank.llm import LLMClient, LLMOutputInvalid, LLMResult, image_part
+from qbank.llm import (
+    BudgetExceeded,
+    LLMClient,
+    LLMOutputInvalid,
+    LLMResult,
+    OrgBudgetExceeded,
+    image_part,
+)
 from qbank.pipeline.schema import PageExtraction
 
 PROMPT_VERSION = "extract-v1"
@@ -46,11 +53,21 @@ def extract_page(  # noqa: PLR0913 -- page context and call controls are indepen
 
     try:
         first = call("extract")
-    except LLMOutputInvalid:
-        strong = call("extract_strong")
-        return strong, strong.cost_usd
+    except LLMOutputInvalid as exc:
+        try:
+            strong = call("extract_strong")
+        except (BudgetExceeded, OrgBudgetExceeded, LLMOutputInvalid) as strong_exc:
+            strong_exc.cost_usd += exc.cost_usd
+            raise
+        return strong, exc.cost_usd + strong.cost_usd
     if first.parsed.page_confidence >= fallback_threshold:
         return first, first.cost_usd
-    strong = call("extract_strong")
+    try:
+        strong = call("extract_strong")
+    except LLMOutputInvalid as exc:
+        return first, first.cost_usd + exc.cost_usd
+    except (BudgetExceeded, OrgBudgetExceeded) as exc:
+        exc.cost_usd += first.cost_usd
+        raise
     best = strong if strong.parsed.page_confidence > first.parsed.page_confidence else first
     return best, first.cost_usd + strong.cost_usd

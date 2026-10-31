@@ -10,7 +10,7 @@ from qbank.db import new_uuid
 from qbank.models import Job, Source, SourcePage, SourceStatus, Subject
 from qbank.pipeline import orchestrator
 from qbank.schemas.sources import SourceDetail, SourceOut
-from qbank.services.errors import DomainError, Invalid
+from qbank.services.errors import Conflict, DomainError, Invalid
 from qbank.services.scoping import get
 from qbank.services.unit_of_work import found, save
 from qbank.storage import get_store, keys
@@ -130,4 +130,26 @@ def page(db: Session, org_id: UUID, source_id: UUID, number: int) -> SourcePage:
 def job(db: Session, org_id: UUID, job_id: UUID) -> Job:
     item = found(db.scalar(select(Job).where(Job.id == job_id, Job.org_id == org_id)))
     item.progress = cast(dict[str, object], counts(db, item.ref_id))
+    return item
+
+
+def resume(db: Session, org_id: UUID, source_id: UUID) -> Source:
+    item = found(
+        db.scalar(
+            select(Source).where(Source.id == source_id, Source.org_id == org_id).with_for_update()
+        )
+    )
+    if item.status != SourceStatus.paused:
+        raise Conflict("source_not_paused")
+    stage = next((stage for stage in orchestrator.STAGES if stage.name == item.stage), None)
+    if stage is None:
+        raise Conflict("invalid_stage")
+    item.status = stage.status
+    item.error = None
+    job = db.scalar(select(Job).where(Job.ref_id == source_id, Job.kind == "ingest"))
+    if job:
+        job.status = "running"
+        job.error = None
+    save(db)
+    stage.start(str(source_id))
     return item

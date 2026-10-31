@@ -7,15 +7,17 @@ from uuid import UUID
 
 from fastapi import APIRouter, File, Form, Header, Query, UploadFile
 from fastapi.responses import Response, StreamingResponse
+from sqlalchemy import select
 from sqlalchemy.orm import Session
 from starlette.concurrency import run_in_threadpool
 
 from qbank.api.deps import DB, Current, Writer
 from qbank.config import get_settings
 from qbank.db import get_engine
-from qbank.models import Job, SourcePage, SourceStatus
+from qbank.models import Asset, Job, Question, Source, SourcePage, SourceStatus, Stimulus
+from qbank.schemas.bank import QuestionOut, StimulusOut
 from qbank.schemas.common import Page
-from qbank.schemas.sources import JobOut, PageOut, SourceDetail, SourceOut, UploadResult
+from qbank.schemas.sources import JobOut, PageDetail, PageOut, SourceDetail, SourceOut, UploadResult
 from qbank.services import sources as service
 from qbank.services.unit_of_work import found
 from qbank.storage import get_store, keys
@@ -54,6 +56,16 @@ def detail(id: UUID, db: DB, user: Current) -> SourceDetail:
     return service.detail(db, user.org_id, id)
 
 
+@router.post("/sources/{id}/resume", response_model=SourceOut)
+def resume(id: UUID, db: DB, user: Writer) -> Source:
+    return service.resume(db, user.org_id, id)
+
+
+@router.get("/sources/{id}/pages/{number}", response_model=PageDetail)
+def page_detail(id: UUID, number: int, db: DB, user: Current) -> SourcePage:
+    return service.page(db, user.org_id, id, number)
+
+
 @router.delete("/sources/{id}", status_code=204)
 def delete(id: UUID, db: DB, user: Writer) -> None:
     service.delete(db, user.org_id, id)
@@ -90,6 +102,56 @@ def image(  # noqa: PLR0913, PLR0917 -- path, variant and conditional request in
     return StreamingResponse(
         chunks(), media_type="image/png" if variant == "hires" else "image/webp", headers=headers
     )
+
+
+@router.get("/sources/{id}/questions", response_model=list[QuestionOut])
+def questions(id: UUID, db: DB, user: Current) -> list[Question]:
+    service.source(db, user.org_id, id)
+    return list(
+        db.scalars(
+            select(Question)
+            .where(Question.source_id == id, Question.org_id == user.org_id)
+            .order_by(Question.position)
+        )
+    )
+
+
+@router.get("/questions/{id}", response_model=QuestionOut)
+def question(id: UUID, db: DB, user: Current) -> Question:
+    return found(
+        db.scalar(select(Question).where(Question.id == id, Question.org_id == user.org_id))
+    )
+
+
+@router.get("/sources/{id}/stimuli", response_model=list[StimulusOut])
+def stimuli(id: UUID, db: DB, user: Current) -> list[Stimulus]:
+    service.source(db, user.org_id, id)
+    return list(
+        db.scalars(
+            select(Stimulus)
+            .where(Stimulus.source_id == id, Stimulus.org_id == user.org_id)
+            .order_by(Stimulus.created_at, Stimulus.id)
+        )
+    )
+
+
+@router.get("/assets/{id}/image")
+def asset_image(
+    id: UUID, db: DB, user: Current, if_none_match: Annotated[str | None, Header()] = None
+) -> Response:
+    asset = found(db.scalar(select(Asset).where(Asset.id == id, Asset.org_id == user.org_id)))
+    tag = f'"{asset.id}-{asset.updated_at.timestamp()}"'
+    headers = {"ETag": tag, "Cache-Control": "private, max-age=86400"}
+    if if_none_match == tag:
+        return Response(status_code=304, headers=headers)
+    stream = get_store().open(asset.image_key)
+
+    def chunks() -> Iterator[bytes]:
+        with stream:
+            while chunk := stream.read(65536):
+                yield chunk
+
+    return StreamingResponse(chunks(), media_type="image/webp", headers=headers)
 
 
 @router.get("/jobs/{id}", response_model=JobOut)

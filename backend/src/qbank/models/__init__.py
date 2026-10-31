@@ -11,10 +11,11 @@ from sqlalchemy import (
     Integer,
     Numeric,
     String,
+    Text,
     UniqueConstraint,
     text,
 )
-from sqlalchemy.dialects.postgresql import JSONB
+from sqlalchemy.dialects.postgresql import ARRAY, JSONB
 from sqlalchemy.orm import Mapped, mapped_column, validates
 
 from qbank.db import Base, Timestamps, UUIDPk
@@ -182,3 +183,66 @@ class LLMCall(ModelBase):
     status: Mapped[str] = mapped_column(String)
     error_code: Mapped[str | None] = mapped_column(String)
     request_hash: Mapped[str] = mapped_column(String)
+
+
+class Stimulus(ModelBase):
+    __tablename__ = "stimuli"
+    org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id"), index=True)
+    source_id: Mapped[UUID] = mapped_column(
+        ForeignKey("sources.id", ondelete="CASCADE"), index=True
+    )
+    kind: Mapped[str] = mapped_column(String)
+    content: Mapped[str] = mapped_column(String)
+    regions: Mapped[list[dict[str, object]]] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(String, server_default=text("'draft'"))
+    metadata_json: Mapped[dict[str, object]] = mapped_column(
+        "metadata", JSONB, server_default=text("'{}'::jsonb")
+    )
+
+
+class Question(ModelBase):
+    __tablename__ = "questions"
+    org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id"), index=True)
+    subject_id: Mapped[UUID] = mapped_column(ForeignKey("subjects.id"), index=True)
+    source_id: Mapped[UUID] = mapped_column(
+        ForeignKey("sources.id", ondelete="CASCADE"), index=True
+    )
+    chapter_id: Mapped[UUID | None] = mapped_column(ForeignKey("chapters.id"))
+    lesson_id: Mapped[UUID | None] = mapped_column(ForeignKey("lessons.id"))
+    stimulus_id: Mapped[UUID | None] = mapped_column(ForeignKey("stimuli.id"))
+    stimulus_position: Mapped[int | None] = mapped_column(Integer)
+    position: Mapped[int] = mapped_column(Integer)
+    number_label: Mapped[str] = mapped_column(String)
+    type: Mapped[str] = mapped_column(String)
+    stem: Mapped[str] = mapped_column(String)
+    choices: Mapped[list[dict[str, object]]] = mapped_column(JSONB)
+    answer: Mapped[str | None] = mapped_column(String)
+    explanation: Mapped[str | None] = mapped_column(String)
+    difficulty: Mapped[int | None] = mapped_column(Integer)
+    difficulty_reason: Mapped[str | None] = mapped_column(String)
+    difficulty_source: Mapped[str | None] = mapped_column(String)
+    language: Mapped[Language] = mapped_column(Enum(Language, name="subject_language"))
+    tags: Mapped[list[str]] = mapped_column(ARRAY(Text), server_default=text("'{}'::text[]"))
+    regions: Mapped[list[dict[str, object]]] = mapped_column(JSONB)
+    status: Mapped[str] = mapped_column(String, server_default=text("'draft'"))
+    confidence: Mapped[float] = mapped_column()
+    content_hash: Mapped[str | None] = mapped_column(String)
+    duplicate_of_id: Mapped[UUID | None] = mapped_column(ForeignKey("questions.id"))
+    version: Mapped[int] = mapped_column(Integer, server_default=text("1"))
+    metadata_json: Mapped[dict[str, object]] = mapped_column(
+        "metadata", JSONB, server_default=text("'{}'::jsonb")
+    )
+
+
+class Asset(ModelBase):
+    __tablename__ = "assets"
+    org_id: Mapped[UUID] = mapped_column(ForeignKey("organizations.id"), index=True)
+    source_page_id: Mapped[UUID | None] = mapped_column(
+        ForeignKey("source_pages.id", ondelete="CASCADE"), index=True
+    )
+    kind: Mapped[str] = mapped_column(String)
+    image_key: Mapped[str] = mapped_column(String)
+    pipeline_generated: Mapped[bool] = mapped_column(Boolean, server_default=text("false"))
+    region: Mapped[list[float]] = mapped_column(JSONB)
+    width: Mapped[int] = mapped_column(Integer)
+    height: Mapped[int] = mapped_column(Integer)

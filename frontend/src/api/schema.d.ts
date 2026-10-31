@@ -4,6 +4,23 @@
  */
 
 export interface paths {
+  "/api/v1/assets/{id}/image": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Asset Image */
+    get: operations["asset_image_api_v1_assets__id__image_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/auth/login": {
     parameters: {
       query?: never;
@@ -159,6 +176,23 @@ export interface paths {
     patch: operations["edit_lesson_api_v1_lessons__id__patch"];
     trace?: never;
   };
+  "/api/v1/questions/{id}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Question */
+    get: operations["question_api_v1_questions__id__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/sources": {
     parameters: {
       query?: never;
@@ -229,6 +263,23 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  "/api/v1/sources/{id}/pages/{number}": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Page Detail */
+    get: operations["page_detail_api_v1_sources__id__pages__number__get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   "/api/v1/sources/{id}/pages/{number}/image": {
     parameters: {
       query?: never;
@@ -238,6 +289,57 @@ export interface paths {
     };
     /** Image */
     get: operations["image_api_v1_sources__id__pages__number__image_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/sources/{id}/questions": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Questions */
+    get: operations["questions_api_v1_sources__id__questions_get"];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/sources/{id}/resume": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Resume */
+    post: operations["resume_api_v1_sources__id__resume_post"];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  "/api/v1/sources/{id}/stimuli": {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Stimuli */
+    get: operations["stimuli_api_v1_sources__id__stimuli_get"];
     put?: never;
     post?: never;
     delete?: never;
@@ -557,6 +659,40 @@ export interface components {
       /** Password */
       password: string;
     };
+    /** PageDetail */
+    PageDetail: {
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /** Dpi */
+      dpi: number | null;
+      /** Error */
+      error: string | null;
+      /** Extraction */
+      extraction: {
+        [key: string]: unknown;
+      } | null;
+      /** Height Px */
+      height_px: number | null;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      page_kind: components["schemas"]["PageKind"] | null;
+      /** Page Number */
+      page_number: number;
+      status: components["schemas"]["PageStatus"];
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+      /** Width Px */
+      width_px: number | null;
+    };
     /**
      * PageKind
      * @enum {string}
@@ -625,6 +761,61 @@ export interface components {
       items: components["schemas"]["UserOut"][];
       /** Next Cursor */
       next_cursor: string | null;
+    };
+    /** QuestionOut */
+    QuestionOut: {
+      /** Answer */
+      answer: string | null;
+      /** Choices */
+      choices: {
+        [key: string]: unknown;
+      }[];
+      /** Confidence */
+      confidence: number;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      language: components["schemas"]["Language"];
+      /** Number Label */
+      number_label: string;
+      /** Position */
+      position: number;
+      /** Regions */
+      regions: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Source Id
+       * Format: uuid
+       */
+      source_id: string;
+      /** Status */
+      status: string;
+      /** Stem */
+      stem: string;
+      /** Stimulus Id */
+      stimulus_id: string | null;
+      /** Stimulus Position */
+      stimulus_position: number | null;
+      /**
+       * Subject Id
+       * Format: uuid
+       */
+      subject_id: string;
+      /** Type */
+      type: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
     };
     /** Reorder */
     Reorder: {
@@ -724,6 +915,39 @@ export interface components {
       | "ready"
       | "failed"
       | "paused";
+    /** StimulusOut */
+    StimulusOut: {
+      /** Content */
+      content: string;
+      /**
+       * Created At
+       * Format: date-time
+       */
+      created_at: string;
+      /**
+       * Id
+       * Format: uuid
+       */
+      id: string;
+      /** Kind */
+      kind: string;
+      /** Regions */
+      regions: {
+        [key: string]: unknown;
+      }[];
+      /**
+       * Source Id
+       * Format: uuid
+       */
+      source_id: string;
+      /** Status */
+      status: string;
+      /**
+       * Updated At
+       * Format: date-time
+       */
+      updated_at: string;
+    };
     /** SubjectIn */
     SubjectIn: {
       /** Grade */
@@ -879,6 +1103,39 @@ export interface components {
 }
 export type $defs = Record<string, never>;
 export interface operations {
+  asset_image_api_v1_assets__id__image_get: {
+    parameters: {
+      query?: never;
+      header?: {
+        "if-none-match"?: string | null;
+      };
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   login_api_v1_auth_login_post: {
     parameters: {
       query?: never;
@@ -1197,6 +1454,37 @@ export interface operations {
       };
     };
   };
+  question_api_v1_questions__id__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuestionOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   listing_api_v1_sources_get: {
     parameters: {
       query?: {
@@ -1386,6 +1674,38 @@ export interface operations {
       };
     };
   };
+  page_detail_api_v1_sources__id__pages__number__get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+        number: number;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["PageDetail"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
   image_api_v1_sources__id__pages__number__image_get: {
     parameters: {
       query?: {
@@ -1409,6 +1729,99 @@ export interface operations {
         };
         content: {
           "application/json": unknown;
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  questions_api_v1_sources__id__questions_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["QuestionOut"][];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  resume_api_v1_sources__id__resume_post: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["SourceOut"];
+        };
+      };
+      /** @description Validation Error */
+      422: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["HTTPValidationError"];
+        };
+      };
+    };
+  };
+  stimuli_api_v1_sources__id__stimuli_get: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        id: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Successful Response */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          "application/json": components["schemas"]["StimulusOut"][];
         };
       };
       /** @description Validation Error */

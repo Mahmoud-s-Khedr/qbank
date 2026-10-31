@@ -379,6 +379,113 @@
         "title": "Login",
         "type": "object"
       },
+      "PageDetail": {
+        "properties": {
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "dpi": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dpi"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          },
+          "extraction": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Extraction"
+          },
+          "height_px": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Height Px"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "page_kind": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PageKind"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "page_number": {
+            "title": "Page Number",
+            "type": "integer"
+          },
+          "status": {
+            "$ref": "#/components/schemas/PageStatus"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          },
+          "width_px": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Width Px"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "page_number",
+          "status",
+          "page_kind",
+          "error",
+          "width_px",
+          "height_px",
+          "dpi",
+          "extraction"
+        ],
+        "title": "PageDetail",
+        "type": "object"
+      },
       "PageKind": {
         "enum": [
           "cover",
@@ -580,6 +687,133 @@
           "next_cursor"
         ],
         "title": "Page[UserOut]",
+        "type": "object"
+      },
+      "QuestionOut": {
+        "properties": {
+          "answer": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Answer"
+          },
+          "choices": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Choices",
+            "type": "array"
+          },
+          "confidence": {
+            "title": "Confidence",
+            "type": "number"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "language": {
+            "$ref": "#/components/schemas/Language"
+          },
+          "number_label": {
+            "title": "Number Label",
+            "type": "string"
+          },
+          "position": {
+            "title": "Position",
+            "type": "integer"
+          },
+          "regions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Regions",
+            "type": "array"
+          },
+          "source_id": {
+            "format": "uuid",
+            "title": "Source Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "stem": {
+            "title": "Stem",
+            "type": "string"
+          },
+          "stimulus_id": {
+            "anyOf": [
+              {
+                "format": "uuid",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stimulus Id"
+          },
+          "stimulus_position": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stimulus Position"
+          },
+          "subject_id": {
+            "format": "uuid",
+            "title": "Subject Id",
+            "type": "string"
+          },
+          "type": {
+            "title": "Type",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "subject_id",
+          "source_id",
+          "stimulus_id",
+          "stimulus_position",
+          "position",
+          "number_label",
+          "type",
+          "stem",
+          "choices",
+          "answer",
+          "language",
+          "regions",
+          "status",
+          "confidence"
+        ],
+        "title": "QuestionOut",
         "type": "object"
       },
       "Reorder": {
@@ -816,6 +1050,62 @@
         ],
         "title": "SourceStatus",
         "type": "string"
+      },
+      "StimulusOut": {
+        "properties": {
+          "content": {
+            "title": "Content",
+            "type": "string"
+          },
+          "created_at": {
+            "format": "date-time",
+            "title": "Created At",
+            "type": "string"
+          },
+          "id": {
+            "format": "uuid",
+            "title": "Id",
+            "type": "string"
+          },
+          "kind": {
+            "title": "Kind",
+            "type": "string"
+          },
+          "regions": {
+            "items": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "title": "Regions",
+            "type": "array"
+          },
+          "source_id": {
+            "format": "uuid",
+            "title": "Source Id",
+            "type": "string"
+          },
+          "status": {
+            "title": "Status",
+            "type": "string"
+          },
+          "updated_at": {
+            "format": "date-time",
+            "title": "Updated At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "created_at",
+          "updated_at",
+          "source_id",
+          "kind",
+          "content",
+          "regions",
+          "status"
+        ],
+        "title": "StimulusOut",
+        "type": "object"
       },
       "SubjectIn": {
         "properties": {
@@ -1190,6 +1480,60 @@
   },
   "openapi": "3.1.0",
   "paths": {
+    "/api/v1/assets/{id}/image": {
+      "get": {
+        "operationId": "asset_image_api_v1_assets__id__image_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "header",
+            "name": "if-none-match",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "If-None-Match"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Asset Image"
+      }
+    },
     "/api/v1/auth/login": {
       "post": {
         "operationId": "login_api_v1_auth_login_post",
@@ -1570,6 +1914,46 @@
         "summary": "Edit Lesson"
       }
     },
+    "/api/v1/questions/{id}": {
+      "get": {
+        "operationId": "question_api_v1_questions__id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QuestionOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Question"
+      }
+    },
     "/api/v1/sources": {
       "get": {
         "operationId": "listing_api_v1_sources_get",
@@ -1850,6 +2234,55 @@
         "summary": "Pages"
       }
     },
+    "/api/v1/sources/{id}/pages/{number}": {
+      "get": {
+        "operationId": "page_detail_api_v1_sources__id__pages__number__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "number",
+            "required": true,
+            "schema": {
+              "title": "Number",
+              "type": "integer"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageDetail"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Page Detail"
+      }
+    },
     "/api/v1/sources/{id}/pages/{number}/image": {
       "get": {
         "operationId": "image_api_v1_sources__id__pages__number__image_get",
@@ -1925,6 +2358,134 @@
           }
         },
         "summary": "Image"
+      }
+    },
+    "/api/v1/sources/{id}/questions": {
+      "get": {
+        "operationId": "questions_api_v1_sources__id__questions_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/QuestionOut"
+                  },
+                  "title": "Response Questions Api V1 Sources  Id  Questions Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Questions"
+      }
+    },
+    "/api/v1/sources/{id}/resume": {
+      "post": {
+        "operationId": "resume_api_v1_sources__id__resume_post",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SourceOut"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Resume"
+      }
+    },
+    "/api/v1/sources/{id}/stimuli": {
+      "get": {
+        "operationId": "stimuli_api_v1_sources__id__stimuli_get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "format": "uuid",
+              "title": "Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "items": {
+                    "$ref": "#/components/schemas/StimulusOut"
+                  },
+                  "title": "Response Stimuli Api V1 Sources  Id  Stimuli Get",
+                  "type": "array"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Stimuli"
       }
     },
     "/api/v1/subjects": {
