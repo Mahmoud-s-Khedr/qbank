@@ -17,6 +17,7 @@ from qbank.api.deps import current_user
 from qbank.api.routers import sources as sources_router
 from qbank.db import get_engine
 from qbank.llm import BudgetExceeded, FakeLLMClient
+from qbank.llm.errors import LLMError, LLMNotConfigured, ModelNotAllowed
 from qbank.models import (
     Asset,
     Language,
@@ -203,7 +204,15 @@ def test_synthetic_pipeline(  # noqa: PLR0915 -- exercises the full ingestion se
 
 
 @pytest.mark.integration
-def test_budget_and_failure(database: str, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+# Budget and configuration errors (e.g. a missing API key) pause the source instead of
+# failing pages, so fixing the setting and resuming continues the same workbook.
+@pytest.mark.parametrize("pause_error", [BudgetExceeded, LLMNotConfigured, ModelNotAllowed])
+def test_budget_and_failure(
+    database: str,
+    tmp_path: Path,
+    monkeypatch: pytest.MonkeyPatch,
+    pause_error: type[LLMError],
+) -> None:
     store = LocalStore(tmp_path)
     monkeypatch.setattr(worker, "get_store", lambda: store)
     monkeypatch.setattr(worker, "page_done", lambda *args: None)
@@ -236,7 +245,7 @@ def test_budget_and_failure(database: str, tmp_path: Path, monkeypatch: pytest.M
     for n in range(1, 4):
         store.put_bytes(keys.page(org_id, sid, n, hires=True), image.getvalue(), "image/png")
     fake.queue("extract", page_data())
-    fake.queue("extract", BudgetExceeded())
+    fake.queue("extract", pause_error())
     extract_pages(str(sid), [1, 2, 3])
     with Session(get_engine()) as db:
         loaded = db.get(Source, sid)

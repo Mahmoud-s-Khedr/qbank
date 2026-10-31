@@ -217,7 +217,8 @@ def extract_source(source_id: str) -> None:
 
 @dramatiq.actor(max_retries=3, on_retry_exhausted="extract_failed")
 def extract_pages(source_id: str, numbers: list[int]) -> None:
-    from qbank.llm import BudgetExceeded, LLMOutputInvalid, OrgBudgetExceeded, get_llm_client  # noqa: PLC0415
+    from qbank.llm import LLMOutputInvalid, get_llm_client  # noqa: PLC0415
+    from qbank.llm.errors import PAUSE_ERRORS  # noqa: PLC0415
     from qbank.models import Organization, Subject  # noqa: PLC0415
     from qbank.pipeline.extract import PROMPT_VERSION, extract_page  # noqa: PLC0415
 
@@ -267,7 +268,7 @@ def extract_pages(source_id: str, numbers: list[int]) -> None:
                 max_side=get_settings().extract_image_max_side,
                 fallback_threshold=get_settings().extract_fallback_threshold,
             )
-        except (BudgetExceeded, OrgBudgetExceeded) as exc:
+        except PAUSE_ERRORS as exc:
             with Session(get_engine()) as db:
                 updated = db.scalar(
                     update(SourcePage)
@@ -563,7 +564,8 @@ def verify_failed(message: dict[str, object], details: dict[str, object]) -> Non
 
 @dramatiq.actor(max_retries=3, on_retry_exhausted="verify_failed")
 def verify_source(source_id: str) -> None:  # noqa: PLR0915 -- page loop + budget/invalid handling
-    from qbank.llm import BudgetExceeded, LLMOutputInvalid, OrgBudgetExceeded, get_llm_client  # noqa: PLC0415
+    from qbank.llm import LLMOutputInvalid, get_llm_client  # noqa: PLC0415
+    from qbank.llm.errors import PAUSE_ERRORS  # noqa: PLC0415
     from qbank.models import Organization, Question  # noqa: PLC0415
     from qbank.pipeline.validate import validate_source as run_validate  # noqa: PLC0415
     from qbank.pipeline.verify import (  # noqa: PLC0415
@@ -670,7 +672,7 @@ def verify_source(source_id: str) -> None:  # noqa: PLR0915 -- page loop + budge
                 source_id=sid,
                 max_side=get_settings().extract_image_max_side,
             )
-        except (BudgetExceeded, OrgBudgetExceeded) as exc:
+        except PAUSE_ERRORS as exc:
             with Session(get_engine()) as db:
                 db.execute(
                     update(SourcePage)
@@ -732,7 +734,8 @@ def classify_failed(message: dict[str, object], details: dict[str, object]) -> N
 
 @dramatiq.actor(max_retries=3, on_retry_exhausted="classify_failed")
 def classify_source(source_id: str) -> None:
-    from qbank.llm import BudgetExceeded, LLMOutputInvalid, OrgBudgetExceeded, get_llm_client  # noqa: PLC0415
+    from qbank.llm import LLMOutputInvalid, get_llm_client  # noqa: PLC0415
+    from qbank.llm.errors import PAUSE_ERRORS  # noqa: PLC0415
     from qbank.models import Question, Subject  # noqa: PLC0415
     from qbank.pipeline.classify import (  # noqa: PLC0415
         BATCH_SIZE,
@@ -790,7 +793,7 @@ def classify_source(source_id: str) -> None:
                 org_id=org_id,
                 source_id=sid,
             )
-        except (BudgetExceeded, OrgBudgetExceeded) as exc:
+        except PAUSE_ERRORS as exc:
             with Session(get_engine()) as db:
                 _pause_source_on_budget(
                     db, sid, "classify", type(exc).__name__, float(exc.cost_usd)

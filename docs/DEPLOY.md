@@ -1,6 +1,18 @@
 # Production deployment
 
-A small school can start with a 4-vCPU, 8-GB RAM VPS and at least 50 GB of SSD storage; PDF volume, concurrency, browser exports, and backups can require more. Install Docker Engine, the Compose plugin and GNU Make. Allow inbound TCP 80 and 443, point the domain's A/AAAA records at the VPS, and keep the host patched. HTTPS certificates are managed by Caddy. For localhost Caddy uses its internal CA; use `curl -k` only for local testing.
+**Sizing (measured, 2026-11-01, default settings `API_WORKERS=2`, `WORKER_PROCESSES=2`, `WORKER_THREADS=4`).** The AI runs remotely on OpenRouter, so the server needs no GPU. Its heavy local jobs are page rendering (PyMuPDF at 300 DPI) and exports (headless Chromium and Pandoc).
+
+| State | RAM (whole stack) |
+|---|---|
+| Idle | ≈ 1.05 GB (api 520 MB, worker 380 MB, minio 70 MB, caddy 40 MB, postgres 35 MB, redis 18 MB) |
+| Rendering a 72-page workbook | worker peaks ≈ 880 MB, using about 3 CPU cores (≈ 45 s total) |
+| After exporting PDF + DOCX + keys | worker ≈ 1 GB (it keeps one Chromium per worker process) → stack ≈ 1.7–2 GB |
+
+- **Recommended for a small school: 2 vCPU, 4 GB RAM, 40 GB SSD.**
+- **Minimum: 1–2 vCPU, 2 GB RAM**, with `API_WORKERS=1`, `WORKER_PROCESSES=1`, `WORKER_THREADS=2` (slower rendering and exports).
+- **Storage:** about 2–4 MB per uploaded page (the original PDF + a display image + a 300 DPI image + figure crops), so roughly 2–4 GB per 1,000 pages, plus database backups.
+
+More CPU only makes rendering faster. Most of the time is spent waiting on the AI. Install Docker Engine, the Compose plugin and GNU Make. Allow inbound TCP 80 and 443, point the domain's A/AAAA records at the VPS, and keep the host patched. HTTPS certificates are managed by Caddy. For localhost Caddy uses its internal CA; use `curl -k` only for local testing.
 
 Copy `.env.prod.example` to `.env.prod`, restrict it with `chmod 600`, and set `QBANK_DOMAIN`, `POSTGRES_PASSWORD`, `QBANK_JWT_SECRET`, S3 credentials, and `QBANK_OPENROUTER_API_KEY`. Generate independent secrets using `python -c 'import secrets; print(secrets.token_urlsafe(48))'`; use URL-safe characters for the database password. Set a provider-side spending limit on the OpenRouter key, set `QBANK_LLM_BUDGET_USD`, and configure `llm_monthly_cap_usd` in each organization's settings. **`QBANK_LLM_BUDGET_USD` is a global, lifetime cap on the total AI spend of the whole installation** (all organizations, all time). Once it is reached, ingestion pauses everywhere until you raise it. The example value (0.50) is only for trying the system out: at about $0.007–0.01 per page, $0.50 covers roughly 50–70 pages. Set it to your total budget (for example 50 for about 5,000–7,000 pages) and raise it as needed. Use the per-organization monthly cap (Settings → Organization) for ongoing control. Review the model price limits, upload/page caps, and concurrency before use.
 
